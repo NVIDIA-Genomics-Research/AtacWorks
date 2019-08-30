@@ -49,7 +49,7 @@ echo ""
 echo "Step 1: Convert peak files into bigWig format..."
 echo ""
 # Clean peaks
-python $root_dir/peak2bw.py \
+ipython $root_dir/peak2bw.py \
     $data_dir/HSC.80M.chr123.10mb.bed \
     $ref_dir/hg19.auto.sizes \
     --prefix=$out_dir/HSC.80M.chr123.10mb.bed
