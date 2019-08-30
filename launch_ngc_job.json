@@ -1,0 +1,23 @@
+{
+    "aceInstance": "ngcv8",
+    "aceName": "nv-us-west-2",
+    "command": "sleep 1000000",
+    "dockerImageName": "nvidian/dt/keras-pytorch-atacworks:latest",
+    "name": "atacworks",
+    "resultContainerMountPoint": "/result",
+    "runPolicy": {
+        "preemptClass": "RUNONCE"
+    },
+    "workspaceMounts": [
+        {
+            "containerMountPoint": "/ws/dlss-code ",
+            "id": "cfIdUdzQQSa3-8qAqAI9dA",
+            "mountMode": "RW"
+        },
+        {
+            "containerMountPoint": "/ws/dlss-data ",
+            "id": "4IfR1O3sTqet-Ae5Sn2keA",
+            "mountMode": "RO"
+        }
+    ]
+}

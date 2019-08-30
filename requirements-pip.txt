@@ -1,0 +1,19 @@
+#
+# Copyright (c) 2019, NVIDIA CORPORATION.  All rights reserved.
+#
+# NVIDIA CORPORATION and its licensors retain all intellectual property
+# and proprietary rights in and to this software, related documentation
+# and any modifications thereto.  Any use, reproduction, disclosure or
+# distribution of this software and related documentation without an express
+# license agreement from NVIDIA CORPORATION is strictly prohibited.
+#
+
+Cython==0.29.13
+h5py==2.9.0
+pyBigWig==0.3.17
+pandas==0.25.0
+pytest==4.4.1
+termcolor==1.1.0
+torch==1.1.0
+torchvision==0.3.0
+scikit-learn==0.21.3
