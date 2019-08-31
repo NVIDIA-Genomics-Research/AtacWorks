@@ -14,7 +14,7 @@ def check_dependence(
     arg1, arg2, parser, err_msg="Argument mutual inclusive test failed."):
     if arg1 and not arg2:
         parser.error(err_msg)
-    
+
 def check_mutual_exclusive(
     arg1, arg2, parser, err_msg="Argument mutual exclusive test failed."):
     if arg1 and arg2:
@@ -22,7 +22,7 @@ def check_mutual_exclusive(
 
 def parse_args():
     parser = argparse.ArgumentParser(description='DenoiseNet training script.')
-    
+
     # General flags
     parser.add_argument('--model', type=str, help='model type', choices=(
         'unet', 'resnet', 'conv', 'linear', 'logistic', 'fc2', 'fc3'), default='unet')
@@ -76,21 +76,25 @@ def parse_args():
     parser.add_argument('--infer_files', type=str, default="",
         help='list of data files in the form of [file1, file2, ...];'
              'or a single path to a folder of files')
-    
+
     parser.add_argument('--weights_path', type=str, default="",
         help="checkpoint path to load the model from for inference or resume training")
     parser.add_argument('--result_fname', type=str, default='infer_results.h5',
         help='filename of the inference results')
 
+    # dataset args
+    parser.add_argument('--sample_rate', type=float, default=0.1,
+        help='if downsampling, dynamic downsample rate')
+
     # training args
-    parser.add_argument('--task', default='regression', choices=['regression', 'classification', 'both'], 
+    parser.add_argument('--task', default='regression', choices=['regression', 'classification', 'both'],
         help='Task can be regression or classification or both. (default: %(default)s)')
     parser.add_argument('--train_files', type=str, default="",
         help='list of data files in the form of [file1, file2, ...];'
              'or a single path to a folder of files')
-    parser.add_argument('--print_freq', type=int, default=10, 
+    parser.add_argument('--print_freq', type=int, default=10,
         help="Logging frequency")
-    parser.add_argument('--bs', type=int, default=3, 
+    parser.add_argument('--bs', type=int, default=3,
         help="meta batch_size")
     parser.add_argument('--num_workers', type=int, default=1,
         help="number of workers for dataloader")
@@ -98,24 +102,24 @@ def parse_args():
         help="checkpoint filename to save the model")
     parser.add_argument('--save_freq', type=int, default=5,
                         help="model checkpoint saving frequency")
-    
+
     # validation args
     parser.add_argument('--val_files', type=str, default="",
         help='list of data files in the form of [file1, file2, ...];'
              'or a single path to a folder of files')
-    parser.add_argument('--eval_freq', type=int, default=2, 
+    parser.add_argument('--eval_freq', type=int, default=2,
         help="evaluation frequency")
     parser.add_argument('--threshold', type=float, default=0.5,
-        help="threshold for classification metrics")    
-    
+        help="threshold for classification metrics")
+
     # dist-env args
-    parser.add_argument('--gpu', default=0, type=int, 
+    parser.add_argument('--gpu', default=0, type=int,
         help='GPU id to use; preempted by --distributed which uses all available gpus ')
     parser.add_argument('--distributed', action='store_true',
         help='Do distributed training across all available gpus on the node')
     parser.add_argument('--dist-url', default='tcp://127.0.0.1:4321', type=str,
         help='url used to set up distributed training')
-    parser.add_argument('--dist-backend', default='nccl', type=str, 
+    parser.add_argument('--dist-backend', default='nccl', type=str,
         help='distributed backend')
 
     # debug
@@ -138,7 +142,7 @@ def parse_args():
 
     check_dependence(args.eval, args.val_files,  parser, "--eval requires --val_files")
     check_dependence(args.eval, args.weights_path, parser, "--eval requires --weights_path")
-  
+
     return args
 
 # args = parse_args()

@@ -16,8 +16,8 @@ from cmd_args import parse_args
 # module imports
 from claragenomics.dl4atac.train.models import *
 from claragenomics.dl4atac.train.losses import MultiLoss
-from claragenomics.dl4atac.train.dataset import DatasetTrain #, DatasetInfer, DatasetEval #, custom_collate_train, custom_collate_infer, custom_collate_eval
-from claragenomics.dl4atac.train.utils import * # myprint, save_model, load_model, gather_files_from_cmdline, assert_device_available, make_experiment_dir
+from claragenomics.dl4atac.train.dataset import DatasetTrain
+from claragenomics.dl4atac.train.utils import *
 from claragenomics.dl4atac.train.train import train
 from claragenomics.dl4atac.train.evaluate import evaluate
 from claragenomics.dl4atac.train.infer import infer
@@ -75,7 +75,7 @@ def get_losses(args):
 
 def get_metrics(args):
 
-    metrics_reg = [] 
+    metrics_reg = []
     cla_metics = []
     best_metric = []
     if args.task == "regression":
@@ -149,7 +149,7 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
     optimizer = Adam(model.parameters(), lr=args.lr)
     # TODO: LR schedule
 
-    train_dataset = DatasetTrain(args.train_files)
+    train_dataset = DatasetTrain(args.train_files, args=args)
     train_sampler = None
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
@@ -160,7 +160,7 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
     )
 
     # TODO: need DatasetVal? Not for now
-    val_dataset = DatasetTrain(args.val_files)
+    val_dataset = DatasetTrain(args.val_files, args=args)
     val_sampler = None
     if args.distributed:
         val_sampler = torch.utils.data.distributed.DistributedSampler(val_dataset)
@@ -178,8 +178,8 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
     for epoch in range(args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
-        train(rank=args.rank, gpu=args.gpu, task=args.task, model=model, train_loader=train_loader, 
-              loss_func=loss_func, optimizer=optimizer, epoch=epoch, epochs=args.epochs, 
+        train(rank=args.rank, gpu=args.gpu, task=args.task, model=model, train_loader=train_loader,
+              loss_func=loss_func, optimizer=optimizer, epoch=epoch, epochs=args.epochs,
               clip_grad=args.clip_grad, print_freq=args.print_freq, distributed=args.distributed, world_size=args.world_size)
 
         if epoch % args.eval_freq == 0:
@@ -219,8 +219,7 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
 
     model = build_model(args)
 
-    #infer_dataset = DatasetInfer(args.infer_files)
-    infer_dataset = DatasetTrain(args.infer_files)
+    infer_dataset = DatasetTrain(args.infer_files, args=args)
     infer_sampler = None
 
     if args.distributed:
@@ -250,8 +249,7 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
 
     model = build_model(args)
 
-    #eval_dataset = DatasetEval(args.val_files)
-    eval_dataset = DatasetTrain(args.val_files)
+    eval_dataset = DatasetTrain(args.val_files, args=args)
     eval_sampler = None
 
     if args.distributed:
