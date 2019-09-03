@@ -49,7 +49,7 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue):
     with torch.no_grad():
         for i, batch in enumerate(infer_loader):
             idxes = batch['idx']
-            x = batch['x']
+            x = batch['x'].float()
             # model forward pass
             x = x.unsqueeze(1) #(N, 1, L)
             x = x.cuda(gpu, non_blocking=True)

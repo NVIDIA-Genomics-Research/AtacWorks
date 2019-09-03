@@ -18,7 +18,7 @@ import h5py
 import numpy as np
 
 
-def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, 
+def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer,
           epoch, epochs, clip_grad, print_freq, distributed, world_size):
 
     num_batches = len(train_loader)
@@ -34,9 +34,9 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer,
 
     # Loop training data
     for i, batch in enumerate(train_loader):
-        x = batch['x']
-        y_reg = batch['y_reg']
-        y_cla = batch['y_cla']
+        x = batch['x'].float()
+        y_reg = batch['y_reg'].float()
+        y_cla = batch['y_cla'].float()
         # model forward pass
         x = x.unsqueeze(1) #(N, 1, L)
         x = x.cuda(gpu, non_blocking=True)
@@ -52,7 +52,7 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer,
 
         t = time.time()
         pred = model(x)
-        
+
         # Calculate losses
         if task == 'regression' or task == 'classification':
             total_loss_value, losses_values = loss_func(pred, y)
@@ -82,7 +82,7 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer,
                 for loss_type, value in losses_values.items():
                     dist.reduce_multigpu([value], dst=0)  # update inplace, ReduceOp=SUM
                     losses_values[loss_type] = value / world_size
-            
+
             if rank == 0:
                 post_bar_msg = " | ".join(
                     [k + ':{:8.3f}'.format(v.cpu().item()) for k, v in losses_values.items()])

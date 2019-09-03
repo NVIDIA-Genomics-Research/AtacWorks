@@ -55,9 +55,9 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
     with torch.no_grad():
         for i, batch in enumerate(val_loader):
             idxes = batch['idx']
-            x = batch['x']
-            y_reg = batch['y_reg']
-            y_cla = batch['y_cla']
+            x = batch['x'].float()
+            y_reg = batch['y_reg'].float()
+            y_cla = batch['y_cla'].float()
 
             """
             if res_queue: # res_queue indicates the mode we are in

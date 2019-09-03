@@ -106,15 +106,14 @@ class DatasetTrain(DatasetBase):
                 if self.test_correct_cuts:
                     expanded_reads = self.expand_cuts(cuts=implied_cuts,h_shape=all_reads.shape[0], w=smooth_size)
                     # Assert we got our data back!
-                    """
-                    print(np.sum(all_reads))
-                    print(all_reads)
-                    print(expanded_reads)
-                    print(all_reads - expanded_reads)
-                    print(np.sum(all_reads - expanded_reads))
-                    print(np.nonzero(all_reads - expanded_reads))
-                    """
-                    assert np.array_equal(all_reads, expanded_reads), "Not getting original image back from implied cuts!"
+                    if not np.array_equal(all_reads, expanded_reads):
+                        print(np.sum(all_reads))
+                        print(all_reads)
+                        print(expanded_reads)
+                        print(all_reads - expanded_reads)
+                        print(np.sum(all_reads - expanded_reads))
+                        print(np.nonzero(all_reads - expanded_reads))
+                        assert np.array_equal(all_reads, expanded_reads), "Not getting original image back from implied cuts!"
 
                 # Now downsample...
                 # HACK -- get downsample rate from the single downsample...
@@ -125,14 +124,14 @@ class DatasetTrain(DatasetBase):
 
                 sample_rate = self.downsample_rate
                 # TODO: Add wiggle to the cuts? Better if we had true cuts... they come pre-wiggled
-                sampled_cuts = np.random.choice(implied_cuts, int(np.ceil(len(implied_cuts) * sample_rate)), replace=False)
+                sampled_cuts = np.random.choice(implied_cuts, min(len(implied_cuts), int(np.ceil(len(implied_cuts) * sample_rate))), replace=False)
                 if self.debug:
                     print('Produced %d sampled cuts' % sampled_cuts.shape[0])
                 expanded_reads = self.expand_cuts(cuts=sampled_cuts,h_shape=all_reads.shape[0], w=smooth_size)
-                x = expanded_reads
+                downsampled_reads = expanded_reads
 
             # Return 4 items -- IDX (for saving/tracing), downsampled data (to train), full data, peaks/classifications
-            idx = yield {'idx':idx, 'x':downsampled_reads, 'y_reg':all_reads, 'y_cla':downsampled_reads}
+            idx = yield {'idx':idx, 'x':downsampled_reads, 'y_reg':all_reads, 'y_cla':peaks}
 
     # Get histogram, look for cuts, smoothed to width w
     # Return array of cut locations
