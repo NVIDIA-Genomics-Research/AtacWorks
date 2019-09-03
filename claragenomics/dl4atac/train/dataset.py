@@ -124,7 +124,11 @@ class DatasetTrain(DatasetBase):
 
                 sample_rate = self.downsample_rate
                 # TODO: Add wiggle to the cuts? Better if we had true cuts... they come pre-wiggled
-                sampled_cuts = np.random.choice(implied_cuts, min(len(implied_cuts), int(np.ceil(len(implied_cuts) * sample_rate))), replace=False)
+                # Sample from the binomial distribution -- for total cuts with expected rate.
+                # TODO: Have sampling fixed, in test set??
+                num_cuts = np.random.binomial(len(implied_cuts), sample_rate, 1)[0]
+                num_cuts = min(len(implied_cuts), num_cuts)
+                sampled_cuts = np.random.choice(implied_cuts, num_cuts, replace=False)
                 if self.debug:
                     print('Produced %d sampled cuts' % sampled_cuts.shape[0])
                 expanded_reads = self.expand_cuts(cuts=sampled_cuts,h_shape=all_reads.shape[0], w=smooth_size)
@@ -209,12 +213,13 @@ class DatasetTrain(DatasetBase):
         print(h[500:600])
         """
 
-        # cuts -- count by location (could be 2x or 3x)
+        # cuts -- count by location (could be 2x or 3x, etc)
         cuts_nonzero = np.nonzero(cuts)
         cuts_list = []
-        for cut_id in cuts_nonzero[0].flat:
-            # NOTE: Cuts can occurr before or after the sequence!
-            cuts_list += [cut_id-int(w/2)]*int(cuts[cut_id])
+        # Get count per location, and location of cuts with correct offset.
+        cut_counts = cuts[cuts_nonzero[0]].astype(int)
+        cut_with_correct_offset = cuts_nonzero[0] - int(w/2)
+        cuts_list = np.repeat(cut_with_correct_offset, cut_counts)
         if debug:
             print(cuts_list)
 
@@ -228,7 +233,7 @@ class DatasetTrain(DatasetBase):
                 print('Calling cuts on remaining reads, recursively.')
             #time.sleep(2)
             extra_cuts = self.get_implied_cuts(h=remain_reads,w=w)
-            cuts_list += list(extra_cuts)
+            cuts_list = np.concatenate((cuts_list, extra_cuts))
             if debug:
                 print('cuts after appending...')
                 print(cuts_list)
@@ -238,7 +243,7 @@ class DatasetTrain(DatasetBase):
             assert False, 'Error in deconstructing reads with implied cuts! Check dimensions, or ignore'
             pass
 
-        return np.array(cuts_list)
+        return cuts_list
 
     # Get cuts, expand them -- into shape from h
     def expand_cuts(self,cuts,h_shape,w,debug=False):
