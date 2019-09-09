@@ -63,7 +63,7 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad):
                 if task == 'regression' or task == 'classification':
                     batch_res = np.expand_dims(pred.cpu().numpy()[:, center], axis=-1)
                 elif task == "both":
-                    batch_res = np.stack([x.cpu().numpy()[:, cen]
+                    batch_res = np.stack([x.cpu().numpy()[:, center]
                                       for x in pred], axis=-1)
 
             # HACK -- replacing "key" with i=index.
