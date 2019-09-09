@@ -68,7 +68,7 @@ python $root_dir/get_intervals.py \
     --val chr2 --holdout chr3
 
 echo ""
-echo "Step 3: Read clean and noisy data in these intervals and save them as batches in .h5 format..."
+echo "Step 3: Read clean and noisy data in these intervals and save them in .h5 format..."
 echo ""
 # Training data
 python $root_dir/bw2h5.py \
@@ -100,8 +100,8 @@ echo ""
 echo "Step 4: Train and validate model..."
 echo ""
 python $root_dir/main.py --train \
-    --train_files $out_dir/train_data.batch.h5 \
-    --val_files $out_dir/val_data.batch.h5 \
+    --train_files $out_dir/train_data.h5 \
+    --val_files $out_dir/val_data.h5 \
     --model resnet --nblocks 5 --nblocksc 2 --nfilt 15 --width 50 \
     --dil 8 --task both --epochs 2 --afunc relu --mse_weight 0.001 \
     --pearson_weight 1 --bs 8 \

@@ -58,11 +58,12 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad):
             pred = model(x)
 
             # Ignore padding
-            center = range(pad, x.shape[2] - pad)
-            if task == 'regression' or task == 'classification':
-                batch_res = np.expand_dims(pred.cpu().numpy()[:, center], axis=-1)
-            elif task == "both":
-                batch_res = np.stack([x.cpu().numpy()[:, cen]
+            if pad is not None:
+                center = range(pad, x.shape[2] - pad)
+                if task == 'regression' or task == 'classification':
+                    batch_res = np.expand_dims(pred.cpu().numpy()[:, center], axis=-1)
+                elif task == "both":
+                    batch_res = np.stack([x.cpu().numpy()[:, cen]
                                       for x in pred], axis=-1)
 
             # HACK -- replacing "key" with i=index.

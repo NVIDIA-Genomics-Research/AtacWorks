@@ -56,14 +56,15 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
         pred = model(x)
 
         # Remove padding
-        center = range(pad, x.shape[2] - pad)
-        if task == 'regression' or task == 'classification':
-            y = y[:, center]
-            pred = pred[:, center]
-        elif task == 'both':
-            y_reg = y_reg[:, center]
-            y_cla = y_cla[:, center]
-            pred = [x[:, center] for x in pred]
+        if pad is not None:
+            center = range(pad, x.shape[2] - pad)
+            if task == 'regression' or task == 'classification':
+                y = y[:, center]
+                pred = pred[:, center]
+            elif task == 'both':
+                y_reg = y_reg[:, center]
+                y_cla = y_cla[:, center]
+                pred = [x[:, center] for x in pred]
 
         # Calculate losses
         if task == 'regression' or task == 'classification':

@@ -63,7 +63,7 @@ def calculate_class_nums(x, threshold=0.5, message='Bases per class'):
     print(result_str)
 
 
-def h5_to_array(h5file, channel=None, pad=0):
+def h5_to_array(h5file, channel, pad):
     """
     Function to read test data into a NumPy array.
     Args:
@@ -79,9 +79,10 @@ def h5_to_array(h5file, channel=None, pad=0):
         else:
             data = np.array(f['data'])
     # ignore padding
-    center = range(pad, data.shape[1] - pad)
-    print("Removing padding and reducing interval size from {} to {}".format(data.shape[1], len(center)))
-    data = data[:, center]
+    if pad is not None:
+        center = range(pad, data.shape[1] - pad)
+        print("Removing padding and reducing interval size from {} to {}".format(data.shape[1], len(center)))
+        data = data[:, center]
     # Flatten data
     data = data.flatten()
     return data
