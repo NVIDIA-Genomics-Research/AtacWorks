@@ -138,3 +138,4 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
             metrics = metrics_reg + metrics_cla
             result_str = " | ".join([str(metric) for metric in metrics])
             myprint("Evaluation result: " + result_str, rank=rank)
+            myprint("Evaluation time taken: {:7.3f}s".format(time.time()-start), color='yellow', rank=rank)
