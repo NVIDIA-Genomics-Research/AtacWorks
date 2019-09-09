@@ -88,7 +88,7 @@ def h5_to_array(h5file, channel, pad):
     return data
 
 
-def read_data_file(filename, channel=None, intervals=None, pad=0):
+def read_data_file(filename, channel=None, intervals=None, pad=None):
     """
     Function to read clean and noisy data for evaluation
     Args:
@@ -117,12 +117,12 @@ def calculate_metrics(metrics, x, y):
 def parse_args():
     parser = argparse.ArgumentParser(
         description='AtacWorks script to calculate metrics on batched data.')
-    parser.add_argument('label_file', type=str,
+    parser.add_argument('--label_file', type=str,
                         help='Path to hdf5/bw file containing labels')
-    parser.add_argument('task', type=str, choices=('regression',
-                                                   'classification', 'both'), help='determines metrics')
     parser.add_argument('--test_file', type=str,
-                        help='Path to hdf5/bw file containing test data')
+                        help='Path to hdf5/bw file containing labels. If not provided, assumed to be present in label_file.')
+    parser.add_argument('--task', type=str, choices=('regression',
+                                                   'classification', 'both'), help='determines metrics')
     parser.add_argument('--ratio', type=float, help='subsampling ratio')
     parser.add_argument('--sep_peaks', action='store_true',
                         help='separate regression metrics for peaks and non-peaks')
@@ -132,7 +132,7 @@ def parse_args():
                         help='Intervals to read bigWig files')
     parser.add_argument('--sizes', type=str,
                         help='Chromosome sizes to read bigWig file')
-    parser.add_argument('--pad', type=int, help='interval padding in h5 file')
+    parser.add_argument('--pad', type=int, help='interval padding in label h5 file')
     args = parser.parse_args()
     return args
 
@@ -164,7 +164,7 @@ if args.task == 'regression' or args.task == 'both':
     if args.test_file is None:
         x = read_data_file(args.label_file, 0, pad=args.pad)
     else:
-        x = read_data_file(args.test_file, 0, intervals, pad=args.pad)
+        x = read_data_file(args.test_file, 0, intervals)
 
     # Calculate metrics
     _logger.info("Calculating metrics for regression")
@@ -205,7 +205,7 @@ if args.task == 'classification' or args.task == 'both':
 
     # Load data
     _logger.info("Loading data for classification")
-    x_peaks = read_data_file(args.test_file, 1, intervals, pad=args.pad)
+    x_peaks = read_data_file(args.test_file, 1, intervals)
 
     # Calculate number of bases in peaks
     calculate_class_nums(y_peaks, message="Bases per class in clean data")
