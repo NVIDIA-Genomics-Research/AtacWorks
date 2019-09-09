@@ -114,11 +114,12 @@ echo "Step 5: Calculate baseline metrics on the test set..."
 echo ""
 # Regression metrics on noisy data
 python $root_dir/calculate_baseline_metrics.py \
-    $out_dir/test_data.h5 regression --sep_peaks
+    --label_file $out_dir/test_data.h5 --task regression --sep_peaks
 
 # Classification metrics on the noisy data peak calls
 python $root_dir/calculate_baseline_metrics.py \
-    $out_dir/test_data.h5 classification --test_file $out_dir/HSC.5M.chr123.10mb.bed.bw \
+    --label_file $out_dir/test_data.h5 --task classification \
+    --test_file $out_dir/HSC.5M.chr123.10mb.bed.bw \
     --intervals $out_dir/example.holdout_intervals.bed
 
 echo ""
@@ -136,7 +137,7 @@ echo ""
 echo "Step 7: Calculate metrics after inference..."
 echo ""
 python $root_dir/calculate_baseline_metrics.py \
-    $out_dir/test_data.h5 both \
+    --label_file $out_dir/test_data.h5 --task both \
     --test_file $out_dir/models/inference_latest/HSC.5M.output.h5 \
     --sep_peaks --thresholds 0.5
 
@@ -182,7 +183,7 @@ echo ""
 echo "Calculate metrics after inference..."
 echo ""
 python $root_dir/calculate_baseline_metrics.py \
-    $out_dir/test_data.h5 both \
+    --label_file $out_dir/test_data.h5 --task both \
     --test_file $out_dir/models/inference.pretrained_latest/HSC.5M.output.pretrained.h5 \
     --sep_peaks --thresholds 0.5
 
