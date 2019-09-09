@@ -104,7 +104,6 @@ if args.nonzero:
     _logger.info("Retaining {} of {} nonzero noisy intervals".format(
         sum(nonzero_intervals), len(intervals)))
     intervals = intervals[nonzero_intervals]
-    intervals.reset_index(inplace=True, drop=True)
 
 _logger.debug('Collecting %d intervals' % len(intervals))
 
