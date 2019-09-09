@@ -78,15 +78,15 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
 
             ###################################################################
             # Remove padding before evaluation
-            cen = list(range(pad, x.shape[2] - pad))
+            center = range(pad, x.shape[2] - pad)
             if task == 'regression' or task =='both':
-                y_reg = y_reg[:, cen]
+                y_reg = y_reg[:, center]
             if task == 'classification' or task == 'both':
-                y_cla = y_cla[:, cen]
+                y_cla = y_cla[:, center]
             if task == 'both':
-                pred = [x[:, cen] for x in pred]
+                pred = [x[:, center] for x in pred]
             else:
-                pred = pred[:, cen]
+                pred = pred[:, center]
 
             ###################################################################
             # dump results in eval mode

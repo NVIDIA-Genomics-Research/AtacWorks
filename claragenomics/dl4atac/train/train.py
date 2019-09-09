@@ -55,16 +55,24 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
         t = time.time()
         pred = model(x)
 
-        # Calculate losses
         # Remove padding
-        cen = list(range(pad, x.shape[2] - pad))
+        center = range(pad, x.shape[2] - pad)
         if task == 'regression' or task == 'classification':
-            total_loss_value, losses_values = loss_func(pred[:, cen], y[:, cen])
+            y = y[:, center]
+            pred = pred[:, center]
+        elif task == 'both':
+            y_reg = y_reg[:, center]
+            y_cla = y_cla[:, center]
+            pred = [x[:, center] for x in pred]
+
+        # Calculate losses
+        if task == 'regression' or task == 'classification':
+            total_loss_value, losses_values = loss_func(pred, y)
         elif task == 'both':
             total_loss_value_reg, losses_values_reg = loss_func[0](
-                pred[0][:, cen], y_reg[:, cen])
+                pred[0], y_reg)
             total_loss_value_cla, losses_values_cla = loss_func[1](
-                pred[1][:, cen], y_cla[:, cen])
+                pred[1], y_cla)
             # Combine loss values
             losses_values = losses_values_reg.copy()
             losses_values.update(losses_values_cla)

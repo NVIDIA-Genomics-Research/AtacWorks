@@ -63,11 +63,13 @@ def calculate_class_nums(x, threshold=0.5, message='Bases per class'):
     print(result_str)
 
 
-def h5_to_array(h5file, channel=None):
+def h5_to_array(h5file, channel=None, pad=0):
     """
     Function to read test data into a NumPy array.
     Args:
         h5file(str): path to hdf5 file containing batched data
+        channel(int): channel of hdf5 file to read
+        pad(int): interval padding in h5 file
     Returns:
         data: NumPy array containing a channel of the data
     """
@@ -76,22 +78,28 @@ def h5_to_array(h5file, channel=None):
             data = f['data'][:, :, channel]
         else:
             data = np.array(f['data'])
+    # ignore padding
+    center = range(pad, data.shape[1] - pad)
+    print("Removing padding and reducing interval size from {} to {}".format(data.shape[1], len(center)))
+    data = data[:, center]
+    # Flatten data
     data = data.flatten()
     return data
 
 
-def read_data_file(filename, channel=None, intervals=None):
+def read_data_file(filename, channel=None, intervals=None, pad=0):
     """
     Function to read clean and noisy data for evaluation
     Args:
         filename: path to file
         channel: channel to read if file is an hdf5 file with labels
         intervals: intervals to read if file is in bigWig format
+        pad(int): interval padding in h5 file
     Returns:
         Data as a NumPy array
     """
     if os.path.splitext(filename)[1] == '.h5':
-        data = h5_to_array(filename, channel)
+        data = h5_to_array(filename, channel, pad)
     elif os.path.splitext(filename)[1] == '.bw':
         data = extract_bigwig_intervals(intervals, filename)
         data = data.flatten()
@@ -123,6 +131,7 @@ def parse_args():
                         help='Intervals to read bigWig files')
     parser.add_argument('--sizes', type=str,
                         help='Chromosome sizes to read bigWig file')
+    parser.add_argument('--pad', type=int, help='interval padding in h5 file')
     args = parser.parse_args()
     return args
 
@@ -147,14 +156,14 @@ if args.task == 'regression' or args.task == 'both':
 
     # Load labels
     _logger.info("Loading labels for regression") 
-    y = read_data_file(args.label_file, 1, intervals)
+    y = read_data_file(args.label_file, 1, intervals, pad=args.pad)
 
     # Load data
     _logger.info("Loading data for regression")
     if args.test_file is None:
-        x = read_data_file(args.label_file, 0)
+        x = read_data_file(args.label_file, 0, pad=args.pad)
     else:
-        x = read_data_file(args.test_file, 0, intervals)
+        x = read_data_file(args.test_file, 0, intervals, pad=args.pad)
 
     # Calculate metrics
     _logger.info("Calculating metrics for regression")
@@ -170,7 +179,7 @@ if args.task == 'regression' or args.task == 'both':
     if args.sep_peaks:
         # Load peak labels
         _logger.info("Loading labels for classification")
-        y_peaks = read_data_file(args.label_file, 2, intervals)
+        y_peaks = read_data_file(args.label_file, 2, intervals, pad=args.pad)
 
         # Calculate separate metrics for peak and non-peak regions
         _logger.info("Calculating metrics for regression in peaks")
@@ -191,11 +200,11 @@ if args.task == 'classification' or args.task == 'both':
     # Load labels if not already loaded
     if not args.sep_peaks:
         _logger.info("Loading labels for classification")
-        y_peaks = read_data_file(args.label_file, 2, intervals)
+        y_peaks = read_data_file(args.label_file, 2, intervals, pad=args.pad)
 
     # Load data
     _logger.info("Loading data for classification")
-    x_peaks = read_data_file(args.test_file, 1, intervals)
+    x_peaks = read_data_file(args.test_file, 1, intervals, pad=args.pad)
 
     # Calculate number of bases in peaks
     calculate_class_nums(y_peaks, message="Bases per class in clean data")
