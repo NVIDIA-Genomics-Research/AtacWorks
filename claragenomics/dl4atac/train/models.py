@@ -125,10 +125,7 @@ class DenoisingUNet(nn.Module):
 
         self.regressor = ConvAct1d(
             interval_size, in_channels=16, out_channels=1, kernel_size=1, dilation=1, bn=bn, afunc=afunc)
-        
-        # Classification
-        self.class1 = ConvAct1d(
-            interval_size, in_channels=16, out_channels=16, kernel_size=1001, dilation=8, bn=bn, afunc=afunc)
+       
         self.classifier = ConvAct1d(
             interval_size, in_channels=16, out_channels=1, kernel_size=1, dilation=1, bn=bn, afunc=None)
 
@@ -147,10 +144,8 @@ class DenoisingUNet(nn.Module):
         x9 = self.up9(x8, x1)
 
         out_reg = self.regressor(x9).squeeze(1)
-
-        x10 = self.class1(x9)
         out_cla = torch.sigmoid(self.classifier(
-            x10).squeeze(1))  # (N, 1, L) => (N, L)
+            x9).squeeze(1))  # (N, 1, L) => (N, L)
 
         return out_reg, out_cla
 
