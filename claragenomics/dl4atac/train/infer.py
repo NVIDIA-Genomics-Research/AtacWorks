@@ -57,14 +57,15 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad):
 
             pred = model(x)
 
-            # Ignore padding
+            if task == 'regression' or task == 'classification':
+                    batch_res = np.expand_dims(pred.cpu().numpy(), axis=-1)
+            elif task == "both":
+                    batch_res = np.stack([x.cpu().numpy() for x in pred], axis=-1)
+            
+            # Remove padding before writing results
             if pad is not None:
                 center = range(pad, x.shape[2] - pad)
-                if task == 'regression' or task == 'classification':
-                    batch_res = np.expand_dims(pred.cpu().numpy()[:, center], axis=-1)
-                elif task == "both":
-                    batch_res = np.stack([x.cpu().numpy()[:, center]
-                                      for x in pred], axis=-1)
+                batch_res = batch_res[:, center, :]
 
             # HACK -- replacing "key" with i=index.
             # TODO: Remove the write queue

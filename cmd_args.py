@@ -101,8 +101,7 @@ def parse_args():
                         help="model checkpoint saving frequency")
 
     # Dataset args
-    parser.add_argument('--pad', type=int, default=0,
-                        help="Padding around intervals")
+    parser.add_argument('--pad', type=int, help="Padding around intervals")
 
     # validation args
     parser.add_argument('--val_files', type=str, default="",

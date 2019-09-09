@@ -310,7 +310,11 @@ def writer(args, res_queue):
     for fname in files_path:
         with h5py.File(fname, 'r') as f:
             total_size = f["data"].shape[0]
-            write_dimension = f["data"].shape[1] - 2*args.pad
+            if args.pad is not None:
+                write_dimension = f["data"].shape[1] - 2*args.pad
+            else:
+                write_dimension = f["data"].shape[1]
+
     # Write one or two outputs per item
     total_outputs = 2 if args.task == 'both' else 1
     output_data = np.zeros(
