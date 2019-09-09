@@ -125,7 +125,6 @@ class DenoisingUNet(nn.Module):
 
         self.regressor = ConvAct1d(
             interval_size, in_channels=16, out_channels=1, kernel_size=1, dilation=1, bn=bn, afunc=afunc)
-       
         self.classifier = ConvAct1d(
             interval_size, in_channels=16, out_channels=1, kernel_size=1, dilation=1, bn=bn, afunc=None)
 
