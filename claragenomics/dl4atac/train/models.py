@@ -14,7 +14,6 @@ import torch.nn.functional as F
 from claragenomics.dl4atac.train.layers import ZeroSamePad1d, Activation, ConvAct1d, ResBlock, DownBlock, UpBlock
 
 
-
 class FC3(nn.Module):
     def __init__(self, interval_size, in_channels=1, afunc='relu', bn=False):
         self.interval_size = interval_size
@@ -27,7 +26,7 @@ class FC3(nn.Module):
                              out_features=1000)
         self.relu2 = Activation('relu')
         self.fc3 = nn.Linear(in_features=1000, out_features=interval_size)
-    
+
     def forward(self, x):
         x = self.relu1(self.fc1(x))
         x = self.relu2(self.fc2(x))
@@ -44,7 +43,7 @@ class FC2(nn.Module):
         self.fc1 = nn.Linear(in_features=interval_size,
                              out_features=1000)
         self.relu1 = Activation('relu')
-        
+
         self.fc2 = nn.Linear(in_features=1000, out_features=interval_size)
 
     def forward(self, x):
@@ -53,70 +52,32 @@ class FC2(nn.Module):
         return x.squeeze(1)
 
 
-class DenoisingNet(nn.Module):
-    def __init__(self, interval_size, recep_field, in_channels=1, out_channels=15, num_conv=4, 
-                 kernel_size=50, dilation=5, residual=True, bn=False, afunc='relu'):
-
-        self.interval_size = interval_size
-        self.residual = residual
-        super(DenoisingNet, self).__init__()
-
-        recep_conv = 0
-        self.conv_layers = []
-        for _ in range(num_conv - 1):
-            self.conv_layers.append(ConvAct1d(interval_size, in_channels=in_channels,
-                                    out_channels=out_channels, kernel_size=kernel_size, dilation=dilation, bn=bn, afunc=afunc))
-            in_channels = out_channels
-            recep_conv += kernel_size
-
-        assert recep_field > recep_conv, "recep_field is too small!"
-        self.conv_layers = nn.ModuleList(self.conv_layers)
-        self.regressor = ConvAct1d(interval_size, in_channels=out_channels,
-                                   out_channels=1, kernel_size=(recep_field-recep_conv), dilation=1, bn=bn, afunc=None)
-        self.classifier = ConvAct1d(interval_size, in_channels=out_channels,
-                                   out_channels=1, kernel_size=(recep_field-recep_conv), dilation=1, bn=bn, afunc=None)
-        self.act_reg = Activation(afunc)
-    
-    def forward(self, input):
-        x = input
-        for conv_layer in self.conv_layers:
-            x = conv_layer(x)
-        
-        x_reg = self.regressor(x)
-        x_cla = self.classifier(x)
-
-        if self.residual:
-            x_reg = input + x_reg
-            x_cla = input + x_cla
-            
-        out_reg = self.act_reg(x_reg).squeeze(1)
-        out_cla = torch.sigmoid(x_cla.squeeze(1))
-
-        return out_reg, out_cla
-
-
 class DenoisingResNet(nn.Module):
-    def __init__(self, interval_size, in_channels=1, out_channels=12, num_blocks=5, 
-                 kernel_size=50, dilation=5, bn=False, afunc='relu', num_blocks_class=2):
+    def __init__(self, interval_size, in_channels=1, out_channels=15, num_blocks=5,
+                 kernel_size=50, dilation=8, bn=False, afunc='relu', num_blocks_class=2,
+                 kernel_size_class=50, dilation_class=8, out_channels_class=15):
+
         self.interval_size = interval_size
         super(DenoisingResNet, self).__init__()
-        
+
         self.res_blocks = nn.ModuleList()
         self.res_blocks_class = nn.ModuleList()
 
-        self.res_blocks.append(ResBlock(interval_size, in_channels, out_channels, kernel_size, 
-                                       dilation=dilation, bn=bn, afunc=afunc, conv_input=True))
+        # Residual blocks for regression
+        self.res_blocks.append(ResBlock(interval_size, in_channels, out_channels, kernel_size,
+                                        dilation=dilation, bn=bn, afunc=afunc, conv_input=True))
         for _ in range(num_blocks - 1):
             self.res_blocks.append(ResBlock(interval_size, out_channels, out_channels, kernel_size,
                                             dilation=dilation, bn=bn, afunc=afunc, conv_input=False))
         self.regressor = ConvAct1d(interval_size, in_channels=out_channels,
                                    out_channels=1, kernel_size=1, dilation=1, bn=bn, afunc=afunc)
-        
-        self.res_blocks_class.append(ResBlock(interval_size, in_channels=1, out_channels=out_channels, kernel_size=kernel_size,
-                                       dilation=10, bn=bn, afunc=afunc, conv_input=True, bias=True))
+
+        # Residual blocks for classification
+        self.res_blocks_class.append(ResBlock(interval_size, in_channels=1, out_channels=out_channels_class,
+                                              kernel_size=kernel_size_class, dilation=dilation_class, bn=bn, afunc=afunc, conv_input=True, bias=True))
         for _ in range(num_blocks_class-1):
-            self.res_blocks_class.append(ResBlock(interval_size, out_channels, out_channels, kernel_size,
-                                            dilation=10, bn=bn, afunc=afunc, conv_input=False, bias=True))
+            self.res_blocks_class.append(ResBlock(interval_size, out_channels_class, out_channels_class,
+                                                  kernel_size_class, dilation=dilation_class, bn=bn, afunc=afunc, conv_input=False, bias=True))
         self.classifier = ConvAct1d(interval_size, in_channels=out_channels,
                                     out_channels=1, kernel_size=1, dilation=1, bn=bn, afunc=None, bias=True)
 
@@ -134,7 +95,7 @@ class DenoisingResNet(nn.Module):
 
 class DenoisingUNet(nn.Module):
     '''
-        U-net model - current best
+        U-net model
     '''
 
     def __init__(self, interval_size, in_channels=1, afunc='relu', bn=False):
@@ -164,6 +125,10 @@ class DenoisingUNet(nn.Module):
 
         self.regressor = ConvAct1d(
             interval_size, in_channels=16, out_channels=1, kernel_size=1, dilation=1, bn=bn, afunc=afunc)
+        
+        # Classification
+        self.class1 = ConvAct1d(
+            interval_size, in_channels=16, out_channels=16, kernel_size=1001, dilation=8, bn=bn, afunc=afunc)
         self.classifier = ConvAct1d(
             interval_size, in_channels=16, out_channels=1, kernel_size=1, dilation=1, bn=bn, afunc=None)
 
@@ -182,7 +147,10 @@ class DenoisingUNet(nn.Module):
         x9 = self.up9(x8, x1)
 
         out_reg = self.regressor(x9).squeeze(1)
-        out_cla = torch.sigmoid(self.classifier(x9).squeeze(1))  # (N, 1, L) => (N, L)
+
+        x10 = self.class1(x9)
+        out_cla = torch.sigmoid(self.classifier(
+            x10).squeeze(1))  # (N, 1, L) => (N, L)
 
         return out_reg, out_cla
 
@@ -193,6 +161,7 @@ class DenoisingLinear(nn.Module):
     '''
         Linear regression model
     '''
+
     def __init__(self, interval_size, field, in_channels=1, out_channels=1):
         super(DenoisingLinear, self).__init__()
 
@@ -200,6 +169,7 @@ class DenoisingLinear(nn.Module):
             interval_size, kernel_size=field, stride=1, dilation=1)
         self.conv_layer = nn.Conv1d(
             in_channels=in_channels, out_channels=out_channels, kernel_size=field, stride=1, padding=0, dilation=1, bias=True)
+
     def forward(self, x):
         x = self.padding_layer(x)
         x = self.conv_layer(x).squeeze(1)
@@ -214,9 +184,9 @@ class DenoisingLogistic(nn.Module):
     def __init__(self, interval_size, field, in_channels=1, out_channels=1):
         super(DenoisingLogistic, self).__init__()
 
-        self.denoising_linear = DenoisingLinear(interval_size, field, in_channels, out_channels)
+        self.denoising_linear = DenoisingLinear(
+            interval_size, field, in_channels, out_channels)
 
     def forward(self, x):
         x = torch.sigmoid(self.denoising_linear(x))
         return x
-

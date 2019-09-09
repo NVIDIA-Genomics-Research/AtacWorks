@@ -219,6 +219,8 @@ class AUROC(Metric):
     def __call__(self, x, y):
         x = Metric.convert_to_numpy(x)
         y = Metric.convert_to_numpy(y)
+        x = x.flatten()
+        y = y.flatten()
         self.val = sklearn.metrics.roc_auc_score(y, x)
         return self.val
 
@@ -235,6 +237,8 @@ class AUPRC(Metric):
     def __call__(self, x, y):
         x = Metric.convert_to_numpy(x)
         y = Metric.convert_to_numpy(y)
+        x = x.flatten()
+        y = y.flatten()
         self.val = sklearn.metrics.average_precision_score(y, x)
         return self.val
 

@@ -22,7 +22,7 @@ from claragenomics.dl4atac.train.utils import myprint, gather_tensor
 from claragenomics.dl4atac.train.metrics import CorrCoef
 
 
-def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, world_size, distributed, best_metric=None, res_queue=None):
+def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, world_size, distributed, pad, best_metric=None, res_queue=None):
     ''' The evaluate function
 
     Args:
@@ -37,7 +37,7 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
         distributed: distributed
         best_metric: metric object for comparison
         res_queue: network predictions will be put in the queue for result dumping
-
+        pad: padding around intervals
 
     '''
 
@@ -55,9 +55,9 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
     with torch.no_grad():
         for i, batch in enumerate(val_loader):
             idxes = batch['idx']
-            x = batch['x']
-            y_reg = batch['y_reg']
-            y_cla = batch['y_cla']
+            x = batch['x'].float()
+            y_reg = batch['y_reg'].float()
+            y_cla = batch['y_cla'].float()
 
             """
             if res_queue: # res_queue indicates the mode we are in
@@ -78,12 +78,13 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
 
             ###################################################################
             # dump results in eval mode
-            if res_queue:
-                if task == "both":
-                    batch_res = np.stack([p.cpu().numpy() for p in pred], axis=-1)
-                else:
-                    batch_res = np.expand_dims(pred.cpu().numpy(), axis=-1)
-                res_queue.put((idxes, batch_res))
+            #if res_queue:
+            #    if task == "both":
+            #        batch_res = np.stack([p.cpu().numpy()
+            #                              for p in pred], axis=-1)
+            #    else:
+            #        batch_res = np.expand_dims(pred.cpu().numpy(), axis=-1)
+            #    res_queue.put((idxes, batch_res))
 
             ###################################################################
             # Store all the batch predictions and labels in a list
@@ -116,23 +117,24 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
         if distributed:
             ys_reg = gather_tensor(ys_reg, world_size=world_size, rank=rank)
             ys_cla = gather_tensor(ys_cla, world_size=world_size, rank=rank)
-            preds_reg = gather_tensor(preds_reg, world_size=world_size, rank=rank)
-            preds_cla = gather_tensor(preds_cla, world_size=world_size, rank=rank)
+            preds_reg = gather_tensor(
+                preds_reg, world_size=world_size, rank=rank)
+            preds_cla = gather_tensor(
+                preds_cla, world_size=world_size, rank=rank)
             #myprint("Gathering takes {}s".format(time.time()-gather_start), rank=rank)
 
         # now with the results of whole dataset, compute metrics on device 0
         if rank == 0:
+            # Ignore padding
+            cen = list(range(pad, x.shape[2] - pad))
+            print("evaluating on {} points in interval of size {}".format(ys_cla[:, cen].shape[1], ys_cla.shape[1]))
+
             if task == 'classification' or task == 'both':
                 for metric in metrics_cla:
-                    metric(preds_cla, ys_cla)
+                    metric(preds_cla[:, cen], ys_cla[:, cen])
             if task == 'regression' or task == 'both':
                 for metric in metrics_reg:
-                    metric(preds_reg, ys_reg)
-        ###################################################################
-
-        metrics = metrics_reg + metrics_cla
-
-        if rank == 0:
+                    metric(preds_reg[:, cen], ys_reg[:, cen])
+            metrics = metrics_reg + metrics_cla
             result_str = " | ".join([str(metric) for metric in metrics])
             myprint("Evaluation result: " + result_str, rank=rank)
-            myprint("Evaluation time taken: {:7.3f}s".format(time.time()-start), color='yellow', rank=rank)

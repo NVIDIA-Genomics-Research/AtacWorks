@@ -23,7 +23,7 @@ from torch.nn.parallel.scatter_gather import gather
 from claragenomics.dl4atac.train.utils import myprint, progbar, dump_results
 
 
-def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue):
+def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad):
     ''' The infer function
 
     Args:
@@ -34,10 +34,9 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue):
         infer_loader: dataloader
         print_freq: logging frequency
         res_queue: network predictions will be put in the queue for result dumping
-
+        pad: padding on ends of interval
 
     '''
-
 
     # inference
     #################################################################################
@@ -51,16 +50,20 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue):
             idxes = batch['idx']
             x = batch['x']
             # model forward pass
-            x = x.unsqueeze(1) #(N, 1, L)
+            x = x.unsqueeze(1)  # (N, 1, L)
             x = x.cuda(gpu, non_blocking=True)
             count += x.shape[0]
 
             pred = model(x)
 
+            # Ignore padding
+            cen = list(range(pad, x.shape[2] - pad))
+
             if task == "both":
-                batch_res = np.stack([x.cpu().numpy() for x in pred], axis=-1)
+                batch_res = np.stack([x.cpu().numpy()[:, cen]
+                                      for x in pred], axis=-1)
             else:
-                batch_res = np.expand_dims(pred.cpu().numpy(), axis=-1)
+                batch_res = np.expand_dims(pred.cpu().numpy()[:, cen], axis=-1)
 
             # HACK -- replacing "key" with i=index.
             # TODO: Remove the write queue
@@ -70,20 +73,5 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue):
                 progbar(curr=i, total=num_batches, progbar_len=20,
                         pre_bar_msg="Inference", post_bar_msg="")
 
-
-    myprint("Inference time taken: {:8.3f}s".format(time.time()-start), color='yellow', rank=rank)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    myprint("Inference time taken: {:8.3f}s".format(
+        time.time()-start), color='yellow', rank=rank)
