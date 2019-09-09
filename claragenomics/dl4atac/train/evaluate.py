@@ -77,15 +77,28 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
             pred = model(x)
 
             ###################################################################
-            # dump results in eval mode
-            #if res_queue:
-            #    if task == "both":
-            #        batch_res = np.stack([p.cpu().numpy()
-            #                              for p in pred], axis=-1)
-            #    else:
-            #        batch_res = np.expand_dims(pred.cpu().numpy(), axis=-1)
-            #    res_queue.put((idxes, batch_res))
+            # Remove padding before evaluation
+            cen = list(range(pad, x.shape[2] - pad))
+            if task == 'regression' or task =='both':
+                y_reg = y_reg[:, cen]
+            if task == 'classification' or task == 'both':
+                y_cla = y_cla[:, cen]
+            if task == 'both':
+                pred = [x[:, cen] for x in pred]
+            else:
+                pred = pred[:, cen]
 
+            ###################################################################
+            # dump results in eval mode
+            """
+            if res_queue:
+                if task == "both":
+                    batch_res = np.stack([p.cpu().numpy()
+                                          for p in pred], axis=-1)
+                else:
+                    batch_res = np.expand_dims(pred.cpu().numpy(), axis=-1)
+                res_queue.put((idxes, batch_res))
+            """
             ###################################################################
             # Store all the batch predictions and labels in a list
             if task == 'both':
@@ -125,17 +138,21 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
 
         # now with the results of whole dataset, compute metrics on device 0
         if rank == 0:
-            # Ignore padding
-            cen = list(range(pad, x.shape[2] - pad))
-            print("evaluating on {} points in interval of size {}".format(ys_cla[:, cen].shape[1], ys_cla.shape[1]))
-
             if task == 'classification' or task == 'both':
                 for metric in metrics_cla:
-                    metric(preds_cla[:, cen], ys_cla[:, cen])
+                    metric(preds_cla, ys_cla)
             if task == 'regression' or task == 'both':
                 for metric in metrics_reg:
-                    metric(preds_reg[:, cen], ys_reg[:, cen])
-            metrics = metrics_reg + metrics_cla
+                    metric(preds_reg, ys_reg)
+        ###################################################################
+
+        metrics = metrics_reg + metrics_cla
+        
+        if rank == 0:
             result_str = " | ".join([str(metric) for metric in metrics])
+            if task == 'regression' or task == 'both':
+                myprint("Evaluating on {} points.".format(preds_reg.shape[1]))
+            else:
+                myprint("Evaluating on {} points.".format(preds_cla.shape[1]))
             myprint("Evaluation result: " + result_str, rank=rank)
             myprint("Evaluation time taken: {:7.3f}s".format(time.time()-start), color='yellow', rank=rank)
