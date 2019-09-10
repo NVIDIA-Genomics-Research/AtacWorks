@@ -143,8 +143,7 @@ class DenoisingUNet(nn.Module):
         x9 = self.up9(x8, x1)
 
         out_reg = self.regressor(x9).squeeze(1)
-        out_cla = torch.sigmoid(self.classifier(
-            x9).squeeze(1))  # (N, 1, L) => (N, L)
+        out_cla = torch.sigmoid(self.classifier(x9).squeeze(1))  # (N, 1, L) => (N, L)
 
         return out_reg, out_cla
 
