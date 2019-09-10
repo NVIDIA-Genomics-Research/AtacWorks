@@ -102,8 +102,9 @@ echo ""
 python $root_dir/main.py --train \
     --train_files $out_dir/train_data.h5 \
     --val_files $out_dir/val_data.h5 \
-    --model resnet --nblocks 5 --nblocksc 2 --nfilt 15 --width 50 \
+    --model resnet --nblocks 5 --nfilt 15 --width 50 \
     --dil 8 --task both --epochs 2 --afunc relu --mse_weight 0.001 \
+    --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
     --pearson_weight 1 --bs 8 \
     --out_home $out_dir/models --label HSC.5M.model \
     --checkpoint_fname checkpoint.pth.tar \
@@ -177,7 +178,9 @@ python $root_dir/main.py --infer \
     --weights_path  $saved_model_dir/bulk_blood_data/5000000.7cell.resnet.5.2.15.8.50.0803.pth.tar\
     --out_home $out_dir/models --label inference.pretrained \
     --result_fname HSC.5M.output.pretrained.h5 \
-    --model resnet --nblocks 5 --nblocksc 2 --nfilt 15 --width 50 --dil 8 --task both
+    --model resnet --nblocks 5 --nfilt 15 --width 50 --dil 8 \
+    --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
+    --task both
 
 echo ""
 echo "Calculate metrics after inference..."
