@@ -115,10 +115,11 @@ def build_model(args):
         model = FC2(interval_size=args.interval_size)
 
     elif args.model == 'resnet':
-        model = DenoisingResNet(interval_size=args.interval_size,
-                                afunc=args.afunc, bn=args.bn, num_blocks=args.nblocks,
-                                out_channels=args.nfilt, kernel_size=args.width, dilation=args.dil,
-                                num_blocks_class=args.nblocksc)
+        model = DenoisingResNet(interval_size=args.interval_size, afunc=args.afunc, bn=args.bn, 
+                                num_blocks=args.nblocks, num_blocks_class=args.nblocks_cla,
+                                out_channels=args.nfilt, out_channels_class=args.nfilt_cla,
+                                kernel_size=args.width, kernel_size_class=args.width_cla,
+                                dilation=args.dil, dilation_class=args.dil_cla)
 
     elif args.model == 'linear':
         model = DenoisingLinear(
