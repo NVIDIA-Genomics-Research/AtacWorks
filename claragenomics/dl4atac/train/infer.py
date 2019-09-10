@@ -57,7 +57,7 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad):
 
             pred = model(x)
 
-            if task == both:
+            if task == 'both':
                 batch_res = np.stack([x.cpu().numpy() for x in pred], axis=-1)
             else:
                 batch_res = np.expand_dims(pred.cpu().numpy(), axis=-1)                    
