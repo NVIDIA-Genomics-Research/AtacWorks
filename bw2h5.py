@@ -60,10 +60,15 @@ _logger.addHandler(_handler)
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Data processing for genome-wide denoising models.')
-    parser.add_argument('--noisybw', type=str, help='Path to noisy bigwig file', required=True)
-    parser.add_argument('--intervals', type=str, help='Path to interval file', required=True)
-    parser.add_argument('--batch_size', type=int, help='batch size', required=True)
-    parser.add_argument('--prefix', type=str, help='output file prefix', required=True)
+    parser.add_argument('--noisybw', type=str,
+                        help='Path to noisy bigwig file', required=True)
+    parser.add_argument('--intervals', type=str,
+                        help='Path to interval file', required=True)
+    parser.add_argument('--batch_size', type=int,
+                        help='batch size', required=True)
+    parser.add_argument('--pad', type=int, help='padding around interval')
+    parser.add_argument('--prefix', type=str,
+                        help='output file prefix', required=True)
     parser.add_argument('--nolabel', action='store_true',
                         help='only saving noisy data')
     parser.add_argument('--cleanbw', type=str,
@@ -89,6 +94,7 @@ _logger.debug(args)
 # Read intervals
 _logger.info('Reading intervals')
 intervals = pd.read_csv(args.intervals, header=None, sep='\t')
+_logger.info('Read {} intervals'.format(len(intervals)))
 
 # Optionally, select intervals with nonzero coverage
 if args.nonzero:
@@ -113,11 +119,10 @@ batch_ends[-1] = len(intervals)
 # Write batches to hdf5 file
 _logger.info('Extracting data for each batch and writing to h5 file')
 df = None
-filename = args.prefix + '.batch.h5'
+filename = args.prefix + '.h5'
 with h5py.File(filename, 'w') as f:
     # Create a single dataset -- expand locations as we go along
     for i in range(batches_per_epoch):
-
         if i % 10 == 0:
             _logger.info("batch: " + str(i) + " of " + str(batches_per_epoch))
 
@@ -125,21 +130,22 @@ with h5py.File(filename, 'w') as f:
         batch_intervals = intervals.iloc[batch_starts[i]:batch_ends[i], :]
 
         # Read noisy data
-        batch_data = extract_bigwig_intervals(batch_intervals, args.noisybw)
+        batch_data = extract_bigwig_intervals(
+            batch_intervals, args.noisybw, pad=args.pad)
 
         if not args.nolabel:
 
             # Read clean data: regression labels
             clean_data = extract_bigwig_intervals(
-                batch_intervals, args.cleanbw
+                batch_intervals, args.cleanbw, pad=args.pad
             )
-            batch_data = np.dstack([batch_data, clean_data])
 
             # Read clean data: classification labels
             clean_peak_data = extract_bigwig_intervals(
-                batch_intervals, args.cleanpeakbw
+                batch_intervals, args.cleanpeakbw, pad=args.pad
             )
-            batch_data = np.dstack([batch_data, clean_peak_data])
+
+            batch_data = np.dstack([batch_data, clean_data, clean_peak_data])
 
         _logger.debug(batch_data.shape)
 
@@ -147,14 +153,17 @@ with h5py.File(filename, 'w') as f:
         _logger.debug('Saving batch: |%s|' % batch_name)
 
         # Create dataset, or expand and append batch.
-        # TODO: Write as named numpy fields?
+        # TODO: Write as named numpy fields
         if df == None:
-            df = f.create_dataset("data", data=batch_data, maxshape=(None,batch_data.shape[1],batch_data.shape[2]), compression='lzf')
-            _logger.debug('Created new dataset! Shape %d -- file %s' % (batch_data.shape[0], filename))
+            df = f.create_dataset("data", data=batch_data, maxshape=(
+                None, batch_data.shape[1], batch_data.shape[2]), compression='lzf')
+            _logger.debug('Created new dataset! Shape %d -- file %s' %
+                          (batch_data.shape[0], filename))
         else:
             df = f["data"]
             d_len = df.shape[0]
-            df.resize((d_len+batch_data.shape[0],batch_data.shape[1],batch_data.shape[2]))
+            df.resize(
+                (d_len+batch_data.shape[0], batch_data.shape[1], batch_data.shape[2]))
             df[d_len:] = batch_data
             _logger.debug('expanded HDF from %d to %d' % (d_len, df.shape[0]))
 

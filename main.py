@@ -10,14 +10,32 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
-# local imports
+# system imports
+import sys
+import os
+import logging
+import torch.multiprocessing as mp
+from torch.optim import Adam
+from torch.nn.parallel import DistributedDataParallel
+import torch.distributed as dist
+import torch.backends.cudnn as cudnn
+import torch.nn.parallel
+import torch.nn as nn
+import torch
+import multiprocessing
+import h5py
+import random
+import time
+import numpy as np
 from cmd_args import parse_args
 
 # module imports
 from claragenomics.dl4atac.train.models import *
 from claragenomics.dl4atac.train.losses import MultiLoss
-from claragenomics.dl4atac.train.dataset import DatasetTrain #, DatasetInfer, DatasetEval #, custom_collate_train, custom_collate_infer, custom_collate_eval
-from claragenomics.dl4atac.train.utils import * # myprint, save_model, load_model, gather_files_from_cmdline, assert_device_available, make_experiment_dir
+# , DatasetInfer, DatasetEval #, custom_collate_train, custom_collate_infer, custom_collate_eval
+from claragenomics.dl4atac.train.dataset import DatasetTrain
+# myprint, save_model, load_model, gather_files_from_cmdline, assert_device_available, make_experiment_dir
+from claragenomics.dl4atac.train.utils import *
 from claragenomics.dl4atac.train.train import train
 from claragenomics.dl4atac.train.evaluate import evaluate
 from claragenomics.dl4atac.train.infer import infer
@@ -26,22 +44,6 @@ from claragenomics.dl4atac.train.metrics import BCE, MSE, Recall, Specificity, C
 # python imports
 import warnings
 warnings.filterwarnings("ignore")
-import numpy as np
-import os, sys
-import time
-import random
-import h5py
-import multiprocessing
-# pytorch imports
-import torch
-import torch.nn as nn
-import torch.nn.parallel
-import torch.backends.cudnn as cudnn
-import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel
-from torch.optim import Adam
-import torch.multiprocessing as mp
-import logging
 
 # Set up logging
 log_formatter = logging.Formatter(
@@ -53,6 +55,7 @@ _handler.setFormatter(log_formatter)
 _logger.setLevel(logging.INFO)
 _logger.addHandler(_handler)
 
+
 def set_random_seed(seed):
     """Set random seed for reproducability."""
 
@@ -62,38 +65,46 @@ def set_random_seed(seed):
         torch.manual_seed(seed)
         mpu.model_parallel_cuda_manual_seed(seed)
 
+
 def get_losses(args):
 
     if args.task == "regression":
-        loss_func = MultiLoss(['mse', 'pearsonloss'], [args.mse_weight, args.pearson_weight], device=args.gpu)
+        loss_func = MultiLoss(['mse', 'pearsonloss'], [
+                              args.mse_weight, args.pearson_weight], device=args.gpu)
     elif args.task == "classification":
         loss_func = MultiLoss('bce', 1, device=args.gpu)
-    elif args.task == 'both':  #shouldn't reach here for now
+    elif args.task == 'both':  # shouldn't reach here for now
         loss_func = [MultiLoss(['mse', 'pearsonloss'], [args.mse_weight, args.pearson_weight], device=args.gpu),
                      MultiLoss('bce', 1, device=args.gpu)]
     return loss_func
 
+
 def get_metrics(args):
 
-    metrics_reg = [] 
+    metrics_reg = []
     cla_metics = []
     best_metric = []
     if args.task == "regression":
         metrics_reg = [MSE(), CorrCoef()]
-        best_metric = metrics_reg[0]
+        best_metric = metrics_reg[-1]
     elif args.task == "classification":
-        metrics_cla = [BCE(), Recall(args.threshold), Specificity(args.threshold), AUROC()]
-        best_metric = metrics_cla[0]
-    elif args.task == 'both':  #shouldn't reach here for now
+        metrics_cla = [BCE(), Recall(args.threshold),
+                       Specificity(args.threshold), AUROC()]
+        best_metric = metrics_cla[-1]
+    elif args.task == 'both':  # shouldn't reach here for now
         metrics_reg = [MSE(), CorrCoef()]
-        metrics_cla = [BCE(), Recall(args.threshold), Specificity(args.threshold), AUROC()]
-        best_metric = metrics_cla[0]
+        metrics_cla = [BCE(), Recall(args.threshold),
+                       Specificity(args.threshold), AUROC()]
+        best_metric = metrics_cla[-1]
 
     return metrics_reg, metrics_cla, best_metric
 
 # build_model now does build, load, distribute in one go
+
+
 def build_model(args):
-    myprint("Building model: {} ...".format(args.model), color='yellow', rank=args.rank)
+    myprint("Building model: {} ...".format(
+        args.model), color='yellow', rank=args.rank)
     # TODO: implement a model dic for model instantiation
 
     if args.model == 'unet':  # args.task == 'both'
@@ -103,16 +114,19 @@ def build_model(args):
         model = FC2(interval_size=args.interval_size)
 
     elif args.model == 'resnet':
-        model = DenoisingResNet(interval_size=args.interval_size,
-                              afunc=args.afunc, bn=args.bn, num_blocks = args.nblocks,
-                              out_channels=args.nfilt, kernel_size=args.width, dilation=args.dil,
-                              num_blocks_class=args.nblocksc)
+        model = DenoisingResNet(interval_size=args.interval_size, afunc=args.afunc, bn=args.bn, 
+                                num_blocks=args.nblocks, num_blocks_class=args.nblocks_cla,
+                                out_channels=args.nfilt, out_channels_class=args.nfilt_cla,
+                                kernel_size=args.width, kernel_size_class=args.width_cla,
+                                dilation=args.dil, dilation_class=args.dil_cla)
 
     elif args.model == 'linear':
-        model = DenoisingLinear(interval_size=args.interval_size, field=args.field)
+        model = DenoisingLinear(
+            interval_size=args.interval_size, field=args.field)
 
     elif args.model == 'logistic':
-        model = DenoisingLogistic(interval_size=args.interval_size, field=args.field)
+        model = DenoisingLogistic(
+            interval_size=args.interval_size, field=args.field)
 
     # TODO: there is a potential problem with loading model on each device like this. keep an eye on torch.load()'s map_location arg
     if args.resume or args.infer or args.eval:
@@ -125,10 +139,12 @@ def build_model(args):
         model = DistributedDataParallel(model, device_ids=[args.gpu])
     elif args.gpu > 1:
         _logger.info('Compiling model in DataParallel')
-        model = nn.DataParallel(model,device_ids=list(range(args.gpus))).cuda()
+        model = nn.DataParallel(
+            model, device_ids=list(range(args.gpus))).cuda()
 
     myprint("Finished building.", color='yellow', rank=args.rank)
     return model
+
 
 def train_worker(gpu, ngpu_per_node, args, timers=None):
     # fix random seed so models have the same starting weights
@@ -152,10 +168,12 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
     train_dataset = DatasetTrain(args.train_files)
     train_sampler = None
     if args.distributed:
-        train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+        train_sampler = torch.utils.data.distributed.DistributedSampler(
+            train_dataset)
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.bs, shuffle=(train_sampler is None),
-        num_workers=args.num_workers, pin_memory=True, sampler=train_sampler,# collate_fn=custom_collate_train,
+        # collate_fn=custom_collate_train,
+        num_workers=args.num_workers, pin_memory=True, sampler=train_sampler,
         drop_last=False
     )
 
@@ -163,14 +181,15 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
     val_dataset = DatasetTrain(args.val_files)
     val_sampler = None
     if args.distributed:
-        val_sampler = torch.utils.data.distributed.DistributedSampler(val_dataset)
+        val_sampler = torch.utils.data.distributed.DistributedSampler(
+            val_dataset)
     val_loader = torch.utils.data.DataLoader(
         val_dataset, batch_size=args.bs, shuffle=False,
-        num_workers=args.num_workers, pin_memory=True, sampler=val_sampler,# collate_fn=custom_collate_train,
+        # collate_fn=custom_collate_train,
+        num_workers=args.num_workers, pin_memory=True, sampler=val_sampler,
         drop_last=False
-        #drop_last=True # need to drop irregular batch for distributed evaluation due to limitation of dist.all_gather
+        # drop_last=True # need to drop irregular batch for distributed evaluation due to limitation of dist.all_gather
     )
-
 
     loss_func = get_losses(args)
 
@@ -178,9 +197,10 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
     for epoch in range(args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
-        train(rank=args.rank, gpu=args.gpu, task=args.task, model=model, train_loader=train_loader, 
-              loss_func=loss_func, optimizer=optimizer, epoch=epoch, epochs=args.epochs, 
-              clip_grad=args.clip_grad, print_freq=args.print_freq, distributed=args.distributed, world_size=args.world_size)
+        train(rank=args.rank, gpu=args.gpu, task=args.task, model=model, train_loader=train_loader,
+              loss_func=loss_func, optimizer=optimizer, epoch=epoch, epochs=args.epochs,
+              clip_grad=args.clip_grad, print_freq=args.print_freq, pad=args.pad,
+              distributed=args.distributed, world_size=args.world_size)
 
         if epoch % args.eval_freq == 0:
             # either create new objects or call reset on each metric obj
@@ -192,19 +212,23 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
                      model=model, val_loader=val_loader,
                      metrics_reg=metrics_reg, metrics_cla=metrics_cla,
                      world_size=args.world_size, distributed=args.distributed,
-                     best_metric=best_metric)
+                     best_metric=best_metric, pad=args.pad)
 
             if args.rank == 0:
                 new_best = best_metric.better_than(current_best)
                 if new_best:
                     current_best = best_metric
-                    myprint("New best metric found - {}".format(current_best), color='yellow', rank=args.rank)
+                    myprint("New best metric found - {}".format(current_best),
+                            color='yellow', rank=args.rank)
                 if new_best or epoch % args.save_freq == 0:
                     # give it the module attribute of the model (DistributedDataParallel wrapper)
                     if args.distributed:
-                        save_model(model.module, args.exp_dir, args.checkpoint_fname, epoch=epoch, is_best=new_best)
+                        save_model(
+                            model.module, args.exp_dir, args.checkpoint_fname, epoch=epoch, is_best=new_best)
                     else:
-                        save_model(model, args.exp_dir, args.checkpoint_fname, epoch=epoch, is_best=new_best)
+                        save_model(
+                            model, args.exp_dir, args.checkpoint_fname, epoch=epoch, is_best=new_best)
+
 
 def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
 
@@ -219,23 +243,24 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
 
     model = build_model(args)
 
-    #infer_dataset = DatasetInfer(args.infer_files)
     infer_dataset = DatasetTrain(args.infer_files)
     infer_sampler = None
 
     if args.distributed:
-        infer_sampler = torch.utils.data.distributed.DistributedSampler(infer_dataset)
+        infer_sampler = torch.utils.data.distributed.DistributedSampler(
+            infer_dataset)
 
     infer_loader = torch.utils.data.DataLoader(
-        infer_dataset, batch_size=args.bs, shuffle=False, #(infer_sampler is None),
-        num_workers=args.num_workers, pin_memory=True, sampler=infer_sampler, drop_last=False#,
-        #collate_fn=custom_collate_infer
+        infer_dataset, batch_size=args.bs, shuffle=False,
+        num_workers=args.num_workers, pin_memory=True, sampler=infer_sampler, drop_last=False
     )
 
     infer(rank=args.rank, gpu=args.gpu, task=args.task, model=model, infer_loader=infer_loader,
-          print_freq=args.print_freq, res_queue=res_queue)
+          print_freq=args.print_freq, res_queue=res_queue, pad=args.pad)
 
 # Is Eval ever called???
+
+
 def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
 
     args.rank = gpu if args.distributed else 0
@@ -259,9 +284,8 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
             eval_dataset)
 
     eval_loader = torch.utils.data.DataLoader(
-        eval_dataset, batch_size=args.bs, shuffle=False, #(eval_sampler is None),
-        num_workers=args.num_workers, pin_memory=True, sampler=eval_sampler, drop_last=False#,
-        #collate_fn=custom_collate_eval
+        eval_dataset, batch_size=args.bs, shuffle=False,
+        num_workers=args.num_workers, pin_memory=True, sampler=eval_sampler, drop_last=False
     )
 
     metrics_reg, metrics_cla, best_metric = get_metrics(args)
@@ -269,7 +293,7 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
              model=model, val_loader=eval_loader,
              metrics_reg=metrics_reg, metrics_cla=metrics_cla,
              world_size=args.world_size, distributed=args.distributed,
-             best_metric=best_metric, res_queue=res_queue)
+             best_metric=best_metric, res_queue=res_queue, pad=args.pad)
 
 
 def writer(args, res_queue):
@@ -277,7 +301,6 @@ def writer(args, res_queue):
     myprint("Writer process standing by... %s" % result_path, color='yellow')
 
     # We need dimensions of the inference dataset.
-    # TODO: Clean up this mess...
     if args.infer:
         files_path = args.infer_files
     else:
@@ -287,10 +310,15 @@ def writer(args, res_queue):
     for fname in files_path:
         with h5py.File(fname, 'r') as f:
             total_size = f["data"].shape[0]
-            write_dimension = f["data"].shape[1]
+            if args.pad is not None:
+                write_dimension = f["data"].shape[1] - 2*args.pad
+            else:
+                write_dimension = f["data"].shape[1]
+
     # Write one or two outputs per item
     total_outputs = 2 if args.task == 'both' else 1
-    output_data = np.zeros((total_size, write_dimension,total_outputs), dtype=float)
+    output_data = np.zeros(
+        (total_size, write_dimension, total_outputs), dtype=float)
 
     count = 0
     outputs_written = np.zeros((total_size), dtype=int)
@@ -305,15 +333,19 @@ def writer(args, res_queue):
             # Write each element to the empty file
             for idx, item in zip(keys, batch):
                 if outputs_written[idx] > 0:
-                    _logger.error('Danger! Key %d already written in dataset' % idx)
+                    _logger.error(
+                        'Danger! Key %d already written in dataset' % idx)
                     continue
                 df[idx] = item
                 count += 1
                 outputs_written[idx] += 1
 
     # Assert that file is properly populated, all keys are written
-    assert np.array_equal(outputs_written, np.ones_like(outputs_written, dtype=int)), "Not all items were inferred. Should have thrown an error..."
-    myprint("Dumped results of {} examples to {}".format(count, result_path), color='yellow')
+    assert np.array_equal(outputs_written, np.ones_like(
+        outputs_written, dtype=int)), "Not all items were inferred. Should have thrown an error..."
+    myprint("Dumped results of {} examples to {}".format(
+        count, result_path), color='yellow')
+
 
 def main():
     args = parse_args()
@@ -326,7 +358,7 @@ def main():
     _logger.debug(args)
 
     # Random seeds for reproducability.
-    #set_random_seed(args.seed)
+    # set_random_seed(args.seed)
 
     # check gpu
     # TODO: add cpu support
@@ -334,7 +366,8 @@ def main():
         raise Exception("No GPU available. Check your machine configuration.")
 
     # all output will be written in the exp_dir folder
-    args.exp_dir = make_experiment_dir(args.label, args.out_home, timestamp=True)
+    args.exp_dir = make_experiment_dir(
+        args.label, args.out_home, timestamp=True)
 
     # train & resume
     ##########################################################################################
@@ -355,7 +388,8 @@ def main():
 
         if args.distributed:
             args.world_size = ngpus_per_node
-            mp.spawn(train_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args), join=True)
+            mp.spawn(train_worker, nprocs=ngpus_per_node,
+                     args=(ngpus_per_node, args), join=True)
         else:
             assert_device_available(args.gpu)
             args.world_size = 1
@@ -378,7 +412,6 @@ def main():
         else:
             args.val_files = files
             _logger.debug("Evaluation data: ", args.val_files)
-
 
         # setup queue and kick off writer process
         #############################################################
@@ -405,6 +438,7 @@ def main():
         _logger.info("Waiting for writer to finish...")
         write_proc.join()
         #############################################################
+
 
 if __name__ == '__main__':
     main()

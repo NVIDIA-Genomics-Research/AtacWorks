@@ -22,7 +22,7 @@ from claragenomics.dl4atac.train.utils import myprint, gather_tensor
 from claragenomics.dl4atac.train.metrics import CorrCoef
 
 
-def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, world_size, distributed, best_metric=None, res_queue=None):
+def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, world_size, distributed, pad, best_metric=None, res_queue=None):
     ''' The evaluate function
 
     Args:
@@ -37,7 +37,7 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
         distributed: distributed
         best_metric: metric object for comparison
         res_queue: network predictions will be put in the queue for result dumping
-
+        pad: padding around intervals
 
     '''
 
@@ -77,14 +77,29 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
             pred = model(x)
 
             ###################################################################
+            # Remove padding before evaluation
+            if pad is not None:            
+                center = range(pad, x.shape[2] - pad)
+                if task == 'regression' or task =='both':
+                    y_reg = y_reg[:, center]
+                if task == 'classification' or task == 'both':
+                    y_cla = y_cla[:, center]
+                if task == 'both':
+                    pred = [x[:, center] for x in pred]
+                else:
+                    pred = pred[:, center]
+
+            ###################################################################
             # dump results in eval mode
+            """
             if res_queue:
                 if task == "both":
-                    batch_res = np.stack([p.cpu().numpy() for p in pred], axis=-1)
+                    batch_res = np.stack([p.cpu().numpy()
+                                          for p in pred], axis=-1)
                 else:
                     batch_res = np.expand_dims(pred.cpu().numpy(), axis=-1)
                 res_queue.put((idxes, batch_res))
-
+            """
             ###################################################################
             # Store all the batch predictions and labels in a list
             if task == 'both':
@@ -116,8 +131,10 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
         if distributed:
             ys_reg = gather_tensor(ys_reg, world_size=world_size, rank=rank)
             ys_cla = gather_tensor(ys_cla, world_size=world_size, rank=rank)
-            preds_reg = gather_tensor(preds_reg, world_size=world_size, rank=rank)
-            preds_cla = gather_tensor(preds_cla, world_size=world_size, rank=rank)
+            preds_reg = gather_tensor(
+                preds_reg, world_size=world_size, rank=rank)
+            preds_cla = gather_tensor(
+                preds_cla, world_size=world_size, rank=rank)
             #myprint("Gathering takes {}s".format(time.time()-gather_start), rank=rank)
 
         # now with the results of whole dataset, compute metrics on device 0
@@ -131,8 +148,12 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
         ###################################################################
 
         metrics = metrics_reg + metrics_cla
-
+        
         if rank == 0:
             result_str = " | ".join([str(metric) for metric in metrics])
+            if task == 'regression' or task == 'both':
+                myprint("Evaluating on {} points.".format(preds_reg.shape[1]))
+            else:
+                myprint("Evaluating on {} points.".format(preds_cla.shape[1]))
             myprint("Evaluation result: " + result_str, rank=rank)
             myprint("Evaluation time taken: {:7.3f}s".format(time.time()-start), color='yellow', rank=rank)

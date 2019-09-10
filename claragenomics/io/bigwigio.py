@@ -21,34 +21,50 @@ import subprocess
 import os
 
 
-def extract_bigwig_to_numpy(interval, bw):
+def extract_bigwig_to_numpy(interval, bw, pad, sizes):
     """
     Function to read values in an interval from a bigWig file.
     Args:
         interval (list or list-like): containing chrom, start, end
         bw: bigWig file object
+        pad(int): padding around interval
+        sizes(dict): dictionary of chromosome sizes
     Returns:
         NumPy array containing values in the interval
     """
-    result = bw.values(interval[0], interval[1], interval[2])
+    if pad is None:
+        result = bw.values(interval[0], interval[1], interval[2])
+    else:
+        # Add padding on both sides of interval.
+        result = bw.values(interval[0], max(
+            0, interval[1] - pad), min(interval[2] + pad, sizes[interval[0]]))
+        # If padding goes beyond chromosome bounds, fill the empty spaces with zeros.
+        if interval[1] < pad:
+            left_zero_pad = np.zeros(pad - interval[1])
+            result = np.concatenate([left_zero_pad, result])
+        if interval[2] + pad > sizes[interval[0]]:
+            right_zero_pad = np.zeros(interval[2] + pad - sizes[interval[0]])
+            result = np.concatenate([result, right_zero_pad])
+        assert(len(result) == interval[2] - interval[1] + 2*pad)
     result = np.array(result, dtype='float32')
     result = np.nan_to_num(result)
     return result
 
 
-def extract_bigwig_intervals(intervals_df, bwfile, stack=True):
+def extract_bigwig_intervals(intervals_df, bwfile, stack=True, pad=None):
     """
     Function to read values in multiple intervals from a bigWig file.
     Args:
         intervals_df (Pandas DataFrame): containing columns chrom, start, end
         bwfile: bigWig file path
         stack (bool): if True, stack the values into a 2D NumPy array. Only works for equal-sized intervals.
+        pad(int): padding to add around interval edges
     Returns:
         NumPy array containing values in all intervals
     """
     with pyBigWig.open(bwfile) as bw:
         result = intervals_df.apply(
-            extract_bigwig_to_numpy, axis=1, args=(bw, ))
+            extract_bigwig_to_numpy, axis=1, args=(bw, pad, bw.chroms()))
     if stack:
         result = np.stack(result)
     return result

@@ -68,7 +68,7 @@ python $root_dir/get_intervals.py \
     --val chr2 --holdout chr3
 
 echo ""
-echo "Step 3: Read clean and noisy data in these intervals and save them as batches in .h5 format..."
+echo "Step 3: Read clean and noisy data in these intervals and save them in .h5 format..."
 echo ""
 # Training data
 python $root_dir/bw2h5.py \
@@ -100,10 +100,11 @@ echo ""
 echo "Step 4: Train and validate model..."
 echo ""
 python $root_dir/main.py --train \
-    --train_files $out_dir/train_data.batch.h5 \
-    --val_files $out_dir/val_data.batch.h5 \
-    --model resnet --nblocks 5 --nblocksc 2 --nfilt 15 --width 50 \
+    --train_files $out_dir/train_data.h5 \
+    --val_files $out_dir/val_data.h5 \
+    --model resnet --nblocks 5 --nfilt 15 --width 50 \
     --dil 8 --task both --epochs 2 --afunc relu --mse_weight 0.001 \
+    --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
     --pearson_weight 1 --bs 8 \
     --out_home $out_dir/models --label HSC.5M.model \
     --checkpoint_fname checkpoint.pth.tar \
@@ -114,11 +115,12 @@ echo "Step 5: Calculate baseline metrics on the test set..."
 echo ""
 # Regression metrics on noisy data
 python $root_dir/calculate_baseline_metrics.py \
-    $out_dir/test_data.batch.h5 regression --sep_peaks
+    --label_file $out_dir/test_data.h5 --task regression --sep_peaks
 
 # Classification metrics on the noisy data peak calls
 python $root_dir/calculate_baseline_metrics.py \
-    $out_dir/test_data.batch.h5 classification --test_file $out_dir/HSC.5M.chr123.10mb.bed.bw \
+    --label_file $out_dir/test_data.h5 --task classification \
+    --test_file $out_dir/HSC.5M.chr123.10mb.bed.bw \
     --intervals $out_dir/example.holdout_intervals.bed
 
 echo ""
@@ -126,17 +128,19 @@ echo "Step 6: Run inference on test set..."
 echo ""
 # Note: change  --weights_path to the path for your saved model!
 python $root_dir/main.py --infer \
-    --infer_files $out_dir/test_data.batch.h5 \
+    --infer_files $out_dir/test_data.h5 \
     --weights_path $out_dir/models/HSC.5M.model_latest/model_best.pth.tar \
     --out_home $out_dir/models --label inference \
     --result_fname HSC.5M.output.h5 \
-    --model resnet --nblocks 5 --nblocksc 2 --nfilt 15 --width 50 --dil 8 --task both
+    --model resnet --nblocks 5 --nfilt 15 --width 50 --dil 8 \
+    --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
+    --task both
 
 echo ""
 echo "Step 7: Calculate metrics after inference..."
 echo ""
 python $root_dir/calculate_baseline_metrics.py \
-    $out_dir/test_data.batch.h5 both \
+    --label_file $out_dir/test_data.h5 --task both \
     --test_file $out_dir/models/inference_latest/HSC.5M.output.h5 \
     --sep_peaks --thresholds 0.5
 
@@ -172,17 +176,19 @@ echo ""
 echo "Alternatively, run inference using a pretrained model..."
 echo ""
 python $root_dir/main.py --infer \
-    --infer_files $out_dir/test_data.batch.h5 \
+    --infer_files $out_dir/test_data.h5 \
     --weights_path  $saved_model_dir/bulk_blood_data/5000000.7cell.resnet.5.2.15.8.50.0803.pth.tar\
     --out_home $out_dir/models --label inference.pretrained \
     --result_fname HSC.5M.output.pretrained.h5 \
-    --model resnet --nblocks 5 --nblocksc 2 --nfilt 15 --width 50 --dil 8 --task both
+    --model resnet --nblocks 5 --nfilt 15 --width 50 --dil 8 \
+    --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
+    --task both
 
 echo ""
 echo "Calculate metrics after inference..."
 echo ""
 python $root_dir/calculate_baseline_metrics.py \
-    $out_dir/test_data.batch.h5 both \
+    --label_file $out_dir/test_data.h5 --task both \
     --test_file $out_dir/models/inference.pretrained_latest/HSC.5M.output.pretrained.h5 \
     --sep_peaks --thresholds 0.5
 
