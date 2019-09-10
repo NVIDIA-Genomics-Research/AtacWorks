@@ -38,13 +38,13 @@ def parse_args():
         '--width', type=int, help='kernel size for regression blocks in resnet', default=50)
     parser.add_argument('--nfilt', type=int,
                         help='number of filters for regression blocks in resnet', default=15)
-    parser.add_argument('--nblocksc', type=int,
+    parser.add_argument('--nblocks_cla', type=int,
                         help='number of classification blocks for resnet', default=2)
     parser.add_argument(
-        '--dilc', type=int, help='dilation for classification blocks in resnet', default=8)
+        '--dil_cla', type=int, help='dilation for classification blocks in resnet', default=8)
     parser.add_argument(
-        '--widthc', type=int, help='kernel size for classification blocks in resnet', default=50)
-    parser.add_argument('--nfiltc', type=int,
+        '--width_cla', type=int, help='kernel size for classification blocks in resnet', default=50)
+    parser.add_argument('--nfilt_cla', type=int,
                         help='number of filters for classification blocks in resnet', default=15)
 
     # Learning args
