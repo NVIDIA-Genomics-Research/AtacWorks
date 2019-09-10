@@ -10,7 +10,7 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
-# local imports
+# system imports
 import sys
 import os
 import logging
