@@ -44,7 +44,6 @@ from claragenomics.dl4atac.train.metrics import BCE, MSE, Recall, Specificity, C
 # python imports
 import warnings
 warnings.filterwarnings("ignore")
-# pytorch imports
 
 # Set up logging
 log_formatter = logging.Formatter(
