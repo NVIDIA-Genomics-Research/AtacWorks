@@ -132,7 +132,9 @@ python $root_dir/main.py --infer \
     --weights_path $out_dir/models/HSC.5M.model_latest/model_best.pth.tar \
     --out_home $out_dir/models --label inference \
     --result_fname HSC.5M.output.h5 \
-    --model resnet --nblocks 5 --nblocksc 2 --nfilt 15 --width 50 --dil 8 --task both
+    --model resnet --nblocks 5 --nfilt 15 --width 50 --dil 8 \
+    --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
+    --task both
 
 echo ""
 echo "Step 7: Calculate metrics after inference..."
