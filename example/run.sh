@@ -95,6 +95,13 @@ python $root_dir/bw2h5.py \
     --prefix $out_dir/test_data \
     --cleanbw $data_dir/HSC.80M.chr123.10mb.bw \
     --cleanpeakbw $out_dir/HSC.80M.chr123.10mb.bed.bw
+#No label
+python $root_dir/bw2h5.py \
+    --noisybw $data_dir/HSC.5M.chr123.10mb.bw \
+    --intervals $out_dir/example.holdout_intervals.bed \
+    --batch_size 64 \
+    --prefix $out_dir/no_label \
+    --nolabel
 
 echo ""
 echo "Step 4: Train and validate model..."
@@ -173,10 +180,10 @@ python $root_dir/peaksummary.py \
     --prefix $out_dir/HSC.5M.output.peaks.summarized
 
 echo ""
-echo "Alternatively, run inference using a pretrained model..."
+echo "Alternatively, run inference using a pretrained model on dataset without label..."
 echo ""
 python $root_dir/main.py --infer \
-    --infer_files $out_dir/test_data.h5 \
+    --infer_files $out_dir/no_label.h5 \
     --weights_path  $saved_model_dir/bulk_blood_data/5000000.7cell.resnet.5.2.15.8.50.0803.pth.tar\
     --out_home $out_dir/models --label inference.pretrained \
     --result_fname HSC.5M.output.pretrained.h5 \
