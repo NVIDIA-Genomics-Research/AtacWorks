@@ -79,8 +79,12 @@ class DatasetTrain(DatasetBase):
             file_id, local_idx = self._get_file_id(idx)
             assert file_id < len(hdrecs), "No file reference %d" % file_id
             rec = hdrecs[file_id][local_idx]
-            # Return 4 items -- IDX (for saving/tracing), input data, upsampled data, peaks/classifications
-            idx = yield {'idx':idx, 'x':rec[:,0], 'y_reg':rec[:,1], 'y_cla':rec[:,2]}
+            if len(rec.shape) == 1:
+                # When no labels, return just the input data
+                idx = yield {'idx':idx, 'x':rec}
+            else:
+                # Return 4 items -- IDX (for saving/tracing), input data, upsampled data, peaks/classifications
+                idx = yield {'idx':idx, 'x':rec[:,0], 'y_reg':rec[:,1], 'y_cla':rec[:,2]}
 
 """
 class DatasetInfer(DatasetBase):
