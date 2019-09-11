@@ -155,15 +155,21 @@ with h5py.File(filename, 'w') as f:
         # Create dataset, or expand and append batch.
         # TODO: Write as named numpy fields
         if df == None:
-            df = f.create_dataset("data", data=batch_data, maxshape=(
-                None, batch_data.shape[1], batch_data.shape[2]), compression='lzf')
+            if args.nolabel:
+                max_shape = (None,  batch_data.shape[1])
+            else:
+                max_shape = (None, batch_data.shape[1], batch_data.shape[2])
+            df = f.create_dataset("data", data=batch_data, maxshape=max_shape, compression='lzf')
             _logger.debug('Created new dataset! Shape %d -- file %s' %
                           (batch_data.shape[0], filename))
         else:
             df = f["data"]
             d_len = df.shape[0]
-            df.resize(
-                (d_len+batch_data.shape[0], batch_data.shape[1], batch_data.shape[2]))
+            if args.nolabel:
+                data_dimension = (d_len+batch_data.shape[0], batch_data.shape[1])
+            else:
+                data_dimension = (d_len+batch_data.shape[0], batch_data.shape[1], batch_data.shape[2])
+            df.resize(data_dimension)
             df[d_len:] = batch_data
             _logger.debug('expanded HDF from %d to %d' % (d_len, df.shape[0]))
 
