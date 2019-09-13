@@ -81,6 +81,8 @@ def parse_args():
                         help='number of decimals to round predicted values')
     parser.add_argument('--num_worker', type=int, default=-1,
                         help='number of worker processes')
+    parser.add_argument('--batches_per_worker', type=int, default=512,
+                        help='Number of batches to process per worker')
     args = parser.parse_args()
     return args
 
@@ -150,29 +152,30 @@ out_bedgraph = args.prefix + '.bedGraph'
 if args.num_worker == 0: 
     writer([0, num_batches], out_bedgraph)
 else: # multiprocessing
+    # Calculate number of processing jobs
+    num_jobs = math.ceil(num_batches / args.batches_per_worker)
+
     if args.num_worker == -1: # spawn pool of processes
         num_cpus = mp.cpu_count()
-        if num_cpus**2 > num_batches: 
-            pool_size = int(math.sqrt(num_batches))
-        else:
-            pool_size = num_cpus
+        pool_size = min(num_jobs, num_cpus)
     else: # user specified # of processes
         pool_size = args.num_worker
 
     # writers dump temporary results
     ###############################################################################
-    batches_per_process = num_batches // pool_size
     logger.debug("Launching {} writers.".format(pool_size))
     pool = mp.Pool(pool_size)
 
     args.tmp_dir = tempfile.mkdtemp()
     
-    tmp_filenames = [os.path.join(args.tmp_dir, "{0:03}".format(i)) for i in range(pool_size)]
-    tmp_batch_ranges = [[i*batches_per_process, (i+1)*batches_per_process] for i in range(pool_size)]
+    tmp_filenames = [os.path.join(args.tmp_dir, "{0:03}".format(i)) for i in range(num_jobs)]
+    tmp_batch_ranges = [[i*args.batches_per_worker, (i+1)*args.batches_per_worker] for i in range(num_jobs)]
     tmp_batch_ranges[-1][1] = num_batches
 
+    start = time.time()
     map_args = list(zip(tmp_batch_ranges, tmp_filenames))
     pool.starmap(writer, map_args)
+    logger.info("Time taken: {}s by writers".format(time.time()-start))
 
     # combiners merge tmp results
     ###############################################################################
