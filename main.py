@@ -383,6 +383,9 @@ def main():
             args.batch_size = 1
 
         ngpus_per_node = torch.cuda.device_count()
+        # WAR: gloo distributed doesn't work if world size is 1.
+        # This is fixed in newer torch version - https://github.com/facebookincubator/gloo/issues/209
+        args.distributed = False if ngpus_per_node == 1 else args.distributed
 
         _logger.info('Distributing to %s GPUS' % str(ngpus_per_node))
 
@@ -422,6 +425,10 @@ def main():
         #############################################################
 
         ngpus_per_node = torch.cuda.device_count()
+        # WAR: gloo distributed doesn't work if world size is 1.
+        # This is fixed in newer torch version - https://github.com/facebookincubator/gloo/issues/209
+        args.distributed = False if ngpus_per_node == 1 else args.distributed
+
         worker = infer_worker if args.infer else eval_worker
         if args.distributed:
             args.world_size = ngpus_per_node
