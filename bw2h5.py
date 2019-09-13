@@ -72,9 +72,9 @@ def parse_args():
     parser.add_argument('--nolabel', action='store_true',
                         help='only saving noisy data')
     parser.add_argument('--cleanbw', type=str,
-                        help='Path to clean bigwig file. Not used with --predict-only.')
+                        help='Path to clean bigwig file. Not used with --nolabel.')
     parser.add_argument('--cleanpeakbw', type=str,
-                        help='Path to clean peak bigwig file. Not used with --predict-only.')
+                        help='Path to clean peak bigwig file. Not used with --nolabel.')
     parser.add_argument('--nonzero', action='store_true',
                         help='subset to intervals with nonzero coverage')
     parser.add_argument('--debug', action='store_true',
