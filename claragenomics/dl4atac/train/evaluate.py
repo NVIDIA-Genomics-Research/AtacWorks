@@ -69,11 +69,6 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
             x = x.unsqueeze(1)  # (N, 1, L)
             x = x.cuda(gpu, non_blocking=True)
 
-            if task == 'regression' or task == 'both':
-                y_reg = y_reg.cuda(gpu, non_blocking=True)
-            if task == 'classification' or task == 'both':
-                y_cla = y_cla.cuda(gpu, non_blocking=True)
-
             pred = model(x)
 
             ###################################################################
@@ -105,14 +100,14 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
             if task == 'both':
                 y_reg_list.append(y_reg.detach())
                 y_cla_list.append(y_cla.detach())
-                pred_reg_list.append(pred[0].detach())
-                pred_cla_list.append(pred[1].detach())
+                pred_reg_list.append(pred[0].cpu().detach())
+                pred_cla_list.append(pred[1].cpu().detach())
             elif task == 'classification':
                 y_cla_list.append(y_cla.detach())
-                pred_cla_list.append(pred.detach())
+                pred_cla_list.append(pred.cpu().detach())
             else:
                 y_reg_list.append(y_reg.detach())
-                pred_reg_list.append(pred.detach())
+                pred_reg_list.append(pred.cpu().detach())
 
         ###################################################################
         # on each device, concat result tensors together for later gathering

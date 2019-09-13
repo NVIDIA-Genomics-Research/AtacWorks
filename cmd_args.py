@@ -119,7 +119,7 @@ def parse_args():
                         help='Do distributed training across all available gpus on the node')
     parser.add_argument('--dist-url', default='tcp://127.0.0.1:4321', type=str,
                         help='url used to set up distributed training')
-    parser.add_argument('--dist-backend', default='nccl', type=str,
+    parser.add_argument('--dist-backend', default='gloo', type=str,
                         help='distributed backend')
 
     # debug

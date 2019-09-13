@@ -20,7 +20,7 @@ class Metric(object):
         self.reset()
 
     def reset(self):
-        self.val = torch.tensor(0.).cuda()
+        self.val = torch.tensor(0.).cuda() if torch.cuda.is_available() else torch.tensor(0.)
 
     def get(self):
         return self.val
