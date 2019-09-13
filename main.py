@@ -326,19 +326,20 @@ def writer(args, res_queue):
         # Create dataset, of the right size (so we don't have to keep extending)
         df = f.create_dataset("data", data=output_data)
         while 1:
-            item = res_queue.get()
-            if item == 'done':
-                break
-            keys, batch = item
-            # Write each element to the empty file
-            for idx, item in zip(keys, batch):
-                if outputs_written[idx] > 0:
-                    _logger.error(
-                        'Danger! Key %d already written in dataset' % idx)
-                    continue
-                df[idx] = item
-                count += 1
-                outputs_written[idx] += 1
+            if not res_queue.empty():
+                item = res_queue.get()
+                if item == 'done':
+                    break
+                keys, batch = item
+                # Write each element to the empty file
+                for idx, item in zip(keys, batch):
+                    if outputs_written[idx] > 0:
+                        _logger.error(
+                            'Danger! Key %d already written in dataset' % idx)
+                        continue
+                    df[idx] = item
+                    count += 1
+                    outputs_written[idx] += 1
 
     # Assert that file is properly populated, all keys are written
     assert np.array_equal(outputs_written, np.ones_like(
