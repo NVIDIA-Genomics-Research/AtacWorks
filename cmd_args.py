@@ -91,8 +91,8 @@ def parse_args():
                         'or a single path to a folder of files')
     parser.add_argument('--print_freq', type=int, default=10,
                         help="Logging frequency")
-    parser.add_argument('--bs', type=int, default=3,
-                        help="meta batch_size")
+    parser.add_argument('--bs', type=int, default=32,
+                        help="batch_size")
     parser.add_argument('--num_workers', type=int, default=1,
                         help="number of workers for dataloader")
     parser.add_argument('--checkpoint_fname', type=str, default="",
