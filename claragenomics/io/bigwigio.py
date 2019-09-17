@@ -139,7 +139,8 @@ def bedgraph_to_bigwig(bgfile, sizesfile, prefix=None, deletebg=False, sort=Fals
         bgfile (str): path to bedGraph file
         sizesfile (str): path to chromosome sizes file
         prefix (str): optional prefix to name bigWig file
-        delete (bool): delete bedGraph file after conversion
+        deletebg (bool): delete bedGraph file after conversion
+        sort (bool): sort bedGraph before conversion. Chromosomes sorted alphabetically.
     Writes:
         bigWig file
     """
