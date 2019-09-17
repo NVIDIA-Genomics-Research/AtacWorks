@@ -132,14 +132,15 @@ def check_bigwig_intervals_peak(intervals_df, bwfile):
     return result
 
 
-def bedgraph_to_bigwig(bgfile, sizesfile, prefix=None, deletebg=False):
+def bedgraph_to_bigwig(bgfile, sizesfile, prefix=None, deletebg=False, sort=False):
     """
     Function to convert bedGraph file to bigWig file
     Args:
         bgfile (str): path to bedGraph file
         sizesfile (str): path to chromosome sizes file
         prefix (str): optional prefix to name bigWig file
-        delete (bool): delete bedGraph file after conversion
+        deletebg (bool): delete bedGraph file after conversion
+        sort (bool): sort bedGraph before conversion. Chromosomes sorted alphabetically.
     Writes:
         bigWig file
     """
@@ -147,6 +148,10 @@ def bedgraph_to_bigwig(bgfile, sizesfile, prefix=None, deletebg=False):
         bwfile = prefix + '.bw'
     else:
         bwfile = os.path.splitext(bgfile)[0] + '.bw'
+    if sort:
+        sort_env = os.environ.copy()
+        sort_env['LC_COLLATE'] = 'C'
+        subprocess.call(['sort', '-k1,1', '-k2,2n', bgfile, '-o', bgfile], env=sort_env)
     subprocess.call(['bedGraphToBigWig', bgfile, sizesfile, bwfile])
     if deletebg:
         subprocess.call(['rm', bgfile])
