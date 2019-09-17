@@ -201,5 +201,5 @@ else: # multiprocessing
 
 # Convert bedGraph to bigWig
 logger.info('Writing scored intervals to bigWig file {}'.format(args.prefix + '.bw'))
-bedgraph_to_bigwig(out_bedgraph, args.sizes_file)
+bedgraph_to_bigwig(out_bedgraph, args.sizes_file, sort=True)
 
