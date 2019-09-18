@@ -85,7 +85,9 @@ peaks['summit'] = peaks['start'] + peaks['relativesummit']
 
 # Discard peaks below minimum length
 if args.minlen is not None:
+    num_before_cut = len(peaks)
     peaks = peaks[peaks['len'] >= args.minlen]
+    _logger.info("reduced number of peaks from {} to {}.".format(num_before_cut, len(peaks)))
 
 # Write to BED
 _logger.info('Writing peaks to BED file {}.bed'.format(args.prefix))
