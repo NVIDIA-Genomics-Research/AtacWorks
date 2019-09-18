@@ -84,7 +84,8 @@ peaks['relativesummit'] = peakscores.apply(np.argmax)
 peaks['summit'] = peaks['start'] + peaks['relativesummit']
 
 # Discard peaks below minimum length
-peaks = peaks[peaks['len'] >= args.minlen]
+if args.minlen is not None:
+    peaks = peaks[peaks['len'] >= args.minlen]
 
 # Write to BED
 _logger.info('Writing peaks to BED file {}.bed'.format(args.prefix))
