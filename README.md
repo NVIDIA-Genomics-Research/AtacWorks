@@ -22,16 +22,7 @@
     pip install -r requirements-pip.txt
     ```
 
-3. (Optional) Install MACS2 globally. This is needed only if you wish to use macs2 subcommands to call peaks and summits.
-   
-   ```
-   git clone https://github.com/taoliu/MACS.git <custom_path>
-   cd <custom_path>/MACS
-   git checkout macs2python3
-   python setup_w_cython.py install --prefix <custom_path>
-   ```
-
-4. Unit tests
+3. Unit tests
 
     ```
     python -m pytest tests/
