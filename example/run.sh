@@ -179,6 +179,23 @@ python $root_dir/peaksummary.py \
     --scorebw $out_dir/HSC.5M.output.track.bw \
     --prefix $out_dir/HSC.5M.output.peaks.summarized
 
+#######
+
+echo ""
+echo "An alternative method to call peaks..."
+echo ""
+
+# To get predicted probabilities for peaks
+python $root_dir/postprocess.py \
+    $out_dir/example.holdout_intervals.bed \
+    $out_dir/models/inference_latest/HSC.5M.output.h5 \
+    $ref_dir/hg19.auto.sizes $out_dir/HSC.5M.output.probs \
+    --channel 1 --round 3
+
+macs2 bdgpeakcall -i $out_dir/HSC.5M.output.probs.bedGraph -o $out_dir/HSC.5M.output.peaks.narrowPeak -c 0.5
+
+#######
+
 echo ""
 echo "Alternatively, run inference using a pretrained model on dataset without label..."
 echo ""
