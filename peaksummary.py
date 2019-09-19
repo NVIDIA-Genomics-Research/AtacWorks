@@ -62,7 +62,7 @@ subprocess.call(['bigWigToBedGraph', args.peakbw, args.prefix + '.bedGraph'])
 # Read collapsed peaks
 _logger.info('Reading peaks')
 peaks = pd.read_csv(args.prefix + '.bedGraph', header=None, sep='\t', usecols=(0,1,2))
-peaks.columns = ['chrom', 'start', 'end']
+peaks.columns = ['#chrom', 'start', 'end']
 
 # Add length of peaks
 _logger.info('Calculating peak statistics')
