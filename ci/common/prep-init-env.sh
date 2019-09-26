@@ -36,3 +36,11 @@ fi
 cd $1
 git clean -xdf
 
+# Install MACS2
+pip install numpy cython
+git clone https://github.com/taoliu/MACS.git
+cd MACS
+git checkout macs2python3
+python setup_w_cython.py install
+
+cd $1
