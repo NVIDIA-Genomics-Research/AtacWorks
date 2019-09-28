@@ -111,33 +111,36 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
 
         ###################################################################
         # on each device, concat result tensors together for later gathering
-        ys_reg = torch.cat(y_reg_list, dim=0)
-        ys_cla = torch.cat(y_cla_list, dim=0)
-        preds_reg = torch.cat(pred_reg_list, dim=0)
-        preds_cla = torch.cat(pred_cla_list, dim=0)
-
-        del y_reg_list
-        del y_cla_list
-        del pred_reg_list
-        del pred_cla_list
+        if task == 'both' or task == 'regression':
+            ys_reg = torch.cat(y_reg_list, dim=0)
+            preds_reg = torch.cat(pred_reg_list, dim=0)
+            del y_reg_list
+            del pred_reg_list
+        if task == 'both' or task == 'classification':
+            ys_cla = torch.cat(y_cla_list, dim=0)
+            preds_cla = torch.cat(pred_cla_list, dim=0)
+            del y_cla_list
+            del pred_cla_list
 
         # gather_start = time.time()
         # gather the results across all devices
         if distributed:
-            ys_reg = gather_tensor(ys_reg, world_size=world_size, rank=rank)
-            ys_cla = gather_tensor(ys_cla, world_size=world_size, rank=rank)
-            preds_reg = gather_tensor(
-                preds_reg, world_size=world_size, rank=rank)
-            preds_cla = gather_tensor(
-                preds_cla, world_size=world_size, rank=rank)
+            if task == 'both' or task == 'regression':
+                ys_reg = gather_tensor(ys_reg, world_size=world_size, rank=rank)
+                preds_reg = gather_tensor(
+                    preds_reg, world_size=world_size, rank=rank)
+            if task == 'both' or task == 'classification':
+                ys_cla = gather_tensor(ys_cla, world_size=world_size, rank=rank)
+                preds_cla = gather_tensor(
+                    preds_cla, world_size=world_size, rank=rank)
             #myprint("Gathering takes {}s".format(time.time()-gather_start), rank=rank)
 
         # now with the results of whole dataset, compute metrics on device 0
         if rank == 0:
-            if task == 'classification' or task == 'both':
+            if task == 'both' or task == 'classification':
                 for metric in metrics_cla:
                     metric(preds_cla, ys_cla)
-            if task == 'regression' or task == 'both':
+            if task == 'both' or task == 'regression':
                 for metric in metrics_reg:
                     metric(preds_reg, ys_reg)
         ###################################################################
