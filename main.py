@@ -82,7 +82,7 @@ def get_losses(args):
 def get_metrics(args):
 
     metrics_reg = []
-    cla_metics = []
+    metrics_cla = []
     best_metric = []
     if args.task == "regression":
         metrics_reg = [MSE(), CorrCoef()]
@@ -91,7 +91,7 @@ def get_metrics(args):
         metrics_cla = [BCE(), Recall(args.threshold),
                        Specificity(args.threshold), AUROC()]
         best_metric = metrics_cla[-1]
-    elif args.task == 'both':  # shouldn't reach here for now
+    elif args.task == 'both':
         metrics_reg = [MSE(), CorrCoef()]
         metrics_cla = [BCE(), Recall(args.threshold),
                        Specificity(args.threshold), AUROC()]
