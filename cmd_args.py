@@ -46,7 +46,8 @@ def parse_args():
         '--width_cla', type=int, help='kernel size for classification blocks in resnet', default=50)
     parser.add_argument('--nfilt_cla', type=int,
                         help='number of filters for classification blocks in resnet', default=15)
-
+    parser.add_argument(
+        '--field', type=int, help='receptive field for linear/logistic regression', default=1000)
     # Learning args
     parser.add_argument('--clip_grad', type=float, default=0.,
                         help='Grad clipping for bad/extreme batches')
