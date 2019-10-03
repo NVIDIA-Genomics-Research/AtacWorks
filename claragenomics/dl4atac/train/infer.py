@@ -43,10 +43,18 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad):
     num_batches = len(infer_loader)
     model.eval()
     start = time.time()
+    local_init = time.time()
+
+    pred_total_time = 0
+    load_total_time = 0
 
     count = 0
     with torch.no_grad():
         for i, batch in enumerate(infer_loader):
+            load_time = (time.time() - local_init)
+            load_total_time += load_time
+            local_init = time.time()
+
             idxes = batch['idx']
             x = batch['x']
             
@@ -75,5 +83,9 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad):
                 progbar(curr=i, total=num_batches, progbar_len=20,
                         pre_bar_msg="Inference", post_bar_msg="")
 
-    myprint("Inference time taken: {:8.3f}s".format(
-        time.time()-start), color='yellow', rank=rank)
+            pred_time = (time.time() - local_init)
+            pred_total_time += pred_time
+            local_init = time.time()
+
+    myprint("Inference time taken: {:8.3f}s (Load {:8.3f}s, Prediction {:8.3f}s)".format(
+        time.time()-start, load_total_time, pred_total_time), color='yellow', rank=rank)

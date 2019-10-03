@@ -33,7 +33,7 @@ from cmd_args import parse_args
 from claragenomics.dl4atac.train.models import *
 from claragenomics.dl4atac.train.losses import MultiLoss
 # , DatasetInfer, DatasetEval #, custom_collate_train, custom_collate_infer, custom_collate_eval
-from claragenomics.dl4atac.train.dataset import DatasetTrain
+from claragenomics.dl4atac.train.dataset import DatasetTrain, DatasetInfer
 # myprint, save_model, load_model, gather_files_from_cmdline, assert_device_available, make_experiment_dir
 from claragenomics.dl4atac.train.utils import *
 from claragenomics.dl4atac.train.train import train
@@ -243,12 +243,12 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
 
     model = build_model(args)
 
-    infer_dataset = DatasetTrain(args.infer_files)
+    infer_dataset = DatasetInfer(args.infer_files)
     infer_sampler = None
 
     if args.distributed:
         infer_sampler = torch.utils.data.distributed.DistributedSampler(
-            infer_dataset)
+            infer_dataset, shuffle=False)
 
     infer_loader = torch.utils.data.DataLoader(
         infer_dataset, batch_size=args.bs, shuffle=False,

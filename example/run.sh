@@ -113,7 +113,7 @@ python $root_dir/main.py --train \
     --dil 8 --task both --epochs 2 --afunc relu --mse_weight 0.001 \
     --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
     --pearson_weight 1 --bs 8 \
-    --out_home $out_dir/models --label HSC.5M.model \
+    --out_home $out_dir --label HSC.5M.model \
     --checkpoint_fname checkpoint.pth.tar \
     --save_freq=1 --eval_freq=1 --distributed
 
@@ -136,19 +136,19 @@ echo ""
 # Note: change  --weights_path to the path for your saved model!
 python $root_dir/main.py --infer \
     --infer_files $out_dir/test_data.h5 \
-    --weights_path $out_dir/models/HSC.5M.model_latest/model_best.pth.tar \
-    --out_home $out_dir/models --label inference \
+    --weights_path $out_dir/HSC.5M.model_latest/model_best.pth.tar \
+    --out_home $out_dir --label inference \
     --result_fname HSC.5M.output.h5 \
     --model resnet --nblocks 5 --nfilt 15 --width 50 --dil 8 \
     --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
-    --task both
+    --task both --num_workers 0
 
 echo ""
 echo "Step 7: Calculate metrics after inference..."
 echo ""
 python $root_dir/calculate_baseline_metrics.py \
     --label_file $out_dir/test_data.h5 --task both \
-    --test_file $out_dir/models/inference_latest/HSC.5M.output.h5 \
+    --test_file $out_dir/inference_latest/HSC.5M.output.h5 \
     --sep_peaks --thresholds 0.5
 
 echo ""
@@ -158,7 +158,7 @@ echo ""
 # To get predicted coverage track
 python $root_dir/postprocess.py \
     $out_dir/example.holdout_intervals.bed \
-    $out_dir/models/inference_latest/HSC.5M.output.h5 \
+    $out_dir/inference_latest/HSC.5M.output.h5 \
     $ref_dir/hg19.auto.sizes \
     $out_dir/HSC.5M.output.track \
     --channel 0 \
@@ -167,7 +167,7 @@ python $root_dir/postprocess.py \
 # To get predicted peaks
 python $root_dir/postprocess.py \
     $out_dir/example.holdout_intervals.bed \
-    $out_dir/models/inference_latest/HSC.5M.output.h5 \
+    $out_dir/inference_latest/HSC.5M.output.h5 \
     $ref_dir/hg19.auto.sizes $out_dir/HSC.5M.output.peaks \
     --channel 1 --threshold 0.5
 
@@ -188,7 +188,7 @@ echo ""
 # To get predicted probabilities for peaks
 python $root_dir/postprocess.py \
     $out_dir/example.holdout_intervals.bed \
-    $out_dir/models/inference_latest/HSC.5M.output.h5 \
+    $out_dir/inference_latest/HSC.5M.output.h5 \
     $ref_dir/hg19.auto.sizes $out_dir/HSC.5M.output.probs \
     --channel 1 --round 3
 
@@ -202,17 +202,17 @@ echo ""
 python $root_dir/main.py --infer \
     --infer_files $out_dir/no_label.h5 \
     --weights_path  $saved_model_dir/bulk_blood_data/5000000.7cell.resnet.5.2.15.8.50.0803.pth.tar\
-    --out_home $out_dir/models --label inference.pretrained \
+    --out_home $out_dir --label inference.pretrained \
     --result_fname HSC.5M.output.pretrained.h5 \
     --model resnet --nblocks 5 --nfilt 15 --width 50 --dil 8 \
     --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
-    --task both
+    --task both --num_workers 0
 
 echo ""
 echo "Calculate metrics after inference..."
 echo ""
 python $root_dir/calculate_baseline_metrics.py \
     --label_file $out_dir/test_data.h5 --task both \
-    --test_file $out_dir/models/inference.pretrained_latest/HSC.5M.output.pretrained.h5 \
+    --test_file $out_dir/inference.pretrained_latest/HSC.5M.output.pretrained.h5 \
     --sep_peaks --thresholds 0.5
 
