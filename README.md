@@ -1,5 +1,25 @@
 # AtacWorks
 
+AtacWorks is a deep learning toolkit for track denoising and peak calling from low-coverage or low-quality ATAC-Seq data.
+
+AtacWorks trains a deep neural network to learn a mapping between noisy (low coverage/low quality) ATAC-Seq data and matching clean (high coverage/high quality) ATAC-Seq data from the same cell type. Once this mapping is learned, the trained model can be applied to other noisy datasets to improve them. 
+
+AtacWorks models can be trained using one or more pairs of matching ATAC-Seq datasets from the same cell type. AtacWorks requires three specific inputs for each such pair of datasets:
+1. A coverage track representing the number of sequencing reads mapped to each position on the genome in the low-quality dataset.
+2. A coverage track representing the number of sequencing reads mapped to each position on the genome in the high-quality dataset. 
+3. The genomic positions of peaks called on the high-quality dataset. These can be obtained by using MACS2 or any other peak caller.
+The model learns a mapping from (1) to both (2) and (3); in other words, from the noisy coverage track, it learns to predict both the clean coverage track, and the positions of peaks in the clean dataset. We also provide pretrained models that can be applied to a noisy dataset.
+
+This is a temporary repository. We intend to integrate AtacWorks into the Clara Genomics Analysis repository (https://github.com/clara-genomics/ClaraGenomicsAnalysis)
+
+## Runtime
+
+Training: Approximately 22 minutes per epoch to train on single whole genome.
+Inference: Approximately 1.5 hours for inference and postprocessing on a whole genome.
+Training and inference were performed on a single Tesla V100 GPU.
+
+We are working to improve runtime, particularly for inference. Improvements are tracked on our project board: https://github.com/clara-genomics/AtacWorks/projects 
+
 ## System Setup
 
 0. System requirements
@@ -8,6 +28,7 @@
 * CUDA 9.0+
 * Python 3.6.7+
 * (Optional) A conda or virtualenv setup
+* Any NVIDIA GPU
 
 1. Download `bedGraphToBigWig` binary and add to your $PATH
     ```
