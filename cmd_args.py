@@ -94,7 +94,7 @@ def parse_args():
                         help="Logging frequency")
     parser.add_argument('--bs', type=int, default=32,
                         help="batch_size")
-    parser.add_argument('--num_workers', type=int, default=1,
+    parser.add_argument('--num_workers', type=int, default=4,
                         help="number of workers for dataloader")
     parser.add_argument('--checkpoint_fname', type=str, default="",
                         help="checkpoint filename to save the model")
