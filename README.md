@@ -15,8 +15,10 @@ This is a temporary repository. We intend to integrate AtacWorks into the Clara 
 ## Runtime
 
 Training: Approximately 22 minutes per epoch to train on single whole genome.
+
 Inference: Approximately 1.5 hours for inference and postprocessing on a whole genome.
-Training and inference were performed on a single Tesla V100 GPU.
+
+Training and inference were performed on a single Tesla V100 GPU. Training time can be significantly reduced by using multiple GPUs.
 
 We are working to improve runtime, particularly for inference. Improvements are tracked on our project board: https://github.com/clara-genomics/AtacWorks/projects 
 
@@ -28,9 +30,9 @@ We are working to improve runtime, particularly for inference. Improvements are 
 * CUDA 9.0+
 * Python 3.6.7+
 * (Optional) A conda or virtualenv setup
-* Any NVIDIA GPU
+* Any NVIDIA GPU. AtacWorks training and inference currently does not run on CPU.
 
-1. Download `bedGraphToBigWig` binary and add to your $PATH
+1. Download `bedGraphToBigWig` and `bigWigToBedGraph` binaries and add to your $PATH
     ```
     rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bedGraphToBigWig <custom_path>
     rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bigWigToBedGraph <custom_path>
@@ -60,11 +62,12 @@ We are working to improve runtime, particularly for inference. Improvements are 
 
 ## Workflow
 
-1. Convert MACS2 output to bigWig with `peak2bw.py`
-2. Generate training/val/holdout intervals with `get_intervals.py`
-3. Save training/val/holdout data with `bw2h5.py`
-4. Train and validate a model with `main.py`
-5. Convert the predictions into bigWig format with `postprocess.py`
+1. Convert the MACS2 peak calls on the clean data to bigWig format with `peak2bw.py`
+2. Generate genomic intervals for training/validation/holdout with `get_intervals.py`
+3. Encode the training/validation/holdout data into .h5 format with `bw2h5.py`
+4. Train a model with `main.py`
+5. Apply the trained model for inference on another dataset with `main.py`
+6. Convert the predictions into bigWig format with `postprocess.py`
 
 ### Workflow input
 
