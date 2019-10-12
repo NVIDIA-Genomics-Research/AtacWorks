@@ -1,5 +1,27 @@
 # AtacWorks
 
+AtacWorks is a deep learning toolkit for track denoising and peak calling from low-coverage or low-quality ATAC-Seq data.
+
+AtacWorks trains a deep neural network to learn a mapping between noisy (low coverage/low quality) ATAC-Seq data and matching clean (high coverage/high quality) ATAC-Seq data from the same cell type. Once this mapping is learned, the trained model can be applied to improve other noisy ATAC-Seq datasets. 
+
+AtacWorks models can be trained using one or more pairs of matching ATAC-Seq datasets from the same cell type. AtacWorks requires three specific inputs for each such pair of datasets:
+1. A coverage track representing the number of sequencing reads mapped to each position on the genome in the low-quality dataset.
+2. A coverage track representing the number of sequencing reads mapped to each position on the genome in the high-quality dataset. 
+3. The genomic positions of peaks called on the high-quality dataset. These can be obtained by using MACS2 or any other peak caller.
+The model learns a mapping from (1) to both (2) and (3); in other words, from the noisy coverage track, it learns to predict both the clean coverage track, and the positions of peaks in the clean dataset. We also provide pretrained models that can be applied to a noisy dataset.
+
+This is a temporary repository. We intend to integrate AtacWorks into the Clara Genomics Analysis repository (https://github.com/clara-genomics/ClaraGenomicsAnalysis)
+
+## Runtime
+
+Training: Approximately 22 minutes per epoch to train on single whole genome.
+
+Inference: Approximately 1.5 hours for inference and postprocessing on a whole genome.
+
+Training and inference were performed on a single Tesla V100 GPU. Training time can be significantly reduced by using multiple GPUs.
+
+We are working to improve runtime, particularly for inference. Improvements are tracked on our project board: https://github.com/clara-genomics/AtacWorks/projects 
+
 ## System Setup
 
 0. System requirements
@@ -8,8 +30,9 @@
 * CUDA 9.0+
 * Python 3.6.7+
 * (Optional) A conda or virtualenv setup
+* Any NVIDIA GPU. AtacWorks training and inference currently does not run on CPU.
 
-1. Download `bedGraphToBigWig` binary and add to your $PATH
+1. Download `bedGraphToBigWig` and `bigWigToBedGraph` binaries and add to your $PATH
     ```
     rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bedGraphToBigWig <custom_path>
     rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bigWigToBedGraph <custom_path>
@@ -39,11 +62,12 @@
 
 ## Workflow
 
-1. Convert MACS2 output to bigWig with `peak2bw.py`
-2. Generate training/val/holdout intervals with `get_intervals.py`
-3. Save training/val/holdout data with `bw2h5.py`
-4. Train and validate a model with `main.py`
-5. Convert the predictions into bigWig format with `postprocess.py`
+1. Convert the MACS2 peak calls on the clean data to bigWig format with `peak2bw.py`
+2. Generate genomic intervals for training/validation/holdout with `get_intervals.py`
+3. Encode the training/validation/holdout data into .h5 format with `bw2h5.py`
+4. Train a model with `main.py`
+5. Apply the trained model for inference on another dataset with `main.py`
+6. Convert the predictions into bigWig format with `postprocess.py`
 
 ### Workflow input
 
