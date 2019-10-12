@@ -18,6 +18,7 @@ PYCLARAGENOMICS_DIR=$1
 cd $PYCLARAGENOMICS_DIR
 
 #Install external dependencies.
+python -m pip install numpy==1.17.0
 python -m pip install -r requirements-pip.txt
 
 LOCAL_BIN_DIR="local_bin"

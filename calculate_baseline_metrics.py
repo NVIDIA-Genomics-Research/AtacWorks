@@ -74,10 +74,9 @@ def h5_to_array(h5file, channel, pad):
         data: NumPy array containing a channel of the data
     """
     with h5py.File(h5file, 'r') as f:
-        if channel is not None:
-            data = f['data'][:, :, channel]
-        else:
-            data = np.array(f['data'])
+        if f['data'].shape[2] == 1:
+            channel = 0
+        data = f['data'][:, :, channel]
     # ignore padding
     if pad is not None:
         center = range(pad, data.shape[1] - pad)
