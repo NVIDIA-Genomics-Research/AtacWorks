@@ -148,7 +148,7 @@ echo "Step 7: Calculate metrics after inference..."
 echo ""
 python $root_dir/calculate_baseline_metrics.py \
     --label_file $out_dir/test_data.h5 --task both \
-    --test_file $out_dir/inference_latest/HSC.5M.output.h5 \
+    --test_file $out_dir/inference_latest/test_data_HSC.5M.output.h5 \
     --sep_peaks --thresholds 0.5
 
 echo ""
@@ -158,7 +158,7 @@ echo ""
 # To get predicted coverage track
 python $root_dir/postprocess.py \
     $out_dir/example.holdout_intervals.bed \
-    $out_dir/inference_latest/HSC.5M.output.h5 \
+    $out_dir/inference_latest/test_data_HSC.5M.output.h5 \
     $ref_dir/hg19.auto.sizes \
     $out_dir/HSC.5M.output.track \
     --channel 0 \
@@ -167,7 +167,7 @@ python $root_dir/postprocess.py \
 # To get predicted peaks
 python $root_dir/postprocess.py \
     $out_dir/example.holdout_intervals.bed \
-    $out_dir/inference_latest/HSC.5M.output.h5 \
+    $out_dir/inference_latest/test_data_HSC.5M.output.h5 \
     $ref_dir/hg19.auto.sizes $out_dir/HSC.5M.output.peaks \
     --channel 1 --threshold 0.5
 
@@ -188,7 +188,7 @@ echo ""
 # To get predicted probabilities for peaks
 python $root_dir/postprocess.py \
     $out_dir/example.holdout_intervals.bed \
-    $out_dir/inference_latest/HSC.5M.output.h5 \
+    $out_dir/inference_latest/test_data_HSC.5M.output.h5 \
     $ref_dir/hg19.auto.sizes $out_dir/HSC.5M.output.probs \
     --channel 1 --round 3
 
@@ -213,6 +213,6 @@ echo "Calculate metrics after inference..."
 echo ""
 python $root_dir/calculate_baseline_metrics.py \
     --label_file $out_dir/test_data.h5 --task both \
-    --test_file $out_dir/inference.pretrained_latest/HSC.5M.output.pretrained.h5 \
+    --test_file $out_dir/inference.pretrained_latest/no_label_HSC.5M.output.pretrained.h5 \
     --sep_peaks --thresholds 0.5
 
