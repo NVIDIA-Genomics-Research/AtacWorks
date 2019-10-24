@@ -29,6 +29,7 @@ We are working to improve runtime, particularly for inference. Improvements are 
 * Ubuntu 16.04+
 * CUDA 9.0+
 * Python 3.6.7+
+* GCC 5+
 * (Optional) A conda or virtualenv setup
 * Any NVIDIA GPU. AtacWorks training and inference currently does not run on CPU.
 
@@ -82,3 +83,10 @@ Testing:
 
 3 pretrained models are provided in `data/pretrained_models/bulk_blood_data/`.
 These are based on bulk ATAC-Seq data from 7 blood cell types. They are trained using clean data of depth 80 million reads, subsampled to a depth of 1 million (1000000.7cell.resnet.5.2.15.8.50.0803.pth.tar), 2 million (2000000.7cell.resnet.5.2.15.8.50.0803.pth.tar), or 5 million (5000000.7cell.resnet.5.2.15.8.50.0803.pth.tar) reads.
+
+### FAQ
+1. What's the preferred way for setting up the environment ?
+A. A virtual environment or conda installation is preferred. You can follow conda installation instructions on their website and then follow the instructions in the README.
+
+2. If you face "no module named numpy" error while installing requirement-pip.txt.
+A. In your terminal, run pip install numpy==<version-from-requirements-pip.txt> and then run pip install -r requirements-pip.txt. If you are running inside a conda or venv, run these commands inside your environment.
