@@ -31,22 +31,28 @@ def expand_interval(interval, score=True):
     expanded['start'] = range(interval['start'], interval['end'])
     expanded['end'] = expanded['start'] + 1
     expanded['chrom'] = interval['chrom']
+    # If necessary, assign a score to each base in the interval
     if score:
         expanded['score'] = interval['scores']
     return expanded
 
+
 def contract_interval(expanded_df, positive=True):
     """
-    Function to contract a dataframe containing genomic positions and scores into intervals with equal score
+    Function to contract a dataframe containing genomic positions and scores into smaller intervals with equal score
     Args:
         expanded_df: Pandas dataframe containing chrom, start, end, score at base resolution.
         positive (bool): if True, only regions with score>0 are retained
     Returns:
         intervals_df: Pandas dataframe with same columns; bases with same score are combined into one line.
     """
+    # For each base, attach the score assigned to the previous base
     expanded_df['prevscore'] = [-1] + list(expanded_df['score'])[:-1]    
+    # Select bases where score changes - or the last base
     intervals_df = expanded_df[(expanded_df['score'] != expanded_df['prevscore']) | (expanded_df.index==len(expanded_df)-1)].copy()
+    # Each interval ends at the next point where the score changes, or at the last base
     intervals_df['end'] = list(intervals_df['start'])[1:] + [intervals_df['end'].iloc[-1]]
+    # Only keep intervals where score > 0
     if positive:
         intervals_df = intervals_df[intervals_df['score'] > 0]
     if len(intervals_df) > 0:
@@ -62,8 +68,11 @@ def intervals_to_bg(intervals_df):
     Returns:
         bg: pandas dataframe containing expanded+contracted intervals
     """
+    # Expand each interval to single-base resolution and add scores
     bg = intervals_df.apply(expand_interval, axis=1)
+    # Contract regions where score is the same
     bg = bg.apply(contract_interval)
+    # Combine into single pandas df
     bg = pd.concat(list(bg))
     return bg
 
