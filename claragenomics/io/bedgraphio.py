@@ -31,7 +31,8 @@ def expand_interval(interval, score=True):
     expanded['start'] = range(interval['start'], interval['end'])
     expanded['end'] = expanded['start'] + 1
     expanded['chrom'] = interval['chrom']
-    expanded['score'] = interval['scores']
+    if score:
+        expanded['score'] = interval['scores']
     return expanded
 
 def contract_interval(expanded_df):
