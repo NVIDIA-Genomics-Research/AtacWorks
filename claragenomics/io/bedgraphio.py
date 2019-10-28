@@ -35,30 +35,32 @@ def expand_interval(interval, score=True):
         expanded['score'] = interval['scores']
     return expanded
 
-def contract_interval(expanded_df):
+def contract_interval(expanded_df, positive=True):
     """
     Function to contract a dataframe containing genomic positions and scores into intervals with equal score
     Args:
         expanded_df: Pandas dataframe containing chrom, start, end, score at base resolution.
+        positive (bool): if True, only regions with score>0 are retained
     Returns:
         intervals_df: Pandas dataframe with same columns; bases with same score are combined into one line.
     """
     expanded_df['prevscore'] = [-1] + list(expanded_df['score'])[:-1]    
     intervals_df = expanded_df[(expanded_df['score'] != expanded_df['prevscore']) | (expanded_df.index==len(expanded_df)-1)].copy()
     intervals_df['end'] = list(intervals_df['start'])[1:] + [intervals_df['end'].iloc[-1]]
-    intervals_df = intervals_df[intervals_df['score'] > 0]
+    if positive:
+        intervals_df = intervals_df[intervals_df['score'] > 0]
     if len(intervals_df) > 0:
         intervals_df = intervals_df.loc[:, ['chrom', 'start', 'end', 'score']]
         return intervals_df
 
+
 def intervals_to_bg(intervals_df):
     """
-    Function to combine intervals and scores in bedGraph format
+    Function to format intervals + scores to bedGraph format
     Args:
-        intervals_df: Pandas dataframe containing columns for chrom, start, end
-        scores: numeric scores (at single-base resolution) to be added to bedGraph
+        intervals_df: Pandas dataframe containing columns for chrom, start, end and scores
     Returns:
-        bg: pandas dataframe containing expanded intervals and scores where score>0.
+        bg: pandas dataframe containing expanded+contracted intervals
     """
     bg = intervals_df.apply(expand_interval, axis=1)
     bg = bg.apply(contract_interval)
