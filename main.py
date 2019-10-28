@@ -296,24 +296,23 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
              best_metric=best_metric, res_queue=res_queue, pad=args.pad)
 
 
-def writer(args, res_queue):
-    result_path = os.path.join(args.exp_dir, args.result_fname)
-    myprint("Writer process standing by... %s" % result_path, color='yellow')
+def writer(args, res_queue, input_file_path):
 
-    # We need dimensions of the inference dataset.
-    if args.infer:
-        files_path = args.infer_files
-    else:
+    # We only pass one file at a time to the writer as a list.
+    if not args.infer:
         assert False, "writer called but infer = False. Not sure what file to write?"
+
     total_size = 0
     write_dimension = 0
-    for fname in files_path:
-        with h5py.File(fname, 'r') as f:
-            total_size = f["data"].shape[0]
-            if args.pad is not None:
-                write_dimension = f["data"].shape[1] - 2*args.pad
-            else:
-                write_dimension = f["data"].shape[1]
+    prefix = os.path.basename(input_file_path).split(".")[0]
+    result_path = os.path.join(args.exp_dir, prefix + "_" + args.result_fname)
+    myprint("Writer process standing by... %s" % result_path, color='yellow')
+    with h5py.File(input_file_path, 'r') as f:
+        total_size = f["data"].shape[0]
+        if args.pad is not None:
+            write_dimension = f["data"].shape[1] - 2*args.pad
+        else:
+            write_dimension = f["data"].shape[1]
 
     # Write one or two outputs per item
     total_outputs = 2 if args.task == 'both' else 1
@@ -404,48 +403,49 @@ def main():
     if args.infer or args.eval:
         files = args.infer_files if args.infer else args.val_files
         files = gather_files_from_cmdline(files)
+        for x in range(len(files)):
+            infile = files[x]
+            if args.infer:
+                args.infer_files = [infile]
+                _logger.debug("Inference data: ", args.infer_files)
+            else:
+                args.val_files = [infile]
+                _logger.debug("Evaluation data: ", args.val_files)
+            # Get model parameters
+            with h5py.File(files[x], 'r') as f:
+                args.interval_size = f['data'].shape[1]
+                args.batch_size = 1
 
-        # Get model parameters
-        with h5py.File(files[0], 'r') as f:
-            args.interval_size = f['data'].shape[1]
-            args.batch_size = 1
 
-        if args.infer:
-            args.infer_files = files
-            _logger.debug("Inference data: ", args.infer_files)
-        else:
-            args.val_files = files
-            _logger.debug("Evaluation data: ", args.val_files)
+            # setup queue and kick off writer process
+            #############################################################
+            manager = mp.Manager()
+            res_queue = manager.Queue()
+            write_proc = mp.Process(target=writer, args=(args, res_queue, infile))
+            write_proc.start()
+            #############################################################
 
-        # setup queue and kick off writer process
-        #############################################################
-        manager = mp.Manager()
-        res_queue = manager.Queue()
-        write_proc = mp.Process(target=writer, args=(args, res_queue))
-        write_proc.start()
-        #############################################################
+            ngpus_per_node = torch.cuda.device_count()
+            # WAR: gloo distributed doesn't work if world size is 1.
+            # This is fixed in newer torch version - https://github.com/facebookincubator/gloo/issues/209
+            args.distributed = False if ngpus_per_node == 1 else args.distributed
 
-        ngpus_per_node = torch.cuda.device_count()
-        # WAR: gloo distributed doesn't work if world size is 1.
-        # This is fixed in newer torch version - https://github.com/facebookincubator/gloo/issues/209
-        args.distributed = False if ngpus_per_node == 1 else args.distributed
+            worker = infer_worker if args.infer else eval_worker
+            if args.distributed:
+                args.world_size = ngpus_per_node
+                mp.spawn(worker, nprocs=ngpus_per_node, args=(
+                    ngpus_per_node, args, res_queue), join=True)
+            else:
+                assert_device_available(args.gpu)
+                args.world_size = 1
+                worker(args.gpu, ngpus_per_node, args, res_queue)
 
-        worker = infer_worker if args.infer else eval_worker
-        if args.distributed:
-            args.world_size = ngpus_per_node
-            mp.spawn(worker, nprocs=ngpus_per_node, args=(
-                ngpus_per_node, args, res_queue), join=True)
-        else:
-            assert_device_available(args.gpu)
-            args.world_size = 1
-            worker(args.gpu, ngpus_per_node, args, res_queue)
-
-        # finish off writing
-        #############################################################
-        res_queue.put("done")
-        _logger.info("Waiting for writer to finish...")
-        write_proc.join()
-        #############################################################
+            # finish off writing
+            #############################################################
+            res_queue.put("done")
+            _logger.info("Waiting for writer to finish...")
+            write_proc.join()
+            #############################################################
 
 
 if __name__ == '__main__':
