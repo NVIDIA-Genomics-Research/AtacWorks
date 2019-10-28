@@ -91,7 +91,8 @@ args = parse_args()
 
 # Load intervals
 logger.info('Loading intervals')
-intervals = pd.read_csv(args.intervals_file, sep='\t', header=None, names=['chrom', 'start', 'end'], usecols=(0,1,2), dtype={'chrom':str, 'start':int, 'end':int})
+intervals = pd.read_csv(args.intervals_file, sep='\t', header=None, names=['chrom', 'start', 'end'], 
+        usecols=(0,1,2), dtype={'chrom':str, 'start':int, 'end':int})
 
 # Get batch parameters
 with h5py.File(args.predictions_file, 'r') as infile:
@@ -110,6 +111,7 @@ def writer(batch_range, outfilename):
     # num_batches = end - start
     with open(outfilename, 'w') as outfile:
         with h5py.File(args.predictions_file, 'r') as infile:
+
             # Load predictions
             if args.channel is not None:
                 scores = infile['data'][start:end, :, args.channel]
@@ -132,14 +134,14 @@ def writer(batch_range, outfilename):
                 # Select intervals corresponding to batch
                 batch_intervals = intervals.iloc[start:end, :].copy()
 
-                # Add scores to intervals
+                # Add scores to each interval
                 batch_intervals['scores'] = np.split(scores, scores.shape[0])
                 batch_intervals['scores'] = [x[0] for x in batch_intervals['scores']]
 
                 # Select intervals with scores>0
                 batch_intervals = batch_intervals.loc[scores.sum(axis=1)>0,:]
                 
-                # Expand each interval and combine with scores
+                # Expand each interval, combine with scores, and contract to smaller intervals
                 batch_bg = intervals_to_bg(batch_intervals)
 
                 # Write to file
