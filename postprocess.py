@@ -37,6 +37,7 @@ import logging
 import subprocess
 import numpy as np
 import pandas as pd
+import pyBigWig
 import h5py
 from claragenomics.io.bedgraphio import expand_interval, intervals_to_bg, df_to_bedGraph
 from claragenomics.io.bigwigio import bedgraph_to_bigwig
@@ -48,6 +49,7 @@ import math
 import multiprocessing as mp
 import glob
 import shutil
+import sys
 import tempfile
 
 # Set up logging
@@ -99,12 +101,27 @@ with h5py.File(args.predictions_file, 'r') as infile:
     num_batches = infile['data'].shape[0]
     interval_size = infile['data'].shape[1]
 
-# TODO: assert that len(intervals) equals number of intervals in predictions file
-# TODO: assert that size of intervals in intervals file equals size of intervals in predictions file
+if ((int(intervals[2][0]) - int(intervals[1][0])) != interval_size):
+    logger.info("Interval sizes do not match between inference file and the intervals file")
+    sys.exit(0)
 
 # Load predictions, convert to bedGraph and append for each batch
 logger.info(
-    'Writing scored intervals to bedGraph file {}.bedGraph'.format(args.prefix))
+    'Writing scored intervals to bigwig file {}.bw'.format(args.prefix))
+
+def df_to_bigwig(batch_data, bwoutputfilename):
+    sizetuple = []
+    uniq_chroms = intervals[0].unique()
+    with open(args.sizes_file, "r") as sizefile:
+        sizes  = sizefile.readlines()
+        for size in sizes:
+            size = size.strip().split("\t")
+            if size[0] in uniq_chroms:
+                sizetuple.append((size[0], int(size[1])))
+    bw = pyBigWig.open(bwoutputfilename, "w")
+    bw.addHeader(sizetuple, maxZooms=10)
+    bw.addEntries(list(batch_data["chrom"]), list(batch_data["start"]), ends=list(batch_data["end"]), values=list(batch_data["score"]))
+    bw.close()
 
 def writer(batch_range, outfilename):
     start, end = batch_range[0], batch_range[1]
@@ -146,6 +163,32 @@ def writer(batch_range, outfilename):
 
                 # Write to file
                 df_to_bedGraph(batch_bg, outfile)
+    """with h5py.File(args.predictions_file, 'r') as infile:
+        # Load predictions
+        if args.channel is not None:
+            scores = infile['data'][start:end, :, args.channel]
+        else:
+            scores = np.array(infile['data'])
+
+        # Flatten scores
+        scores = scores.flatten()
+
+        # Threshold predictions - for classification output
+        if args.threshold is not None:
+            scores = (scores > args.threshold).astype(int).astype('float64')
+        # Round scores - for regression output
+        elif args.round is not None:
+            scores = scores.astype('float64')
+            # Sometimes np.around doesn't work with float32. To investigate.
+            scores = np.around(scores, decimals=args.round)
+
+        # if the batch contains values > 0, write them
+        if (scores > 0).any():
+            # Select intervals corresponding to batch
+            batch_intervals = intervals.iloc[start:end, :]
+            # Expand each interval and combine with scores
+            batch_bg = intervals_to_bg(batch_intervals, scores)
+            df_to_bigwig(batch_bg, outfilename)"""
 
 
 def combiner(f1, f2):
@@ -156,7 +199,7 @@ def combiner(f1, f2):
     os.remove(f2)
 
 
-out_bedgraph = args.prefix + '.bedGraph'
+out_bedgraph = args.prefix + '.bw'
 # single process
 if args.num_worker == 0: 
     writer([0, num_batches], out_bedgraph)
@@ -205,10 +248,3 @@ else: # multiprocessing
     shutil.move(os.path.join(args.tmp_dir, "000"), out_bedgraph)
     # remove tmp folder
     os.rmdir(args.tmp_dir)
-
-
-
-# Convert bedGraph to bigWig
-logger.info('Writing scored intervals to bigWig file {}'.format(args.prefix + '.bw'))
-bedgraph_to_bigwig(out_bedgraph, args.sizes_file, sort=True)
-

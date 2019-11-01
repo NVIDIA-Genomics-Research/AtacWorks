@@ -192,6 +192,8 @@ python $root_dir/postprocess.py \
     $ref_dir/hg19.auto.sizes $out_dir/HSC.5M.output.probs \
     --channel 1 --round 3
 
+bigWigToBedGraph $out_dir/HSC.5M.output.probs.bw $out_dir/HSC.5M.output.probs.bedGraph
+
 macs2 bdgpeakcall -i $out_dir/HSC.5M.output.probs.bedGraph -o $out_dir/HSC.5M.output.peaks.narrowPeak -c 0.5
 
 #######
