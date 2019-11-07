@@ -18,34 +18,62 @@ import numpy as np
 import pandas as pd
 
 
-def expand_interval(interval):
+def expand_interval(interval, score=True):
     """
-    Function to expand an interval to single-base resolution
+    Function to expand an interval to single-base resolution and add scores
     Args:
-        interval (list or list-like containing chrom, start, and end)
+        interval (dict or DataFrame containing chrom, start, end and optionally scores)
+        score (bool): add score to each base of interval
     Returns:
-        expanded: pandas dataframe containing a row for every base in the interval
+        expanded: pandas DataFrame containing a row for every base in the interval
     """
     expanded = pd.DataFrame(columns=['chrom', 'start'])
-    expanded['start'] = range(interval[1], interval[2])
-    expanded['chrom'] = interval[0]
+    expanded['start'] = range(interval['start'], interval['end'])
+    expanded['end'] = expanded['start'] + 1
+    expanded['chrom'] = interval['chrom']
+    # If necessary, assign a score to each base in the interval
+    if score:
+        expanded['score'] = interval['scores']
     return expanded
 
 
-def intervals_to_bg(intervals_df, scores):
+def contract_interval(expanded_df, positive=True):
     """
-    Function to combine intervals and scores in bedGraph format
+    Function to contract a dataframe containing genomic positions and scores into smaller intervals with equal score
     Args:
-        intervals_df: Pandas dataframe containing columns for chrom, start, end
-        scores: numeric scores (at single-base resolution) to be added to bedGraph
+        expanded_df: Pandas dataframe containing chrom, start, end, score at base resolution.
+        positive (bool): if True, only regions with score>0 are retained
     Returns:
-        bg: pandas dataframe containing expanded intervals and scores where score>0.
+        intervals_df: Pandas dataframe with same columns; bases with same score are combined into one line.
     """
+    # For each base, attach the score assigned to the previous base
+    expanded_df['prevscore'] = [-1] + list(expanded_df['score'])[:-1]    
+    # Select bases where score changes - or the last base
+    intervals_df = expanded_df[(expanded_df['score'] != expanded_df['prevscore']) | (expanded_df.index==len(expanded_df)-1)].copy()
+    # Each interval ends at the next point where the score changes, or at the last base
+    intervals_df['end'] = list(intervals_df['start'])[1:] + [intervals_df['end'].iloc[-1]]
+    # Only keep intervals where score > 0
+    if positive:
+        intervals_df = intervals_df[intervals_df['score'] > 0]
+    if len(intervals_df) > 0:
+        intervals_df = intervals_df.loc[:, ['chrom', 'start', 'end', 'score']]
+        return intervals_df
+
+
+def intervals_to_bg(intervals_df):
+    """
+    Function to format intervals + scores to bedGraph format
+    Args:
+        intervals_df: Pandas dataframe containing columns for chrom, start, end and scores
+    Returns:
+        bg: pandas dataframe containing expanded+contracted intervals
+    """
+    # Expand each interval to single-base resolution and add scores
     bg = intervals_df.apply(expand_interval, axis=1)
+    # Contract regions where score is the same
+    bg = bg.apply(contract_interval)
+    # Combine into single pandas df
     bg = pd.concat(list(bg))
-    bg['end'] = bg['start']+1
-    bg['score'] = scores
-    bg = bg[bg['score'] > 0]
     return bg
 
 

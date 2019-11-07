@@ -91,7 +91,8 @@ args = parse_args()
 
 # Load intervals
 logger.info('Loading intervals')
-intervals = pd.read_csv(args.intervals_file, sep='\t', header=None)
+intervals = pd.read_csv(args.intervals_file, sep='\t', header=None, names=['chrom', 'start', 'end'], 
+        usecols=(0,1,2), dtype={'chrom':str, 'start':int, 'end':int})
 
 # Get batch parameters
 with h5py.File(args.predictions_file, 'r') as infile:
@@ -110,30 +111,38 @@ def writer(batch_range, outfilename):
     # num_batches = end - start
     with open(outfilename, 'w') as outfile:
         with h5py.File(args.predictions_file, 'r') as infile:
+
             # Load predictions
             if args.channel is not None:
                 scores = infile['data'][start:end, :, args.channel]
             else:
                 scores = np.array(infile['data'])
 
-            # Flatten scores
-            scores = scores.flatten()
-
-            # Threshold predictions - for classification output
-            if args.threshold is not None:
-                scores = (scores > args.threshold).astype(int)
-            # Round scores - for regression output
-            elif args.round is not None:
+            # Round scores - for regression or classification outputs
+            if args.round is not None:
                 scores = scores.astype('float64')
                 # Sometimes np.around doesn't work with float32. To investigate.
                 scores = np.around(scores, decimals=args.round)
 
+            # Threshold predictions - to output direct peak calls
+            elif args.threshold is not None:
+                scores = (scores > args.threshold).astype(int)
+
             # if the batch contains values > 0, write them
             if (scores > 0).any():
+
                 # Select intervals corresponding to batch
-                batch_intervals = intervals.iloc[start:end, :]
-                # Expand each interval and combine with scores
-                batch_bg = intervals_to_bg(batch_intervals, scores)
+                batch_intervals = intervals.iloc[start:end, :].copy()
+
+                # Add scores to each interval
+                batch_intervals['scores'] = np.split(scores, scores.shape[0])
+                batch_intervals['scores'] = [x[0] for x in batch_intervals['scores']]
+
+                # Select intervals with scores>0
+                batch_intervals = batch_intervals.loc[scores.sum(axis=1)>0,:]
+                
+                # Expand each interval, combine with scores, and contract to smaller intervals
+                batch_bg = intervals_to_bg(batch_intervals)
 
                 # Write to file
                 df_to_bedGraph(batch_bg, outfile)
