@@ -17,10 +17,10 @@ set -e
 
 # Files provided:
 
-# 1. Clean Track (bigWig): HSC.80M.chr1-3.1M.bw
-# 2. Clean Peaks (narrowPeak): HSC.80M.chr1-3.1M.narrowPeak
-# 3. Noisy Track (bigWig): HSC.1M.chr1-3.1M.bw
-# 4. Noisy Peaks (narrowPeak): HSC.1M.chr1-3.1M.narrowPeak
+# 1. Clean Track (bigWig) : HSC.80M.chr123.10mb.coverage.bw  
+# 2. Clean Peaks (bed): HSC.80M.chr123.10mb.peaks.bed
+# 3. Noisy Track (bigWig): HSC.5M.chr123.10mb.coverage.bw
+# 4. Noisy Peaks (bed):  HSC.5M.chr123.10mb.peaks.bed
 # (These cover the first 10 Mb each of chr1, chr2, and chr3)
 
 # 5. example.sizes - lists the regions of the genome to cover (first 10 Mb each of chr1, chr2, and chr3)
@@ -50,14 +50,14 @@ echo "Step 1: Convert peak files into bigWig format..."
 echo ""
 # Clean peaks
 python $root_dir/peak2bw.py \
-    $data_dir/HSC.80M.chr123.10mb.bed \
+    $data_dir/HSC.80M.chr123.10mb.peaks.bed \
     $ref_dir/hg19.auto.sizes \
-    --prefix=$out_dir/HSC.80M.chr123.10mb.bed
+    --prefix=$out_dir/HSC.80M.chr123.10mb.peaks.bed
 # Noisy peaks
 python $root_dir/peak2bw.py \
-    $data_dir/HSC.5M.chr123.10mb.bed \
+    $data_dir/HSC.5M.chr123.10mb.peaks.bed \
     $ref_dir/hg19.auto.sizes \
-    --prefix=$out_dir/HSC.5M.chr123.10mb.bed
+    --prefix=$out_dir/HSC.5M.chr123.10mb.peaks.bed
 
 echo ""
 echo "Step 2: Split the given regions of the genome into train, val, and holdout/test intervals..."
@@ -72,32 +72,32 @@ echo "Step 3: Read clean and noisy data in these intervals and save them in .h5 
 echo ""
 # Training data
 python $root_dir/bw2h5.py \
-    --noisybw $data_dir/HSC.5M.chr123.10mb.bw \
+    --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
     --intervals $out_dir/example.training_intervals.bed \
     --batch_size 4 \
     --prefix $out_dir/train_data \
-    --cleanbw $data_dir/HSC.80M.chr123.10mb.bw \
-    --cleanpeakbw $out_dir/HSC.80M.chr123.10mb.bed.bw \
+    --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
+    --cleanpeakbw $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw \
     --nonzero
 # Validation data
 python $root_dir/bw2h5.py \
-    --noisybw $data_dir/HSC.5M.chr123.10mb.bw \
+    --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
     --intervals $out_dir/example.val_intervals.bed \
     --batch_size 64 \
     --prefix $out_dir/val_data \
-    --cleanbw $data_dir/HSC.80M.chr123.10mb.bw \
-    --cleanpeakbw $out_dir/HSC.80M.chr123.10mb.bed.bw
+    --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
+    --cleanpeakbw $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw
 # Test data
 python $root_dir/bw2h5.py \
-    --noisybw $data_dir/HSC.5M.chr123.10mb.bw \
+    --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
     --intervals $out_dir/example.holdout_intervals.bed \
     --batch_size 64 \
     --prefix $out_dir/test_data \
-    --cleanbw $data_dir/HSC.80M.chr123.10mb.bw \
-    --cleanpeakbw $out_dir/HSC.80M.chr123.10mb.bed.bw
+    --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
+    --cleanpeakbw $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw
 #No label
 python $root_dir/bw2h5.py \
-    --noisybw $data_dir/HSC.5M.chr123.10mb.bw \
+    --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
     --intervals $out_dir/example.holdout_intervals.bed \
     --batch_size 64 \
     --prefix $out_dir/no_label \
@@ -127,7 +127,7 @@ python $root_dir/calculate_baseline_metrics.py \
 # Classification metrics on the noisy data peak calls
 python $root_dir/calculate_baseline_metrics.py \
     --label_file $out_dir/test_data.h5 --task classification \
-    --test_file $out_dir/HSC.5M.chr123.10mb.bed.bw \
+    --test_file $out_dir/HSC.5M.chr123.10mb.peaks.bed.bw \
     --intervals $out_dir/example.holdout_intervals.bed
 
 echo ""
