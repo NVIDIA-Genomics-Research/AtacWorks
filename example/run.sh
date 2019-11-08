@@ -136,48 +136,35 @@ echo ""
 # Note: change  --weights_path to the path for your saved model!
 python $root_dir/main.py --infer \
     --infer_files $out_dir/test_data.h5 \
+    --intervals_file $out_dir/example.holdout_intervals.bed \
+    --sizes_file $ref_dir/hg19.auto.sizes \
+    --round 3 \
     --weights_path $out_dir/HSC.5M.model_latest/model_best.pth.tar \
     --out_home $out_dir --label inference \
-    --result_fname HSC.5M.output.h5 \
+    --result_fname HSC.5M.output \
     --model resnet --nblocks 5 --nfilt 15 --width 50 --dil 8 \
     --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
-    --task both --num_workers 0
+    --task both --num_workers 0 --gen_bigwig
 
 echo ""
-echo "Step 7: Calculate metrics after inference..."
+echo "Step 7a: Calculate metrics for track coverage after inference..."
 echo ""
 python $root_dir/calculate_baseline_metrics.py \
-    --label_file $out_dir/test_data.h5 --task both \
-    --test_file $out_dir/inference_latest/test_data_HSC.5M.output.h5 \
-    --sep_peaks --thresholds 0.5
+    --label_file $out_dir/test_data.h5 --task regression \
+    --test_file $out_dir/inference_latest/test_data_HSC.5M.output.track.bw \
+    --intervals $out_dir/example.holdout_intervals.bed \
+    --sizes $ref_dir/hg19.auto.sizes \
+    --sep_peaks
 
 echo ""
-echo "Step 8: Postprocess the model output to produce bedGraph and bigWig files..."
+echo "Step 7b: Calculate metrics for peak classification after inference..."
 echo ""
-# NOTE - replace 3rd argument with your inference result file!
-# To get predicted coverage track
-python $root_dir/postprocess.py \
-    $out_dir/example.holdout_intervals.bed \
-    $out_dir/inference_latest/test_data_HSC.5M.output.h5 \
-    $ref_dir/hg19.auto.sizes \
-    $out_dir/HSC.5M.output.track \
-    --channel 0 \
-    --round 3 \
-    --num_worker -1
-# To get predicted peaks
-python $root_dir/postprocess.py \
-    $out_dir/example.holdout_intervals.bed \
-    $out_dir/inference_latest/test_data_HSC.5M.output.h5 \
-    $ref_dir/hg19.auto.sizes $out_dir/HSC.5M.output.peaks \
-    --channel 1 --threshold 0.5
-
-echo ""
-echo "Step 9: Summarize the predicted peaks in a BED file..."
-echo ""
-python $root_dir/peaksummary.py \
-    --peakbw $out_dir/HSC.5M.output.peaks.bw \
-    --scorebw $out_dir/HSC.5M.output.track.bw \
-    --prefix $out_dir/HSC.5M.output.peaks.summarized
+python $root_dir/calculate_baseline_metrics.py \
+    --label_file $out_dir/test_data.h5 --task classification \
+    --test_file $out_dir/inference_latest/test_data_HSC.5M.output.peaks.bw \
+    --intervals $out_dir/example.holdout_intervals.bed \
+    --sizes $ref_dir/hg19.auto.sizes \
+    --thresholds 0.5
 
 #######
 
@@ -185,36 +172,51 @@ echo ""
 echo "An alternative method to call peaks..."
 echo ""
 
-# To get predicted probabilities for peaks
-python $root_dir/postprocess.py \
-    $out_dir/example.holdout_intervals.bed \
-    $out_dir/inference_latest/test_data_HSC.5M.output.h5 \
-    $ref_dir/hg19.auto.sizes $out_dir/HSC.5M.output.probs \
-    --channel 1 --round 3
+python $root_dir/main.py --infer \
+    --infer_files $out_dir/test_data.h5 \
+    --intervals_file $out_dir/example.holdout_intervals.bed \
+    --sizes_file $ref_dir/hg19.auto.sizes \
+    --round 3 \
+    --weights_path $out_dir/HSC.5M.model_latest/model_best.pth.tar \
+    --out_home $out_dir --label inference \
+    --result_fname HSC.5M.output.probs \
+    --model resnet --nblocks 5 --nfilt 15 --width 50 --dil 8 \
+    --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
+    --task both --num_workers 0 --gen_bigwig
 
-bigWigToBedGraph $out_dir/HSC.5M.output.probs.bw $out_dir/HSC.5M.output.probs.bedGraph
-
-macs2 bdgpeakcall -i $out_dir/HSC.5M.output.probs.bedGraph -o $out_dir/HSC.5M.output.peaks.narrowPeak -c 0.5
+macs2 bdgpeakcall -i $out_dir/inference_latest/test_data_HSC.5M.output.probs.peaks.bedGraph -o $out_dir/inference_latest/test_data_HSC.5M.output.peaks.narrowPeak -c 0.5
 
 #######
 
 echo ""
 echo "Alternatively, run inference using a pretrained model on dataset without label..."
 echo ""
+# Inference output track
 python $root_dir/main.py --infer \
     --infer_files $out_dir/no_label.h5 \
-    --weights_path  $saved_model_dir/bulk_blood_data/5000000.7cell.resnet.5.2.15.8.50.0803.pth.tar\
+    --intervals_file $out_dir/example.holdout_intervals.bed \
+    --sizes_file $ref_dir/hg19.auto.sizes \
+    --round 3 \
+    --weights_path $saved_model_dir/bulk_blood_data/5000000.7cell.resnet.5.2.15.8.50.0803.pth.tar \
     --out_home $out_dir --label inference.pretrained \
-    --result_fname HSC.5M.output.pretrained.h5 \
+    --result_fname HSC.5M.output.pretrained \
     --model resnet --nblocks 5 --nfilt 15 --width 50 --dil 8 \
     --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
-    --task both --num_workers 0
+    --task both --num_workers 0 --gen_bigwig
 
 echo ""
 echo "Calculate metrics after inference..."
 echo ""
 python $root_dir/calculate_baseline_metrics.py \
-    --label_file $out_dir/test_data.h5 --task both \
-    --test_file $out_dir/inference.pretrained_latest/no_label_HSC.5M.output.pretrained.h5 \
-    --sep_peaks --thresholds 0.5
+    --label_file $out_dir/test_data.h5 --task regression \
+    --test_file $out_dir/inference.pretrained_latest/no_label_HSC.5M.output.pretrained.track.bw \
+    --intervals $out_dir/example.holdout_intervals.bed \
+    --sizes $ref_dir/hg19.auto.sizes \
+    --sep_peaks
 
+python $root_dir/calculate_baseline_metrics.py \
+    --label_file $out_dir/test_data.h5 --task classification \
+    --test_file $out_dir/inference.pretrained_latest/no_label_HSC.5M.output.pretrained.peaks.bw \
+    --intervals $out_dir/example.holdout_intervals.bed \
+    --sizes $ref_dir/hg19.auto.sizes \
+    --thresholds 0.5

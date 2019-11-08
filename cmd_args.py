@@ -79,6 +79,14 @@ def parse_args():
     parser.add_argument('--infer_files', type=str, default="",
                         help='list of data files in the form of [file1, file2, ...];'
                         'or a single path to a folder of files')
+    parser.add_argument('--intervals_file', type=str, default="",
+                        help='bed file containing the chr and interval values for inference')
+    parser.add_argument('--sizes_file', type=str, default="",
+                        help='bed file containing the chr and max size values')
+    parser.add_argument('--round', type=int,
+                        help='round the output to this value')
+    parser.add_argument('--gen_bigwig', action='store_true',
+                        help='save the inference output to bigiwig in addition to bedgraph')
     parser.add_argument('--weights_path', type=str, default="",
                         help="checkpoint path to load the model from for inference or resume training")
     parser.add_argument('--result_fname', type=str, default='infer_results.h5',
