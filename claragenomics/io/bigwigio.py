@@ -155,3 +155,27 @@ def bedgraph_to_bigwig(bgfile, sizesfile, prefix=None, deletebg=False, sort=Fals
     subprocess.call(['bedGraphToBigWig', bgfile, sizesfile, bwfile])
     if deletebg:
         subprocess.call(['rm', bgfile])
+
+def df_to_bigwig(intervals, sizes_file, batch_data, outputfile):
+    """
+    Function to write a pandas dataframe object into bigiwg file
+    Args:
+        intervals (Pandas Dataframe): Containing columns, chrom, start, end
+        sizes_file (str): path to chromosome sizes file
+        batch_data (Pandas Dataframe): Containing scores
+        outputfile (str): Path to output bigwig file
+    Writes:
+        bigWig file
+    """
+    bw = pyBigWig.open(outputfile, "w")
+    uniq_chroms = intervals["chrom"].unique()
+    sizetuple = []
+    with open(sizes_file, "r") as sizefile:
+        sizes  = sizefile.readlines()
+        for size in sizes:
+            size = size.strip().split("\t")
+            if size[0] in uniq_chroms:
+                sizetuple.append((size[0], int(size[1])))
+    bw.addHeader(sizetuple, maxZooms=10)
+    bw.addEntries(list(batch_data["chrom"]), list(batch_data["start"]), ends=list(batch_data["end"]), values=list(batch_data["score"]))
+    bw.close()
