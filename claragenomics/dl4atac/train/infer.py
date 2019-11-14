@@ -77,6 +77,9 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad):
                 center = range(pad, x.shape[2] - pad)
                 batch_res = batch_res[:, center, :]
 
+            # Reverse log transformation
+            batch_res[:,:,0] = np.exp(batch_res[:,:,0]) - 1
+
             # HACK -- replacing "key" with i=index.
             # TODO: Remove the write queue
             res_queue.put((idxes, batch_res))
