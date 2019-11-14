@@ -63,7 +63,9 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad):
             x = x.cuda(gpu, non_blocking=True)
             count += x.shape[0]
 
-            pred = model(x)
+            # Log transform input for model
+            x_log = torch.log(x + 1)
+            pred = model(x_log)
 
             if task == 'both':
                 batch_res = np.stack([x.cpu().numpy() for x in pred], axis=-1)

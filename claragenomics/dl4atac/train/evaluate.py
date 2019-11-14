@@ -69,7 +69,11 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
             x = x.unsqueeze(1)  # (N, 1, L)
             x = x.cuda(gpu, non_blocking=True)
 
-            pred = model(x)
+            # log normalize tracks
+            x_log = torch.log(x+1)
+
+            # predict using log track
+            pred = model(x_log)
 
             ###################################################################
             # Remove padding before evaluation
@@ -114,6 +118,9 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
         if task == 'both' or task == 'regression':
             ys_reg = torch.cat(y_reg_list, dim=0)
             preds_reg = torch.cat(pred_reg_list, dim=0)
+            #print(preds_reg)
+            preds_reg = torch.exp(preds_reg) - 1
+            #print(preds_reg)
             del y_reg_list
             del pred_reg_list
         if task == 'both' or task == 'classification':
