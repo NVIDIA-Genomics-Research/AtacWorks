@@ -109,32 +109,37 @@ if args.tss is not None:
     else:
         tss = filter_bed_multichrom(tss, None, sizes)
 
-    # Calculate TSS enrichment over 4000-bp region
-    if args.output_file is not None:
+    if len(tss) > 0:
+        tss.columns = ['chrom', 'start', 'end', 'strand']
 
-        # Define TSS region
-        tss[1] = tss[1] - 2000
-        tss[2] = tss[2] + 2000
+        # Calculate TSS enrichment over 4000-bp region
+        if args.output_file is not None:
 
-        # Extract coverage
-        tss['coverage'] = extract_bigwig_intervals(tss, args.bw_file)
-        tss['flip'] = tss.apply(flip_negative, axis=1, args=('coverage',))
-        signal_near_tss = np.sum(np.stack(tss['flip']), axis=0)[:-1]
-        enr_near_tss = signal_near_tss/signal_near_tss[1:200].mean()
-        np.save(args.prefix + '.npy', enr_near_tss)
+            # Define TSS region
+            tss['start'] = tss['start'] - 2000
+            tss['end'] = tss['end'] + 2000
 
-        # Get TSS score
-        signal_near_tss = signal_near_tss[1000:3000]
-    else:
-        tss[1] = tss[1] - 1000
-        tss[2] = tss[2] + 1000
-        signal_near_tss = extract_bigwig_intervals(tss, args.bw_file, stack=True)
-        signal_near_tss = np.sum(signal_near_tss)
+            # Extract coverage
+            tss['coverage'] = extract_bigwig_intervals(tss, args.bw_file, stack=False)
+            tss['flip'] = tss.apply(flip_negative, axis=1, args=('coverage',))
+            signal_near_tss = np.sum(np.stack(tss['flip']), axis=0)[:-1]
+            enr_near_tss = signal_near_tss/signal_near_tss[1:200].mean()
+            np.save(args.prefix + '.npy', enr_near_tss)
 
-    # Calculate TSS score
-    tss_score = np.mean(signal_near_tss)*2/(signal_near_tss[:100] + signal_near_tss[-100:])
+            # Get TSS score
+            signal_near_tss = signal_near_tss[1000:3000]
+        else:
+            tss['start'] = tss['start'] - 1000
+            tss['end'] = tss['end'] + 1000
+            signal_near_tss = extract_bigwig_intervals(tss, args.bw_file, stack=True)
+            signal_near_tss = np.sum(signal_near_tss)
+
+        # Calculate TSS score
+        tss_score = np.mean(signal_near_tss)*2/(signal_near_tss[:100] + signal_near_tss[-100:])
+        print("TSS Score: {}".format(tss_score))
 
 # Mean signal overall
+if args.intervals is not None:
 sum_signal = np.sum(extract_bigwig_intervals(intervals, args.bw_file))
 mean_signal = np.mean(extract_bigwig_intervals(intervals, args.bw_file))
 
@@ -185,10 +190,10 @@ if args.peak_file is not None:
 # FSIP (clean)
 if args.clean_peak_file is not None:
 
-    # Read peaks
+    # Read clean peaks
     clean_peaks = pd.read_csv(args.clean_peak_file, sep='\t', header=None, skiprows=1, usecols=(0,1,2,6))
 
-    # Filter peaks
+    # Filter clean peaks
     if args.intervals is not None:
         clean_peaks = filter_bed_multichrom(clean_peaks, intervals)
     else:
