@@ -43,15 +43,21 @@ def flip_negative(x, col):
 
 
 def filter_bed(bed, intervals_df):
-    intervals_df = intervals_df[intervals_df[0]==pos.iloc[0,0]]
+    intervals_df = intervals_df[intervals_df[0]==bed.iloc[0,0]]
     if len(intervals_df) > 0:
         in_interval = bed.apply(lambda x:((intervals_df[1]<=x[1])[intervals_df[2] >= x[2]].any()), axis=1)
         bed_filtered = bed[in_interval]
         return bed_filtered
 
-def filter_bed_multichrom(bed, intervals_df):
-    bed_by_chrom = bed.groupby(0, as_index=True)
-    bed_filtered = bed_by_chrom.apply(filter_bed, (intervals_df))
+
+def filter_bed_multichrom(bed, intervals_df=None, sizes_df=None):
+    if intervals_df is not None:
+        bed_by_chrom = bed.groupby(0, as_index=False)
+        bed_filtered = bed_by_chrom.apply(filter_bed, (intervals_df))
+    elif sizes_df is not None:
+        bed_filtered = bed[bed[0].isin(sizes[0])]
+    else:
+        raise InputError('Either intervals or sizes must be provided.')
     return bed_filtered
 
 
@@ -86,13 +92,10 @@ _logger.info('Loading intervals')
 if args.intervals is not None:
 	intervals = pd.read_csv(args.intervals, header=None, sep='\t', usecols=(0,1,2))
 # If no intervals are supplied, evaluate on full length of chromosomes provided.
-else:
+elif args.sizes is not None:
     sizes = pd.read_csv(args.sizes, header=None, sep='\t', usecols=(0,1))
-	intervals = sizes.copy()
-    # Convert to interval format - add a column of zeros for start value
-    intervals[2] = [0]*len(intervals)
-    intervals.rename(columns={0: 0, 2: 1, 1: 2}, inplace=True)
-
+else:
+    parser.error('Either intervals or sizes must be provided')
 
 # TSS enrichment
 if args.tss is not None:
@@ -101,7 +104,10 @@ if args.tss is not None:
     tss = pd.read_csv(args.tss_file, sep='\t', header=None, usecols=(0,1,2,3))
     
     # Filter TSS
-    tss = filter_bed_multichrom(tss, intervals)
+    if args.intervals is not None:
+        tss = filter_bed_multichrom(tss, intervals)
+    else:
+        tss = filter_bed_multichrom(tss, None, sizes)
 
     # Calculate TSS enrichment over 4000-bp region
     if args.output_file is not None:
