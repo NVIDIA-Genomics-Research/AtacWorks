@@ -112,7 +112,7 @@ def parse_args():
     # Dataset args
     parser.add_argument('--pad', type=int, help="Padding around intervals")
     parser.add_argument('--transform', default='none', choices=['log', 'none'],
-                        help='transformation to apply to coverage track before training')
+                        help='transformation to apply to coverage tracks before training')
 
     # validation args
     parser.add_argument('--val_files', type=str, default="",
