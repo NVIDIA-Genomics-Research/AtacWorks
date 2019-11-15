@@ -70,6 +70,25 @@ def extract_bigwig_intervals(intervals_df, bwfile, stack=True, pad=None):
     return result
 
 
+def extract_bigwig_positions(positions_df, bwfile, stack=True):
+    """
+    Function to read values in multiple genomic positions from a bigWig file.
+    Args:
+        positions_df (Pandas DataFrame): containing columns chrom, pos
+        bwfile: bigWig file path
+        stack (bool): if True, stack the values into a 1D NumPy array.
+    Returns:
+        NumPy array containing values in all intervals
+    """
+    positions_df[2] = positions_df[1] + 1
+    with pyBigWig.open(bwfile) as bw:
+        result = positions_df.apply(
+            extract_bigwig_to_numpy, axis=1, args=(bw, pad=None, bw.chroms()))
+    if stack:
+        result = np.stack(result)
+    return result
+
+
 def check_bigwig_nonzero(interval, bw):
     """
     Function to chck whether an interval has nonzero coverage in a bigWig file.
