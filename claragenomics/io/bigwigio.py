@@ -99,7 +99,7 @@ def extract_bigwig_chromosomes(sizes_df, bwfile, stack=True):
     Returns:
         NumPy array containing values in all chromosomes
     """
-    sizes_df[2] = [0]*len(intervals)
+    sizes_df[2] = [0]*len(sizes_df)
     sizes_df.rename(columns={0: 0, 2: 1, 1: 2}, inplace=True) 
     with pyBigWig.open(bwfile) as bw:
         result = sizes_df.apply(

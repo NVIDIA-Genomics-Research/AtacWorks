@@ -22,7 +22,7 @@ import pyBigWig
 import pandas as pd
 import logging
 
-from claragenomics.io.bigwigio import extract_bigwig_intervals, extract_bigwig_positions
+from claragenomics.io.bigwigio import extract_bigwig_intervals, extract_bigwig_positions, extract_bigwig_chromosomes
 
 # Set up logging
 log_formatter = logging.Formatter(
@@ -140,8 +140,11 @@ if args.tss is not None:
 
 # Mean signal overall
 if args.intervals is not None:
-sum_signal = np.sum(extract_bigwig_intervals(intervals, args.bw_file))
-mean_signal = np.mean(extract_bigwig_intervals(intervals, args.bw_file))
+    sum_signal = np.sum(extract_bigwig_intervals(intervals, args.bw_file))
+    mean_signal = np.mean(extract_bigwig_intervals(intervals, args.bw_file))
+else:
+    sum_signal = np.sum(extract_bigwig_chromosomes(sizes, args.bw_file))
+    mean_signal = np.mean(extract_bigwig_chromosomes(sizes, args.bw_file))
 
 #DHS score
 if args.dhs is not None:
