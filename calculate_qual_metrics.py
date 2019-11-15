@@ -145,7 +145,10 @@ if args.dhs is not None:
     dhs = pd.read_csv(args.dhs_file, sep='\t', header=None, usecols=(0,1,2))
 
     # Filter DHS
-    dhs = filter_bed_multichrom(dhs, intervals)
+    if args.intervals is not None:
+        dhs = filter_bed_multichrom(dhs, intervals)
+    else:
+        dhs = filter_bed_multichrom(dhs, None, sizes)
 
     # Calculate DHS score
     dhs_score = np.sum(extract_bigwig_intervals(dhs, args.bw_file))/sum_signal
@@ -157,7 +160,10 @@ if args.peak_file is not None:
     peaks = pd.read_csv(args.peak_file, sep='\t', header=None, skiprows=1, usecols=(0,1,2,9))
 
     # Filter peaks
-    peaks = filter_bed_multichrom(peaks, intervals)
+    if args.intervals is not None:
+        peaks = filter_bed_multichrom(peaks, intervals)
+    else:
+        peaks = filter_bed_multichrom(peaks, None, sizes)
 
     # Number of peaks
     num_peaks = len(peaks)    
@@ -183,7 +189,10 @@ if args.clean_peak_file is not None:
     clean_peaks = pd.read_csv(args.clean_peak_file, sep='\t', header=None, skiprows=1, usecols=(0,1,2,6))
 
     # Filter peaks
-    clean_peaks = filter_bed_multichrom(clean_peaks, intervals)
+    if args.intervals is not None:
+        clean_peaks = filter_bed_multichrom(clean_peaks, intervals)
+    else:
+        clean_peaks = filter_bed_multichrom(clean_peaks, None, sizes)
 
     # FSIP
     signal_in_clean_peaks = extract_bigwig_intervals(clean_peaks, args.bw_file)
