@@ -25,9 +25,13 @@ LOCAL_BIN_DIR="local_bin"
 mkdir -p $LOCAL_BIN_DIR
 export PATH="$PATH:$LOCAL_BIN_DIR"
 
-# Install custom binaries.
-rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bedGraphToBigWig $LOCAL_BIN_DIR/
-rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bigWigToBedGraph $LOCAL_BIN_DIR/
+# Install custom binaries.Try the US server first, if it fails, then try the europe server.
+rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bedGraphToBigWig $LOCAL_BIN_DIR/ ||
+rsync -aP rsync://hgdownload-euro.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bedGraphToBigWig $LOCAL_BIN_DIR/
+
+
+rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bigWigToBedGraph $LOCAL_BIN_DIR/ ||
+rsync -aP rsync://hgdownload-euro.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bigWigToBedGraph $LOCAL_BIN_DIR/
 
 # Run tests.
 if [ "${TEST_ON_GPU}" == '1' ]; then

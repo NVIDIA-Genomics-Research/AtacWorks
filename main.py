@@ -28,6 +28,7 @@ import random
 import time
 import numpy as np
 from cmd_args import parse_args
+import pandas as pd
 
 # module imports
 from claragenomics.dl4atac.train.models import *
@@ -40,6 +41,8 @@ from claragenomics.dl4atac.train.train import train
 from claragenomics.dl4atac.train.evaluate import evaluate
 from claragenomics.dl4atac.train.infer import infer
 from claragenomics.dl4atac.train.metrics import BCE, MSE, Recall, Specificity, CorrCoef, AUROC
+from claragenomics.io.bedgraphio import expand_interval, intervals_to_bg, df_to_bedGraph
+from claragenomics.io.bigwigio import bedgraph_to_bigwig
 
 # python imports
 import warnings
@@ -294,6 +297,28 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
              world_size=args.world_size, distributed=args.distributed,
              best_metric=best_metric, res_queue=res_queue, pad=args.pad, transform=args.transform)
 
+def get_batch_bg(args, item, channel, intervals):
+    keys, batch = item
+    scores = batch[:,:,channel]
+    # Round scores - for regression output
+    if args.round is not None:
+        scores = scores.astype('float64')
+        # Sometimes np.around doesn't work with float32. To investigate.
+        scores = np.around(scores, decimals=args.round)
+    # if the batch contains values > 0, write them
+    if (scores > 0).any():
+        # Select intervals corresponding to batch
+        batch_intervals = intervals.iloc[keys.numpy(), :].copy()
+        # Add scores to each interval
+        batch_intervals['scores'] = np.split(scores, scores.shape[0])
+        batch_intervals['scores'] = [x[0] for x in batch_intervals['scores']]
+        # Select intervals with scores>0
+        batch_intervals = batch_intervals.loc[scores.sum(axis=1)>0,:]
+            
+        # Expand each interval, combine with scores, and contract to smaller intervals
+        batch_bg = intervals_to_bg(batch_intervals)
+    return batch_bg
+
 
 def writer(args, res_queue, input_file_path):
 
@@ -304,8 +329,6 @@ def writer(args, res_queue, input_file_path):
     total_size = 0
     write_dimension = 0
     prefix = os.path.basename(input_file_path).split(".")[0]
-    result_path = os.path.join(args.exp_dir, prefix + "_" + args.result_fname)
-    myprint("Writer process standing by... %s" % result_path, color='yellow')
     with h5py.File(input_file_path, 'r') as f:
         total_size = f["data"].shape[0]
         if args.pad is not None:
@@ -313,38 +336,39 @@ def writer(args, res_queue, input_file_path):
         else:
             write_dimension = f["data"].shape[1]
 
-    # Write one or two outputs per item
-    total_outputs = 2 if args.task == 'both' else 1
-    output_data = np.zeros(
-        (total_size, write_dimension, total_outputs), dtype=float)
+    intervals = pd.read_csv(args.intervals_file, sep='\t', header=None, names=['chrom', 'start', 'end'], 
+         usecols=(0,1,2), dtype={'chrom':str, 'start':int, 'end':int})
 
-    count = 0
-    outputs_written = np.zeros((total_size), dtype=int)
-    with h5py.File(result_path, 'w') as f:
-        # Create dataset, of the right size (so we don't have to keep extending)
-        df = f.create_dataset("data", data=output_data)
-        while 1:
-            if not res_queue.empty():
-                item = res_queue.get()
-                if item == 'done':
-                    break
-                keys, batch = item
-                # Write each element to the empty file
-                for idx, item in zip(keys, batch):
-                    if outputs_written[idx] > 0:
-                        _logger.error(
-                            'Danger! Key %d already written in dataset' % idx)
-                        continue
-                    df[idx] = item
-                    count += 1
-                    outputs_written[idx] += 1
+    channels = []
+    outputfiles = []
+    out_base_path = os.path.join(args.exp_dir, prefix + "_" + args.result_fname)
+    if args.task == "regression":
+        channels = [0]
+        outfiles = [open(os.path.join(out_base_path + ".track.bedGraph"), "w")]
+    elif args.task == "classification":
+        channels = [1]
+        outfiles = [open(os.path.join(out_base_path + ".peaks.bedGraph"), "w")]
+    elif args.task == "both":
+        channels = [0, 1]
+        outfiles = [open(os.path.join(out_base_path + ".track.bedGraph"), "w"),
+                    open(os.path.join(out_base_path + ".peaks.bedGraph"), "w")]
+    while 1:
+        if not res_queue.empty():
+            item = res_queue.get()
+            if item == 'done':
+                break
+            for channel in channels:
+                batch_bg = get_batch_bg(args, item, channel, intervals)
+                df_to_bedGraph(batch_bg, outfiles[channel])
 
-    # Assert that file is properly populated, all keys are written
-    assert np.array_equal(outputs_written, np.ones_like(
-        outputs_written, dtype=int)), "Not all items were inferred. Should have thrown an error..."
-    myprint("Dumped results of {} examples to {}".format(
-        count, result_path), color='yellow')
+    # Close the open files.
+    for outfile in outfiles:
+        outfile.close()
 
+    if (args.gen_bigwig):
+        print ("Writing the output to bigwig files")
+        for channel in channels:
+            bedgraph_to_bigwig(outfiles[channel].name, args.sizes_file, prefix=None,deletebg=False, sort=True)
 
 def main():
     args = parse_args()
