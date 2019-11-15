@@ -21,7 +21,7 @@ import numpy as np
 
 
 def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
-          epoch, epochs, clip_grad, print_freq, distributed, world_size):
+          epoch, epochs, clip_grad, print_freq, distributed, world_size, transform):
 
     num_batches = len(train_loader)
     epoch_formatter = "Epoch " + \
@@ -41,7 +41,7 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
         y_reg = batch['y_reg']
         y_cla = batch['y_cla']
 
-        # model forward pass
+        # move data and labels to GPU for forward pass
         x = x.unsqueeze(1)  # (N, 1, L)
         x = x.cuda(gpu, non_blocking=True)
 
@@ -50,15 +50,20 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
         elif task == 'classification':
             y = y_cla.cuda(gpu, non_blocking=True)
         elif task == 'both':
-            y_reg= y_reg.cuda(gpu, non_blocking=True)
+            y_reg = y_reg.cuda(gpu, non_blocking=True)
             y_cla = y_cla.cuda(gpu, non_blocking=True)
 
-        # log normalize tracks
-        x_log = torch.log(x + 1)
-        y_reg_log = torch.log(y_reg + 1)
-
+        # transform tracks if required
+        if transform == 'log':
+            x = torch.log(x + 1)
+            if task == 'regression':
+                y = torch.log(y + 1)
+            elif task == 'both':
+                y_reg = torch.log(y_reg + 1)
+            
+        # Model forward pass
         t = time.time()
-        pred = model(x_log)
+        pred = model(x)
 
         # Remove padding
         if pad is not None:
@@ -67,7 +72,7 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
                 y = y[:, center]
                 pred = pred[:, center]
             elif task == 'both':
-                y_reg_log = y_reg_log[:, center]
+                y_reg = y_reg[:, center]
                 y_cla = y_cla[:, center]
                 pred = [x[:, center] for x in pred]
 
@@ -76,7 +81,7 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
             total_loss_value, losses_values = loss_func(pred, y)
         elif task == 'both':
             total_loss_value_reg, losses_values_reg = loss_func[0](
-                pred[0], y_reg_log)
+                pred[0], y_reg)
             total_loss_value_cla, losses_values_cla = loss_func[1](
                 pred[1], y_cla)
             # Combine loss values
