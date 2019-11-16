@@ -88,11 +88,12 @@ args = parse_args()
 
 
 # Load intervals
-_logger.info('Loading intervals')
 if args.intervals is not None:
-	intervals = pd.read_csv(args.intervals, header=None, sep='\t', usecols=(0,1,2))
+    _logger.info('Loading intervals')
+    intervals = pd.read_csv(args.intervals, header=None, sep='\t', usecols=(0,1,2))
 # If no intervals are supplied, evaluate on full length of chromosomes provided.
 elif args.sizes is not None:
+    _logger.info('Loading chromosome sizes')
     sizes = pd.read_csv(args.sizes, header=None, sep='\t', usecols=(0,1))
 else:
     parser.error('Either intervals or sizes must be provided')
@@ -101,6 +102,7 @@ else:
 if args.tss_file is not None:
     
     # Read TSS
+    _logger.info('Loading TSS positions')
     tss = pd.read_csv(args.tss_file, sep='\t', header=None, usecols=(0,1,2,3))
     
     # Filter TSS
@@ -120,10 +122,14 @@ if args.tss_file is not None:
             tss['end'] = tss['end'] + 2000
 
             # Extract coverage
+            _logger.info('Extracting signal in TSS +/- 2000 bp')
             tss['coverage'] = extract_bigwig_intervals(tss, args.bw_file, stack=False)
             tss['flip'] = tss.apply(flip_negative, axis=1, args=('coverage',))
             signal_near_tss = np.sum(np.stack(tss['flip']), axis=0)[:-1]
             enr_near_tss = signal_near_tss/signal_near_tss[1:200].mean()
+            
+            # Save local enrichment as .npy file
+            _logger.info('Saving enrichment in TSS +/- 2000 bp')
             np.save(args.prefix + '.npy', enr_near_tss)
 
             # Get TSS score
@@ -131,19 +137,23 @@ if args.tss_file is not None:
         else:
             tss['start'] = tss['start'] - 1000
             tss['end'] = tss['end'] + 1000
+            _logger.info('Extracting signal in TSS +/- 1000 bp')
             signal_near_tss = extract_bigwig_intervals(tss, args.bw_file, stack=True)
             signal_near_tss = np.sum(signal_near_tss)
 
         # Calculate TSS score
+        _logger.info('Calculating TSS score')
         tss_score = np.mean(signal_near_tss)*2/(signal_near_tss[:100] + signal_near_tss[-100:])
         print("TSS Score: {}".format(tss_score))
 
 # Mean signal overall
+_logger.info('Extracting signal values for all positions in intervals')
 if args.intervals is not None:
     full_signal = extract_bigwig_intervals(intervals, args.bw_file)
 else:
     full_signal = extract_bigwig_chromosomes(sizes, args.bw_file)
     full_signal = np.concatenate(full_signal)
+_logger.info('Calculating mean and total signal overall')
 sum_signal = np.sum(full_signal)
 mean_signal = sum_signal/len(full_signal)
 
@@ -151,6 +161,7 @@ mean_signal = sum_signal/len(full_signal)
 if args.dhs_file is not None:
 
     # Read DHS
+    _logger.info('Loading DHS positions')
     dhs = pd.read_csv(args.dhs_file, sep='\t', header=None, usecols=(0,1,2))
 
     # Filter DHS
@@ -160,8 +171,10 @@ if args.dhs_file is not None:
         dhs = filter_bed_multichrom(dhs, None, sizes)
 
     # Calculate DHS score
+    _logger.info('Extracting signal in DHSs')
     signal_in_dhs = extract_bigwig_intervals(dhs, args.bw_file, stack=False)
     signal_in_dhs = np.concatenate(signal_in_dhs)
+    _logger.info('Calculating DHS score')
     dhs_score = np.sum(signal_in_dhs)/sum_signal
     print("DHS Score: {}".format(dhs_score))
 
@@ -169,6 +182,7 @@ if args.dhs_file is not None:
 if args.peak_file is not None:
 
     # Read peaks
+    _logger.info('Loading peaks')
     peaks = pd.read_csv(args.peak_file, sep='\t', header=None, skiprows=1, usecols=(0,1,2,9))
 
     # Filter peaks
@@ -178,22 +192,26 @@ if args.peak_file is not None:
         peaks = filter_bed_multichrom(peaks, None, sizes)
 
     # Number of peaks
+    _logger.info('Counting peaks')
     num_peaks = len(peaks)    
     print("Number of peaks: {}".format(num_peaks))
 
     # Summits
     summits = peaks[[0]].copy()
     summits[1] = peaks[1] + peaks[9]
+    _logger.info('Extracting signal at summits')
     signal_at_summits = extract_bigwig_positions(summits, args.bw_file)
     fc_at_summits = signal_at_summits/mean_signal
 
     # Number of peaks with fold enrichment over threshold
+    _logger.info('Counting peaks with fold enrichment over threshold')
     num_peaks_10 = sum(fc_at_summits >= 10)
     print("Number of peaks with FC>=10 over global average: {}".format(num_peaks_10))
     num_peaks_20 = sum(fc_at_summits >= 20)
     print("Number of peaks with FC>=20 over global average: {}".format(num_peaks_20))
 
     # FSIP
+    _logger.info('Calculating FSIP')    
     signal_in_peaks = extract_bigwig_intervals(peaks, args.bw_file, stack=False)
     signal_in_peaks = np.concatenate(signal_in_peaks)
     fsip = np.sum(signal_in_peaks)/sum_signal
@@ -203,6 +221,7 @@ if args.peak_file is not None:
 if args.clean_peak_file is not None:
 
     # Read clean peaks
+    _logger.info('Loading peaks from clean data')
     clean_peaks = pd.read_csv(args.clean_peak_file, sep='\t', header=None, skiprows=1, usecols=(0,1,2,6))
 
     # Filter clean peaks
@@ -212,6 +231,7 @@ if args.clean_peak_file is not None:
         clean_peaks = filter_bed_multichrom(clean_peaks, None, sizes)
 
     # FSIP
+    _logger.info('Calculating FSIP using peaks in clean data')
     signal_in_clean_peaks = extract_bigwig_intervals(clean_peaks, args.bw_file, stack=False)
     signal_in_clean_peaks = np.concatenate(signal_in_clean_peaks)
     fsip_clean = np.sum(signal_in_clean_peaks)/sum_signal
