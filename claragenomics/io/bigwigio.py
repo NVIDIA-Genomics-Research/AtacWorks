@@ -85,27 +85,25 @@ def extract_bigwig_positions(positions_df, bwfile, stack=True):
         result = positions_df.apply(
             extract_bigwig_to_numpy, axis=1, args=(bw, None, bw.chroms()))
     if stack:
-        result = np.stack(result)
+        result = np.concatenate(np.stack(result))
     return result
 
 
-def extract_bigwig_chromosomes(sizes_df, bwfile, stack=True):
+def extract_bigwig_chromosomes(sizes_df, bwfile):
     """
     Function to read values across one or more chromosomes.
     Args:
         sizes_df (Pandas DataFrame): containing columns chrom, size
         bwfile: bigWig file path
-        stack (bool): if True, stack the values into a 2D NumPy array.
     Returns:
-        NumPy array containing values in all chromosomes
+        Pandas series containing values in all chromosomes
     """
-    sizes_df[2] = [0]*len(sizes_df)
-    sizes_df.rename(columns={0: 0, 2: 1, 1: 2}, inplace=True) 
+    tmp_df = sizes_df.copy()
+    tmp_df[2] = [0]*len(tmp_df)
+    tmp_df.rename(columns={0: 0, 2: 1, 1: 2}, inplace=True) 
     with pyBigWig.open(bwfile) as bw:
-        result = sizes_df.apply(
+        result = tmp_df.apply(
             extract_bigwig_to_numpy, axis=1, args=(bw, None, bw.chroms()))
-    if stack:
-        result = np.stack(result)
     return result
 
 

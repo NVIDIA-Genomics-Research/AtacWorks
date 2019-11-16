@@ -140,11 +140,12 @@ if args.tss is not None:
 
 # Mean signal overall
 if args.intervals is not None:
-    sum_signal = np.sum(extract_bigwig_intervals(intervals, args.bw_file))
-    mean_signal = np.mean(extract_bigwig_intervals(intervals, args.bw_file))
+    full_signal = extract_bigwig_intervals(intervals, args.bw_file)
 else:
-    sum_signal = np.sum(extract_bigwig_chromosomes(sizes, args.bw_file))
-    mean_signal = np.mean(extract_bigwig_chromosomes(sizes, args.bw_file))
+    full_signal = extract_bigwig_chromosomes(sizes, args.bw_file)
+    full_signal = np.concatenate(full_signal)
+sum_signal = np.sum(full_signal)
+mean_signal = sum_signal/len(full_signal)
 
 #DHS score
 if args.dhs is not None:
@@ -159,7 +160,10 @@ if args.dhs is not None:
         dhs = filter_bed_multichrom(dhs, None, sizes)
 
     # Calculate DHS score
-    dhs_score = np.sum(extract_bigwig_intervals(dhs, args.bw_file))/sum_signal
+    signal_in_dhs = extract_bigwig_intervals(dhs, args.bw_file, stack=False)
+    signal_in_dhs = np.concatenate(signal_in_dhs)
+    dhs_score = np.sum(signal_in_dhs)/sum_signal
+    print("DHS Score: {}".format(dhs_score))
 
 # Number of peaks
 if args.peak_file is not None:
@@ -175,20 +179,25 @@ if args.peak_file is not None:
 
     # Number of peaks
     num_peaks = len(peaks)    
+    print("Number of peaks: {}".format(num_peaks))
 
     # Summits
-    peaks.columns = ['chrom', 'start', 'end', 'relativesummit']
-    peaks['summit'] = peaks['start'] + peaks['relativesummit']
-    signal_at_summits = extract_bigwig_positions(peaks[['chrom','summit']], args.bw_file)
+    summits = peaks[[0]].copy()
+    summits[1] = peaks[1] + peaks[9]
+    signal_at_summits = extract_bigwig_positions(summits, args.bw_file)
     fc_at_summits = signal_at_summits/mean_signal
 
     # Number of peaks with fold enrichment over threshold
     num_peaks_10 = sum(fc_at_summits >= 10)
+    print("Number of peaks with FC>=10 over global average: {}".format(num_peaks_10))
     num_peaks_20 = sum(fc_at_summits >= 20)
+    print("Number of peaks with FC>=20 over global average: {}".format(num_peaks_20))
 
     # FSIP
-    signal_in_peaks = extract_bigwig_intervals(peaks, args.bw_file, stack=True)
+    signal_in_peaks = extract_bigwig_intervals(peaks, args.bw_file, stack=False)
+    signal_in_peaks = np.concatenate(signal_in_peaks)
     fsip = np.sum(signal_in_peaks)/sum_signal
+    print("FSIP: {}".format(fsip))
 
 # FSIP (clean)
 if args.clean_peak_file is not None:
@@ -203,6 +212,9 @@ if args.clean_peak_file is not None:
         clean_peaks = filter_bed_multichrom(clean_peaks, None, sizes)
 
     # FSIP
-    signal_in_clean_peaks = extract_bigwig_intervals(clean_peaks, args.bw_file)
+    signal_in_clean_peaks = extract_bigwig_intervals(clean_peaks, args.bw_file, stack=False)
+    signal_in_clean_peaks = np.concatenate(signal_in_clean_peaks)
     fsip_clean = np.sum(signal_in_clean_peaks)/sum_signal
+    print("FSIP_clean: {}".format(fsip_clean))
+
 
