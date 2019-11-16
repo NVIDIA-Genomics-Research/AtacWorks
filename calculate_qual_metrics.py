@@ -64,7 +64,7 @@ def filter_bed_multichrom(bed, intervals_df=None, sizes_df=None):
 def parse_args():
     parser = argparse.ArgumentParser(
         description='AtacWorks script to calculate additional signal-quality metrics from a bigWig file.')
-    parser.add_argument('--bwfile', type=str,
+    parser.add_argument('--bw_file', type=str,
                         help='Path to bw file containing track.')
     parser.add_argument('--peak_file', type=str,
                         help='Path to bed or narrowPeak file containing peak calls.')
@@ -98,7 +98,7 @@ else:
     parser.error('Either intervals or sizes must be provided')
 
 # TSS enrichment
-if args.tss is not None:
+if args.tss_file is not None:
     
     # Read TSS
     tss = pd.read_csv(args.tss_file, sep='\t', header=None, usecols=(0,1,2,3))
@@ -113,7 +113,7 @@ if args.tss is not None:
         tss.columns = ['chrom', 'start', 'end', 'strand']
 
         # Calculate TSS enrichment over 4000-bp region
-        if args.output_file is not None:
+        if args.prefix is not None:
 
             # Define TSS region
             tss['start'] = tss['start'] - 2000
@@ -148,7 +148,7 @@ sum_signal = np.sum(full_signal)
 mean_signal = sum_signal/len(full_signal)
 
 #DHS score
-if args.dhs is not None:
+if args.dhs_file is not None:
 
     # Read DHS
     dhs = pd.read_csv(args.dhs_file, sep='\t', header=None, usecols=(0,1,2))
