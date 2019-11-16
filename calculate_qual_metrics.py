@@ -35,27 +35,56 @@ _logger.setLevel(logging.INFO)
 _logger.addHandler(_handler)
 
 
-def flip_negative(x, col):
-    if x['strand']=='-':
-        return np.flip(x[col],0)
+def flip_negative(df, col):
+    """
+    Function to flip values for intervals on the negative strand.
+    Args:
+        df: Pandas dataframe with a column named 'strand'
+        col: name of column in df whose values are to be flipped
+    Returns:
+        Pandas Series identical to df[col] except that values are 
+        flipped for rows where strand='-'.
+    """
+    if df['strand'] == '-':
+        return np.flip(df[col], 0)
     else:
-        return x[col]
+        return df[col]
 
 
-def filter_bed(bed, intervals_df):
-    intervals_df = intervals_df[intervals_df[0]==bed.iloc[0,0]]
+def filter_bed(bed_df, intervals_df):
+    """
+    Function to select bed-format entries that are fuly contained within given intervals
+    Assumes all entries in bed_df have the same chromosome.
+    Args:
+        bed_df: Pandas dataframe with columns for chrom, start, end.
+        intervals_df: Pandas dataframe with columns for chrom, start, end.
+    Returns:
+        bed_filtered: Pandas dataframe containing rows of bed_df that are contained within 
+        intervals of intervals_df. 
+    """
+    intervals_df = intervals_df[intervals_df[0] == bed_df.iloc[0,0]]
     if len(intervals_df) > 0:
-        in_interval = bed.apply(lambda x:((intervals_df[1]<=x[1])[intervals_df[2] >= x[2]].any()), axis=1)
-        bed_filtered = bed[in_interval]
+        in_interval = bed_df.apply(lambda x:((intervals_df[1]<=x[1])[intervals_df[2] >= x[2]].any()), axis=1)
+        bed_filtered = bed_df[in_interval]
         return bed_filtered
 
 
-def filter_bed_multichrom(bed, intervals_df=None, sizes_df=None):
+def filter_bed_multichrom(bed_df, intervals_df=None, sizes_df=None):
+    """
+    Function to select bed-format entries that are fuly contained within given intervals or chromosomes
+    Args:
+        bed_df: Pandas dataframe with columns for chrom, start, end.
+        intervals_df: Pandas dataframe with columns for chrom, start, end.
+        sizes_df: Pandas dataframe with columns for chrom, size.
+    Returns:
+        bed_filtered: Pandas dataframe containing rows of bed_df that are contained within 
+        intervals of intervals_df or chromosomes of sizes_df. 
+    """
     if intervals_df is not None:
-        bed_by_chrom = bed.groupby(0, as_index=False)
+        bed_by_chrom = bed_df.groupby(0, as_index=False)
         bed_filtered = bed_by_chrom.apply(filter_bed, (intervals_df))
     elif sizes_df is not None:
-        bed_filtered = bed[bed[0].isin(sizes[0])]
+        bed_filtered = bed_df[bed_df[0].isin(sizes[0])]
     else:
         raise InputError('Either intervals or sizes must be provided.')
     return bed_filtered
