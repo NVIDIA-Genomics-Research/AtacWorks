@@ -143,7 +143,7 @@ if args.tss_file is not None:
 
         # Calculate TSS score
         _logger.info('Calculating TSS score')
-        tss_score = np.mean(signal_near_tss)*2/(signal_near_tss[:100] + signal_near_tss[-100:])
+        tss_score = np.mean(signal_near_tss)*2/(signal_near_tss[:100] + signal_near_tss[-100:]).mean()
         print("TSS Score: {}".format(tss_score))
 
 # Mean signal overall
