@@ -167,7 +167,7 @@ if args.task == 'regression' or args.task == 'both':
 
     # Calculate metrics
     _logger.info("Calculating metrics for regression")
-    metrics = calculate_metrics([MSE(), CorrCoef()], x, y)
+    metrics = calculate_metrics([MSE(), CorrCoef(), SpearmanCorrCoef()], x, y)
     print("Regression metrics on full data : " +
           " | ".join([str(metric) for metric in metrics]))
 
@@ -184,12 +184,12 @@ if args.task == 'regression' or args.task == 'both':
         # Calculate separate metrics for peak and non-peak regions
         _logger.info("Calculating metrics for regression in peaks")
         metrics = calculate_metrics(
-            [MSE(), CorrCoef()], x[y_peaks == 1], y[y_peaks == 1])
+            [MSE(), CorrCoef(), SpearmanCorrCoef()], x[y_peaks == 1], y[y_peaks == 1])
         print("Regression metrics in peaks : " +
               " | ".join([str(metric) for metric in metrics]))
         _logger.info("Calculating metrics for regression outside peaks")
         metrics = calculate_metrics(
-            [MSE(), CorrCoef()], x[y_peaks == 0], y[y_peaks == 0])
+            [MSE(), CorrCoef(), SpearmanCorrCoef()], x[y_peaks == 0], y[y_peaks == 0])
         print("Regression metrics outside peaks : " +
               " | ".join([str(metric) for metric in metrics]))
 
