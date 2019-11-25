@@ -83,8 +83,10 @@ def parse_args():
                         help='bed file containing the chr and interval values for inference')
     parser.add_argument('--sizes_file', type=str, default="",
                         help='bed file containing the chr and max size values')
-    parser.add_argument('--round', type=int,
-                        help='round the output to this value')
+    parser.add_argument('--infer_threshold', type=float,
+                        help='threshold the output peaks to this value')
+    parser.add_argument('--batches_per_worker', type=int, default=16,
+                        help='number of batches to run per worker during multiprocessing')
     parser.add_argument('--gen_bigwig', action='store_true',
                         help='save the inference output to bigiwig in addition to bedgraph')
     parser.add_argument('--weights_path', type=str, default="",

@@ -151,7 +151,7 @@ def bedgraph_to_bigwig(bgfile, sizesfile, prefix=None, deletebg=False, sort=Fals
     if sort:
         sort_env = os.environ.copy()
         sort_env['LC_COLLATE'] = 'C'
-        subprocess.call(['sort', '-k1,1', '-k2,2n', bgfile, '-o', bgfile], env=sort_env)
+        subprocess.call(['sort', '-u', '-k1,1', '-k2,2n', bgfile, '-o', bgfile], env=sort_env)
     subprocess.call(['bedGraphToBigWig', bgfile, sizesfile, bwfile])
     if deletebg:
         subprocess.call(['rm', bgfile])
