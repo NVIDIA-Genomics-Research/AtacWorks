@@ -56,12 +56,11 @@ We are working to improve runtime, particularly for inference. Improvements are 
 
 ## Workflow
 
-1. Convert the MACS2 peak calls on the clean data to bigWig format with `peak2bw.py`
+1. Convert peak calls on the clean data to bigWig format with `peak2bw.py`
 2. Generate genomic intervals for training/validation/holdout with `get_intervals.py`
 3. Encode the training/validation/holdout data into .h5 format with `bw2h5.py`
 4. Train a model with `main.py`
-5. Apply the trained model for inference on another dataset with `main.py`
-6. Convert the predictions into bigWig format with `bedGraphToBigWig`
+5. Apply the trained model for inference on another dataset with `main.py`, producing output in bigWig or bedGraph format.
 
 ### Workflow input
 
