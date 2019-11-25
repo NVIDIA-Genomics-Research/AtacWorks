@@ -2,7 +2,7 @@
 
 AtacWorks is a deep learning toolkit for track denoising and peak calling from low-coverage or low-quality ATAC-Seq data.
 
-![AtacWorks](https://giphy.com/embed/U3DqwNYL0ehzwnTMvH)
+![AtacWorks](https://giphy.com/embed/U3DqwNYL0ehzwnTMvH/giphy.gif)
 
 AtacWorks trains a deep neural network to learn a mapping between noisy (low coverage/low quality) ATAC-Seq data and matching clean (high coverage/high quality) ATAC-Seq data from the same cell type. Once this mapping is learned, the trained model can be applied to improve other noisy ATAC-Seq datasets. 
 
