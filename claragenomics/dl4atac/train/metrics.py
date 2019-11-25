@@ -13,7 +13,7 @@ import torch.distributed as dist
 import torch.nn.functional as F
 import sklearn.metrics
 from collections import Iterable
-
+import scipy.stats
 
 class Metric(object):
     def __init__(self):
@@ -240,6 +240,24 @@ class AUPRC(Metric):
         x = x.flatten()
         y = y.flatten()
         self.val = sklearn.metrics.average_precision_score(y, x)
+        return self.val
+
+    def better_than(self, metric):
+        if not metric:
+            return True
+        return self.get() > metric.get()
+
+
+class SpearmanCorrCoef(Metric):
+    def __init__(self):
+        super(SpearmanCorrCoef, self).__init__()
+
+    def __call__(self, x, y):
+        x = Metric.convert_to_numpy(x)
+        y = Metric.convert_to_numpy(y)
+        x = x.flatten()
+        y = y.flatten()
+        self.val = scipy.stats.spearmanr(y, x)[0]
         return self.val
 
     def better_than(self, metric):
