@@ -24,9 +24,27 @@ Training and inference were performed on a single Tesla V100 GPU. Training time 
 
 We are working to improve runtime, particularly for inference. Improvements are tracked on our project board: https://github.com/clara-genomics/AtacWorks/projects 
 
+## Clone repository
+
+### Latest released version
+This will clone the repo to the `master` branch, which contains code for latest released version
+and hot-fixes.
+
+```
+git clone --recursive -b master https://github.com/clara-genomics/AtacWorks.git
+```
+
+### Latest development version
+This will clone the repo to the default branch, which is set to be the latest development branch.
+This branch is subject to change frequently as features and bug fixes are pushed.
+
+```bash
+git clone --recursive https://github.com/clara-genomics/AtacWorks.git
+```
+
 ## System Setup
 
-0. System requirements
+### System requirements
 
 * Ubuntu 16.04+
 * CUDA 9.0+
@@ -35,20 +53,22 @@ We are working to improve runtime, particularly for inference. Improvements are 
 * (Optional) A conda or virtualenv setup
 * Any NVIDIA GPU. AtacWorks training and inference currently does not run on CPU.
 
-1. Download `bedGraphToBigWig` and `bigWigToBedGraph` binaries and add to your $PATH
+### Install dependencies
+
+* Download `bedGraphToBigWig` and `bigWigToBedGraph` binaries and add to your $PATH
     ```
     rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bedGraphToBigWig <custom_path>
     rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bigWigToBedGraph <custom_path>
     export PATH="$PATH:<custom_path>"
     ```
 
-2. Install pip dependencies
+* Install pip dependencies
 
     ```
     pip install -r requirements-pip.txt
     ```
 
-3. Unit tests
+### Unit tests
 
     ```
     python -m pytest tests/

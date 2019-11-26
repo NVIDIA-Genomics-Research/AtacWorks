@@ -29,7 +29,7 @@ Workflow:
 Output:
     BED file containing scored peaks and summits
 Example:
-    python peaksummary.py --peakbw peaks.bw --scorebw scores.bw --prefix peaks
+    python peaksummary.py --peakbw peaks.bw --trackbw tracks.bw --prefix peaks
 """
 
 # Set up logging
@@ -47,7 +47,7 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='Data processing for genome-wide denoising models.')
     parser.add_argument('--peakbw', type=str, help='Path to bigwig file with peak labels')
-    parser.add_argument('--scorebw', type=str, help='Path to bigwig file with coverage track')
+    parser.add_argument('--trackbw', type=str, help='Path to bigwig file with coverage track')
     parser.add_argument('--prefix', type=str, help='output file prefix')
     parser.add_argument('--minlen', type=int, help='minimum peak length')
     args = parser.parse_args()
@@ -69,7 +69,7 @@ _logger.info('Calculating peak statistics')
 peaks['len'] = peaks['end'] - peaks['start']
 
 # Extract scores in peaks
-peakscores = extract_bigwig_intervals(peaks, args.scorebw, stack=False)
+peakscores = extract_bigwig_intervals(peaks, args.trackbw, stack=False)
 
 # Add mean score in peak
 peaks['mean'] = peakscores.apply(np.mean)
