@@ -180,6 +180,15 @@ python $root_dir/calculate_baseline_metrics.py \
     --sizes $ref_dir/hg19.auto.sizes \
     --thresholds 0.5
 
+echo ""
+echo "Step 8: Summarize peak statistics..."
+echo ""
+python $root_dir/peaksummary.py \
+    --peakbw $out_dir/inference_latest/test_data_HSC.5M.output.no_threshold.peaks.bw \
+    --trackbw $out_dir/inference_latest/test_data_HSC.5M.output.no_threshold.track.bw \
+    --prefix $out_dir/inference_latest/test_data_HSC.5M.output.no_threshold.summary \
+    --minlen 50
+
 #######
 
 echo ""
