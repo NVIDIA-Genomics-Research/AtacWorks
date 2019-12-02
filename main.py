@@ -438,8 +438,11 @@ def writer(args, res_queue, prefix):
 
     if args.num_workers != 0:
         for channel in channels:
+            # Get last file in temp directory which has all the data
+            files = glob.glob(os.path.join(temp_dir, str(channel), "*"))
+            assert(len(files) == 1) # Only one file should be left after the combiner stage
             # move final files out of tmp folder
-            shutil.move(os.path.join(temp_dir, str(channel), "00001"), outfiles[channel])
+            shutil.move(files[0], outfiles[channel])
 
     # remove tmp folder
     shutil.rmtree(temp_dir)
