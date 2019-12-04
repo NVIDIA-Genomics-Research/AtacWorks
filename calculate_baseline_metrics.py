@@ -101,8 +101,8 @@ def read_data_file(filename, channel=None, intervals=None, pad=None):
     if os.path.splitext(filename)[1] == '.h5':
         data = h5_to_array(filename, channel, pad)
     elif os.path.splitext(filename)[1] == '.bw':
-        data = extract_bigwig_intervals(intervals, filename)
-        data = data.flatten()
+        data = extract_bigwig_intervals(intervals, filename, stack=False)
+        data = np.concatenate(data)
     # TODO: Error if file extension is neither .h5 nor .bw
     return data.astype('float32')
 
