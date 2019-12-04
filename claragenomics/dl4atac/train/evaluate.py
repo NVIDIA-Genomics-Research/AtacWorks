@@ -22,7 +22,7 @@ from claragenomics.dl4atac.train.utils import myprint, gather_tensor
 from claragenomics.dl4atac.train.metrics import CorrCoef
 
 
-def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, world_size, distributed, pad, best_metric=None, res_queue=None):
+def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, world_size, distributed, pad, transform, best_metric=None, res_queue=None):
     ''' The evaluate function
 
     Args:
@@ -38,6 +38,7 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
         best_metric: metric object for comparison
         res_queue: network predictions will be put in the queue for result dumping
         pad: padding around intervals
+        transform: transformation to apply to coverage track
 
     '''
 
@@ -65,10 +66,15 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
             else:
                 (x, y_reg, y_cla) = batch
                 """
-            # model forward pass
+            # move input to GPU for model forward pass
             x = x.unsqueeze(1)  # (N, 1, L)
             x = x.cuda(gpu, non_blocking=True)
 
+            # transform coverage track if required
+            if transform == 'log':
+                x = torch.log(x + 1)
+
+            # model forward pass
             pred = model(x)
 
             ###################################################################
@@ -114,6 +120,9 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
         if task == 'both' or task == 'regression':
             ys_reg = torch.cat(y_reg_list, dim=0)
             preds_reg = torch.cat(pred_reg_list, dim=0)
+            # Reverse transformation on predicted values for final evaluation
+            if transform == 'log':
+                preds_reg = torch.exp(preds_reg) - 1
             del y_reg_list
             del pred_reg_list
         if task == 'both' or task == 'classification':

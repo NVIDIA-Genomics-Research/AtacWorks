@@ -21,7 +21,7 @@ import numpy as np
 
 
 def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
-          epoch, epochs, clip_grad, print_freq, distributed, world_size):
+          epoch, epochs, clip_grad, print_freq, distributed, world_size, transform):
 
     num_batches = len(train_loader)
     epoch_formatter = "Epoch " + \
@@ -40,7 +40,8 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
         x = batch['x']
         y_reg = batch['y_reg']
         y_cla = batch['y_cla']
-        # model forward pass
+
+        # move data and labels to GPU for forward pass
         x = x.unsqueeze(1)  # (N, 1, L)
         x = x.cuda(gpu, non_blocking=True)
 
@@ -52,6 +53,15 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
             y_reg = y_reg.cuda(gpu, non_blocking=True)
             y_cla = y_cla.cuda(gpu, non_blocking=True)
 
+        # transform tracks if required
+        if transform == 'log':
+            x = torch.log(x + 1)
+            if task == 'regression':
+                y = torch.log(y + 1)
+            elif task == 'both':
+                y_reg = torch.log(y_reg + 1)
+            
+        # Model forward pass
         t = time.time()
         pred = model(x)
 

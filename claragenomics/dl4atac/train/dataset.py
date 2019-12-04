@@ -16,7 +16,7 @@ import time
 import sys
 
 
-MAX_FILES = 10
+MAX_FILES = 20
 class DatasetBase(Dataset):
     def __init__(self, files):
         self.files = files

@@ -204,7 +204,7 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
         train(rank=args.rank, gpu=args.gpu, task=args.task, model=model, train_loader=train_loader,
               loss_func=loss_func, optimizer=optimizer, epoch=epoch, epochs=args.epochs,
               clip_grad=args.clip_grad, print_freq=args.print_freq, pad=args.pad,
-              distributed=args.distributed, world_size=args.world_size)
+              distributed=args.distributed, world_size=args.world_size, transform=args.transform)
 
         if epoch % args.eval_freq == 0:
             # either create new objects or call reset on each metric obj
@@ -216,7 +216,7 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
                      model=model, val_loader=val_loader,
                      metrics_reg=metrics_reg, metrics_cla=metrics_cla,
                      world_size=args.world_size, distributed=args.distributed,
-                     best_metric=best_metric, pad=args.pad)
+                     best_metric=best_metric, pad=args.pad, transform=args.transform)
 
             if args.rank == 0:
                 new_best = best_metric.better_than(current_best)
@@ -260,7 +260,7 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
     )
 
     infer(rank=args.rank, gpu=args.gpu, task=args.task, model=model, infer_loader=infer_loader,
-          print_freq=args.print_freq, res_queue=res_queue, pad=args.pad)
+          print_freq=args.print_freq, res_queue=res_queue, pad=args.pad, transform=args.transform)
 
 # Is Eval ever called???
 
@@ -294,10 +294,9 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
 
     metrics_reg, metrics_cla, best_metric = get_metrics(args)
     evaluate(rank=args.rank, gpu=args.gpu, task=args.task,
-             model=model, val_loader=eval_loader,
-             metrics_reg=metrics_reg, metrics_cla=metrics_cla,
+             model=model, val_loader=eval_loader, metrics_reg=metrics_reg, metrics_cla=metrics_cla,
              world_size=args.world_size, distributed=args.distributed,
-             best_metric=best_metric, res_queue=res_queue, pad=args.pad)
+             best_metric=best_metric, res_queue=res_queue, pad=args.pad, transform=args.transform)
 
 def save_to_bedgraph(batch_range, item, channel, intervals, outfile, rounding=None, threshold=None):
     """

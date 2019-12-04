@@ -23,7 +23,7 @@ from torch.nn.parallel.scatter_gather import gather
 from claragenomics.dl4atac.train.utils import myprint, progbar, dump_results
 
 
-def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad):
+def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad, transform):
     ''' The infer function
 
     Args:
@@ -35,6 +35,7 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad):
         print_freq: logging frequency
         res_queue: network predictions will be put in the queue for result dumping
         pad: padding on ends of interval
+        transform: transformation to apply to coverage track
 
     '''
 
@@ -58,11 +59,16 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad):
             idxes = batch['idx']
             x = batch['x']
             
-            # model forward pass
+            # move input to GPU for model forward pass
             x = x.unsqueeze(1)  # (N, 1, L)
             x = x.cuda(gpu, non_blocking=True)
             count += x.shape[0]
 
+            # transform coverage track if required
+            if transform == 'log':
+                x = torch.log(x + 1)
+
+            # Model forward pass
             pred = model(x)
 
             if task == 'both':
@@ -74,6 +80,13 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad):
             if pad is not None:
                 center = range(pad, x.shape[2] - pad)
                 batch_res = batch_res[:, center, :]
+
+            # Reverse transformation before writing output
+            if transform == 'log':
+                if task == 'both':
+                    batch_res[:,:,0] = np.exp(batch_res[:,:,0]) - 1
+                elif task == 'regression':
+                    batch_res = np.exp(batch_res) - 1
 
             # HACK -- replacing "key" with i=index.
             # TODO: Remove the write queue
