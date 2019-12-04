@@ -120,6 +120,8 @@ def parse_args():
                         help='Path to hdf5/bw file containing labels')
     parser.add_argument('--test_file', type=str,
                         help='Path to hdf5/bw file containing labels. If not provided, assumed to be present in label_file.')
+    parser.add_argument('--peak_file', type=str,
+                        help='Path to hdf5/bw file containing peak labels. If not provided, assumed to be present in label_file.')
     parser.add_argument('--task', type=str, choices=('regression',
                                                    'classification', 'both'), help='determines metrics')
     parser.add_argument('--ratio', type=float, help='subsampling ratio')
@@ -179,7 +181,10 @@ if args.task == 'regression' or args.task == 'both':
     if args.sep_peaks:
         # Load peak labels
         _logger.info("Loading labels for classification")
-        y_peaks = read_data_file(args.label_file, 2, intervals, pad=args.pad)
+        if args.peak_file is not None:
+            y_peaks = read_data_file(args.peak_file, 2, intervals, pad=args.pad)
+        else:
+            y_peaks = read_data_file(args.label_file, 2, intervals, pad=args.pad)
 
         # Calculate separate metrics for peak and non-peak regions
         _logger.info("Calculating metrics for regression in peaks")
