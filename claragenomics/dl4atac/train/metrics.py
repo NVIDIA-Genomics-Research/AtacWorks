@@ -13,7 +13,7 @@ import torch.distributed as dist
 import torch.nn.functional as F
 import sklearn.metrics
 from collections import Iterable
-import scipy.stats
+from scipy.stats import rankdata
 
 class Metric(object):
     def __init__(self):
@@ -86,11 +86,12 @@ class CorrCoef(Metric):
     def __call__(self, x, y):
         x = Metric.convert_to_tensor(x)
         y = Metric.convert_to_tensor(y)
-        x_norm = x - torch.mean(x)
-        y_norm = y - torch.mean(y)
-
-        self.val = torch.sum(x_norm * y_norm) / (torch.sqrt(torch.sum(x_norm**2))
-                                             * torch.sqrt(torch.sum(y_norm**2)))
+        xm = x.mean()
+        ym = y.mean()
+        x.add_(-1*xm)
+        y.add_(-1*ym)
+        self.val = torch.sum(x*y) / (torch.sqrt(torch.sum(x**2))
+                                             * torch.sqrt(torch.sum(y**2)))
         return self.val
 
     def better_than(self, metric):
@@ -255,9 +256,14 @@ class SpearmanCorrCoef(Metric):
     def __call__(self, x, y):
         x = Metric.convert_to_numpy(x)
         y = Metric.convert_to_numpy(y)
-        x = x.flatten()
-        y = y.flatten()
-        self.val = scipy.stats.spearmanr(y, x)[0]
+        x = np.apply_along_axis(rankdata,0,x)
+        y = np.apply_along_axis(rankdata,0,y)
+        xm = x.mean()
+        ym = y.mean()
+        np.subtract(x, xm, out=x)
+        np.subtract(y, ym, out=y)
+        self.val = np.sum(x * y) / (np.sqrt(np.sum(x**2))
+                                             * np.sqrt(np.sum(y**2)))
         return self.val
 
     def better_than(self, metric):

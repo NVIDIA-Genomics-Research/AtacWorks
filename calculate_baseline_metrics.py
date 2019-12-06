@@ -123,12 +123,12 @@ def parse_args():
     parser.add_argument('--peak_file', type=str,
                         help='Path to hdf5/bw file containing peak labels. If not provided, assumed to be present in label_file.')
     parser.add_argument('--task', type=str, choices=('regression',
-                                                   'classification', 'both'), help='determines metrics')
+                                                   'classification'), help='determines metrics')
     parser.add_argument('--ratio', type=float, help='subsampling ratio')
     parser.add_argument('--sep_peaks', action='store_true',
                         help='separate regression metrics for peaks and non-peaks')
     parser.add_argument('--thresholds', type=str,
-                        help='threshold or list of thresholds for classification metrics', default='0.5')
+                        help='threshold or list of thresholds for classification metrics')
     parser.add_argument('--intervals', type=str,
                         help='Intervals to read bigWig files')
     parser.add_argument('--sizes', type=str,
@@ -154,7 +154,7 @@ else:
 
 
 # Calculate regression metrics
-if args.task == 'regression' or args.task == 'both':
+if args.task == 'regression':
 
     # Load labels
     _logger.info("Loading labels for regression") 
@@ -200,12 +200,11 @@ if args.task == 'regression' or args.task == 'both':
 
 
 # Calculate classification metrics
-if args.task == 'classification' or args.task == 'both':
+else:
 
-    # Load labels if not already loaded
-    if not args.sep_peaks:
-        _logger.info("Loading labels for classification")
-        y_peaks = read_data_file(args.label_file, 2, intervals, pad=args.pad)
+    # Load labels
+    _logger.info("Loading labels for classification")
+    y_peaks = read_data_file(args.label_file, 2, intervals, pad=args.pad)
 
     # Load data
     _logger.info("Loading data for classification")
@@ -215,29 +214,30 @@ if args.task == 'classification' or args.task == 'both':
     calculate_class_nums(y_peaks, message="Bases per class in clean data")
 
     # Get threshold for evaluation
-    thresholds = args.thresholds.strip("[]")
-    if thresholds == args.thresholds:
-        # Only one threshold provided
-        thresholds = [float(thresholds)]
-    else:
-        # Multiple thresholds provided
-        thresholds = [float(t.strip()) for t in thresholds.split(',')]
+    if args.thresholds is not None:
+        thresholds = args.thresholds.strip("[]")
+        if thresholds == args.thresholds:
+            # Only one threshold provided
+            thresholds = [float(thresholds)]
+        else:
+            # Multiple thresholds provided
+            thresholds = [float(t.strip()) for t in thresholds.split(',')]
 
-    # Calculate metrics for each threshold
-    _logger.info("Calculating per-threshold classification metrics")
-    for t in thresholds:
-        calculate_class_nums(
-            x_peaks, t, message="Bases per class at threshold {}".format(t))
-        metrics = calculate_metrics([Recall(t), Precision(
-            t), Specificity(t), Accuracy(t)], x_peaks, y_peaks)
-        print("Classification metrics at threshold {}".format(t) +
-              " : " + " | ".join([str(metric) for metric in metrics]))
+        # Calculate metrics for each threshold
+        _logger.info("Calculating per-threshold classification metrics")
+        for t in thresholds:
+            calculate_class_nums(
+                x_peaks, t, message="Bases per class at threshold {}".format(t))
+            metrics = calculate_metrics([Recall(t), Precision(
+                t), Specificity(t), Accuracy(t)], x_peaks, y_peaks)
+            print("Classification metrics at threshold {}".format(t) +
+                  " : " + " | ".join([str(metric) for metric in metrics]))
 
-        # Calculate F1 score from precision and recall
-        rec = metrics[0].get()
-        prec = metrics[1].get()
-        f1 = 2*rec*prec/(rec + prec)
-        print("F1 score at threshold {} : {:7.3f}".format(t, f1))
+            # Calculate F1 score from precision and recall
+            rec = metrics[0].get()
+            prec = metrics[1].get()
+            f1 = 2*rec*prec/(rec + prec)
+            print("F1 score at threshold {} : {:7.3f}".format(t, f1))
 
     # Calculate AUC
     _logger.info("Calculating AUC metrics")
