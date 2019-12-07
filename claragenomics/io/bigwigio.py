@@ -21,7 +21,7 @@ import subprocess
 import os
 
 
-def extract_bigwig_to_numpy(interval, bw, pad, sizes):
+def extract_bigwig_to_numpy(interval, bw, pad, sizes, dtype='float32'):
     """
     Function to read values in an interval from a bigWig file.
     Args:
@@ -29,6 +29,7 @@ def extract_bigwig_to_numpy(interval, bw, pad, sizes):
         bw: bigWig file object
         pad(int): padding around interval
         sizes(dict): dictionary of chromosome sizes
+        dtype(str): numpy dtype to return
     Returns:
         NumPy array containing values in the interval
     """
@@ -46,12 +47,12 @@ def extract_bigwig_to_numpy(interval, bw, pad, sizes):
             right_zero_pad = np.zeros(interval[2] + pad - sizes[interval[0]])
             result = np.concatenate([result, right_zero_pad])
         assert(len(result) == interval[2] - interval[1] + 2*pad)
-    result = np.array(result, dtype='float32')
+    result = np.array(result, dtype=dtype)
     result = np.nan_to_num(result)
     return result
 
 
-def extract_bigwig_intervals(intervals_df, bwfile, stack=True, pad=None):
+def extract_bigwig_intervals(intervals_df, bwfile, stack=True, pad=None, dtype='float32'):
     """
     Function to read values in multiple intervals from a bigWig file.
     Args:
@@ -59,12 +60,13 @@ def extract_bigwig_intervals(intervals_df, bwfile, stack=True, pad=None):
         bwfile: bigWig file path
         stack (bool): if True, stack the values into a 2D NumPy array. Only works for equal-sized intervals.
         pad(int): padding to add around interval edges
+        dtype(str): numpy dtype to return
     Returns:
         NumPy array containing values in all intervals
     """
     with pyBigWig.open(bwfile) as bw:
         result = intervals_df.apply(
-            extract_bigwig_to_numpy, axis=1, args=(bw, pad, bw.chroms()))
+            extract_bigwig_to_numpy, axis=1, args=(bw, pad, bw.chroms(), dtype))
     if stack:
         result = np.stack(result)
     return result
