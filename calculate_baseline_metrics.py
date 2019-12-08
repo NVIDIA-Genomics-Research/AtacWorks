@@ -87,7 +87,7 @@ def h5_to_array(h5file, channel, pad):
     return data
 
 
-def read_data_file(filename, channel=None, intervals=None, pad=None):
+def read_data_file(filename, channel=None, intervals=None, pad=None, dtype='float32'):
     """
     Function to read clean and noisy data for evaluation
     Args:
@@ -95,16 +95,18 @@ def read_data_file(filename, channel=None, intervals=None, pad=None):
         channel: channel to read if file is an hdf5 file with labels
         intervals: intervals to read if file is in bigWig format
         pad(int): interval padding in h5 file
+        dtype(str): numpy dtype to return
     Returns:
         Data as a NumPy array
     """
     if os.path.splitext(filename)[1] == '.h5':
         data = h5_to_array(filename, channel, pad)
+        data = data.astype(dtype)
     elif os.path.splitext(filename)[1] == '.bw':
-        data = extract_bigwig_intervals(intervals, filename, stack=False)
+        data = extract_bigwig_intervals(intervals, filename, stack=False, dtype=dtype)
         data = np.concatenate(data)
     # TODO: Error if file extension is neither .h5 nor .bw
-    return data.astype('float32')
+    return data
 
 
 def calculate_metrics(metrics, x, y):
@@ -204,11 +206,11 @@ else:
 
     # Load labels
     _logger.info("Loading labels for classification")
-    y_peaks = read_data_file(args.label_file, 2, intervals, pad=args.pad)
+    y_peaks = read_data_file(args.label_file, 2, intervals, pad=args.pad, dtype='int8')
 
     # Load data
     _logger.info("Loading data for classification")
-    x_peaks = read_data_file(args.test_file, 1, intervals)
+    x_peaks = read_data_file(args.test_file, 1, intervals, dtype='float16')
 
     # Calculate number of bases in peaks
     calculate_class_nums(y_peaks, message="Bases per class in clean data")
@@ -242,4 +244,6 @@ else:
     # Calculate AUC
     _logger.info("Calculating AUC metrics")
     metrics = calculate_metrics([AUROC(), AUPRC()], x_peaks, y_peaks)
-    print("AUC metrics: " + " | ".join([str(metric) for metric in metrics])) 
+    print("AUC metrics: " + " | ".join([str(metric) for metric in metrics]))
+
+_logger.info('Done!') 

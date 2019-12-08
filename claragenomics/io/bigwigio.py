@@ -47,8 +47,8 @@ def extract_bigwig_to_numpy(interval, bw, pad, sizes, dtype='float32'):
             right_zero_pad = np.zeros(interval[2] + pad - sizes[interval[0]])
             result = np.concatenate([result, right_zero_pad])
         assert(len(result) == interval[2] - interval[1] + 2*pad)
-    result = np.array(result, dtype=dtype)
     result = np.nan_to_num(result)
+    result = result.astype(dtype)
     return result
 
 

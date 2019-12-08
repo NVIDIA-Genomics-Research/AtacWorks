@@ -8,6 +8,7 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
+import numpy as np
 import torch
 import torch.distributed as dist
 import torch.nn.functional as F
