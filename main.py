@@ -366,12 +366,12 @@ def writer(args, res_queue, prefix):
     elif args.task == "classification":
         channels = [1]
         outfiles = [os.path.join(out_base_path + ".peaks.bedGraph")]
-        rounding = [2]
+        rounding = [3]
     elif args.task == "both":
         channels = [0, 1]
         outfiles = [os.path.join(out_base_path + ".track.bedGraph"),
                     os.path.join(out_base_path + ".peaks.bedGraph")]
-        rounding = [0, 2]
+        rounding = [0, 3]
 
     # Temp dir used to save temp files during multiprocessing.
     temp_dir = tempfile.mkdtemp()

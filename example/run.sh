@@ -128,12 +128,13 @@ python $root_dir/calculate_baseline_metrics.py \
 python $root_dir/calculate_baseline_metrics.py \
     --label_file $out_dir/test_data.h5 --task classification \
     --test_file $out_dir/HSC.5M.chr123.10mb.peaks.bed.bw \
-    --intervals $out_dir/example.holdout_intervals.bed
+    --intervals $out_dir/example.holdout_intervals.bed \
+    --thresholds 0.5
 
 echo ""
 echo "Step 6a: Run inference on test set with default peak calling setting..."
 echo ""
-# Note: change  --weights_path to the path for your saved model!
+# Note: change --weights_path to the path for your saved model!
 python $root_dir/main.py --infer \
     --infer_files $out_dir/test_data.h5 \
     --intervals_file $out_dir/example.holdout_intervals.bed \
@@ -147,25 +148,11 @@ python $root_dir/main.py --infer \
     --task both --num_workers 0 --gen_bigwig
 
 echo ""
-echo "Step 6b: Run inference on test set without any thresholding for advanced usage..."
-echo ""
-# Note: change  --weights_path to the path for your saved model!
-python $root_dir/main.py --infer \
-    --infer_files $out_dir/test_data.h5 \
-    --intervals_file $out_dir/example.holdout_intervals.bed \
-    --sizes_file $ref_dir/hg19.auto.sizes \
-    --weights_path $out_dir/HSC.5M.model_latest/model_best.pth.tar \
-    --out_home $out_dir --label inference \
-    --result_fname HSC.5M.output.no_threshold \
-    --model resnet --nblocks 5 --nfilt 15 --width 50 --dil 8 \
-    --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
-    --task both --num_workers 0 --gen_bigwig
-echo ""
 echo "Step 7a: Calculate metrics for track coverage after inference..."
 echo ""
 python $root_dir/calculate_baseline_metrics.py \
     --label_file $out_dir/test_data.h5 --task regression \
-    --test_file $out_dir/inference_latest/test_data_HSC.5M.output.no_threshold.track.bw \
+    --test_file $out_dir/inference_latest/test_data_HSC.5M.output.track.bw \
     --intervals $out_dir/example.holdout_intervals.bed \
     --sizes $ref_dir/hg19.auto.sizes \
     --sep_peaks
@@ -175,7 +162,7 @@ echo "Step 7b: Calculate metrics for peak classification after inference..."
 echo ""
 python $root_dir/calculate_baseline_metrics.py \
     --label_file $out_dir/test_data.h5 --task classification \
-    --test_file $out_dir/inference_latest/test_data_HSC.5M.output.no_threshold.peaks.bw \
+    --test_file $out_dir/inference_latest/test_data_HSC.5M.output.peaks.bw \
     --intervals $out_dir/example.holdout_intervals.bed \
     --sizes $ref_dir/hg19.auto.sizes \
     --thresholds 0.5
@@ -184,17 +171,17 @@ echo ""
 echo "Step 8: Summarize peak statistics..."
 echo ""
 python $root_dir/peaksummary.py \
-    --peakbw $out_dir/inference_latest/test_data_HSC.5M.output.no_threshold.peaks.bw \
-    --trackbw $out_dir/inference_latest/test_data_HSC.5M.output.no_threshold.track.bw \
-    --prefix $out_dir/inference_latest/test_data_HSC.5M.output.no_threshold.summary \
+    --peakbw $out_dir/inference_latest/test_data_HSC.5M.output.peaks.bw \
+    --trackbw $out_dir/inference_latest/test_data_HSC.5M.output.track.bw \
+    --prefix $out_dir/inference_latest/test_data_HSC.5M.output.summary \
     --minlen 50
 
 #######
 
 echo ""
-echo "An alternative method to call peaks..."
+echo "An alternative method to call peaks (for advanced usage)..."
 echo ""
-
+# Note: change  --weights_path to the path for your saved model!
 python $root_dir/main.py --infer \
     --infer_files $out_dir/test_data.h5 \
     --intervals_file $out_dir/example.holdout_intervals.bed \
@@ -221,6 +208,7 @@ python $root_dir/main.py --infer \
     --weights_path $saved_model_dir/bulk_blood_data/5000000.7cell.resnet.5.2.15.8.50.0803.pth.tar \
     --out_home $out_dir --label inference.pretrained \
     --result_fname HSC.5M.output.pretrained \
+    --infer_threshold 0.5 \
     --model resnet --nblocks 5 --nfilt 15 --width 50 --dil 8 \
     --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
     --task both --num_workers 0 --gen_bigwig
