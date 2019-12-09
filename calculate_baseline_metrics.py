@@ -131,7 +131,7 @@ def parse_args():
                         help='separate regression metrics for peaks and non-peaks')
     parser.add_argument('--thresholds', type=str,
                         help='threshold or list of thresholds for classification metrics')
-    parser.add_argument('--auc', type=float, help='calculate AUC metrics')
+    parser.add_argument('--auc', action='store_true', help='calculate AUC metrics')
     parser.add_argument('--intervals', type=str,
                         help='Intervals to read bigWig files')
     parser.add_argument('--sizes', type=str,
