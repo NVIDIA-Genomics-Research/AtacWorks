@@ -91,8 +91,6 @@ class CorrCoef(Metric):
         ym = y.mean()
         x = x - xm
         y = y - ym
-        #x.add_(-1*xm)
-        #y.add_(-1*ym)
         self.val = torch.sum(x*y) / (torch.sqrt(torch.sum(x**2))
                                              * torch.sqrt(torch.sum(y**2)))
         return self.val
