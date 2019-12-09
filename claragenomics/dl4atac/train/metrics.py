@@ -89,8 +89,8 @@ class CorrCoef(Metric):
         y = Metric.convert_to_tensor(y)
         xm = x.mean()
         ym = y.mean()
-        x = x-xm
-        y = y-ym
+        x = x - xm
+        y = y - ym
         #x.add_(-1*xm)
         #y.add_(-1*ym)
         self.val = torch.sum(x*y) / (torch.sqrt(torch.sum(x**2))
@@ -164,6 +164,25 @@ class Precision(Metric):
             self.val = num_peak_correct / num_peak_pred
         else:
             self.val = torch.tensor(1.).cuda() if x.is_cuda else torch.tensor(1.)
+        return self.val
+
+    def better_than(self, metric):
+        if not metric: 
+            return True
+        return self.get() > metric.get()
+
+
+class F1(Metric):
+    def __init__(self, threshold):
+        super(F1, self).__init__()
+        self.threshold = threshold
+
+    def __call__(self, x, y):
+        r = Recall(self.threshold)
+        p = Precision(self.threshold)
+        rec = r(x, y)
+        prec = p(x, y)
+        self.val = 2*rec*prec/(rec + prec)
         return self.val
 
     def better_than(self, metric):

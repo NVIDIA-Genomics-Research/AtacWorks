@@ -31,7 +31,7 @@ import pandas as pd
 import os
 import logging
 
-from claragenomics.dl4atac.train.metrics import BCE, MSE, Recall, Precision, Specificity, CorrCoef, Accuracy, AUROC, AUPRC, SpearmanCorrCoef
+from claragenomics.dl4atac.train.metrics import BCE, MSE, Recall, Precision, Specificity, CorrCoef, Accuracy, AUROC, AUPRC, SpearmanCorrCoef, F1
 from claragenomics.io.bigwigio import extract_bigwig_intervals
 
 # Set up logging
@@ -236,15 +236,9 @@ else:
             calculate_class_nums(
                 x_peaks, t, message="Bases per class at threshold {}".format(t))
             metrics = calculate_metrics([Recall(t), Precision(
-                t), Specificity(t), Accuracy(t)], x_peaks, y_peaks)
+                t), Specificity(t), Accuracy(t), F1(t)], x_peaks, y_peaks)
             print("Classification metrics at threshold {}".format(t) +
                   " : " + " | ".join([str(metric) for metric in metrics]))
-
-            # Calculate F1 score from precision and recall
-            rec = metrics[0].get()
-            prec = metrics[1].get()
-            f1 = 2*rec*prec/(rec + prec)
-            print("F1 score at threshold {} : {:7.3f}".format(t, f1))
 
     # Calculate AUC
     if args.auc is not None:
