@@ -521,6 +521,17 @@ def main():
             if args.infer:
                 args.infer_files = [infile]
                 _logger.debug("Inference data: ", args.infer_files)
+
+                # Ensure the sizes for intervals file and infer dataset are same.
+                infer_dataset = DatasetInfer(args.infer_files)
+                intervals = pd.read_csv(args.intervals_file, sep='\t', header=None, names=['chrom', 'start', 'end'],
+                     usecols=(0,1,2), dtype={'chrom':str, 'start':int, 'end':int})
+
+                assert len(infer_dataset) == intervals.shape[0], \
+                        "Size of infer dataset ({}) doesn't match the intervals file ({})".format(len(infer_dataset), intervals.shape[0])
+                # Delete dataset and intervals objects in main thread
+                del infer_dataset
+                del intervals
             else:
                 args.val_files = [infile]
                 _logger.debug("Evaluation data: ", args.val_files)
@@ -529,7 +540,6 @@ def main():
                 args.interval_size = f['data'].shape[1]
                 args.batch_size = 1
 
-             
             prefix = os.path.basename(infile).split(".")[0]
             # setup queue and kick off writer process
             #############################################################
