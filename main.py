@@ -250,6 +250,12 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
     infer_dataset = DatasetInfer(args.infer_files)
     infer_sampler = None
 
+    # Check that the intervals file and infer data have same number of entries.
+    intervals = pd.read_csv(args.intervals_file, sep='\t', header=None, names=['chrom', 'start', 'end'],
+         usecols=(0,1,2), dtype={'chrom':str, 'start':int, 'end':int})
+    assert len(infer_dataset) == intervals.shape[0], \
+            "Size of infer dataset ({}) doesn't match the intervals file ({})".format(len(infer_dataset), intervals.shape[0])
+
     if args.distributed:
         infer_sampler = torch.utils.data.distributed.DistributedSampler(
             infer_dataset, shuffle=False)
