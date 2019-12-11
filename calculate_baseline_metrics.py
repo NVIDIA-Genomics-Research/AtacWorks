@@ -215,7 +215,7 @@ else:
         x_peaks = read_data_file(args.test_file, 1, intervals, dtype='float32')
         # fp32 is required by torch for sensitivity/specificity calculation
     else:
-        read_data_file(args.test_file, 1, intervals, dtype='float16')
+        x_peaks = read_data_file(args.test_file, 1, intervals, dtype='float16')
 
     # Calculate number of bases in peaks
     calculate_class_nums(y_peaks, message="Bases per class in clean data")
