@@ -150,6 +150,33 @@ def build_model(args):
     return model
 
 
+def check_intervals(intervals_df, sizes_df, h5_file):
+    """
+    Function to check intervals file used for inference.
+    Args:
+        intervals_df(Pandas DataFrame): df with cols chrom, start, end
+        sizes_df(Pandas dataframe): df with cols chrom, len
+        h5_file(str): path to h5 file to match intervals
+    """
+    # Length of intervals == length of dataset in h5 file
+    with h5py.File(h5_file, 'r') as hf:
+        len_data = len(hf['data'])
+    assert len_data == intervals_df.shape[0], \
+        "Size of infer dataset ({}) doesn't match the intervals file ({})".format(len_data, intervals_df.shape[0])
+
+    # Intervals do not cover chromosomes outside sizes file.
+    interval_chroms = set(intervals_df['chrom'])
+    sizes_chroms = set(sizes_df['chrom'])
+    assert interval_chroms.issubset(sizes_chroms), \
+         "Intervals file contains chromosomes not in sizes file ({})".format(interval_chroms.difference(sizes_chroms))
+
+    # Interval bounds do not exceed chromosome lengths
+    intervals_sizes = intervals_df.merge(sizes_df, on='chrom')
+    excess_intervals = intervals_sizes[intervals_sizes['end'] > intervals_sizes['len']]
+    assert len(excess_intervals) == 0, \
+          "Intervals exceed chromosome sizes in sizes file ({})".format(excess_intervals)
+
+
 def train_worker(gpu, ngpu_per_node, args, timers=None):
     # fix random seed so models have the same starting weights
     torch.manual_seed(42)
@@ -262,8 +289,6 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
     infer(rank=args.rank, gpu=args.gpu, task=args.task, model=model, infer_loader=infer_loader,
           print_freq=args.print_freq, res_queue=res_queue, pad=args.pad, transform=args.transform)
 
-# Is Eval ever called???
-
 
 def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
 
@@ -297,6 +322,7 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
              model=model, val_loader=eval_loader, metrics_reg=metrics_reg, metrics_cla=metrics_cla,
              world_size=args.world_size, distributed=args.distributed,
              best_metric=best_metric, res_queue=res_queue, pad=args.pad, transform=args.transform)
+
 
 def save_to_bedgraph(batch_range, item, channel, intervals, outfile, rounding=None, threshold=None):
     """
@@ -522,16 +548,17 @@ def main():
                 args.infer_files = [infile]
                 _logger.debug("Inference data: ", args.infer_files)
 
-                # Ensure the sizes for intervals file and infer dataset are same.
-                infer_dataset = DatasetInfer(args.infer_files)
+                # Check that intervals, sizes and h5 file are all compatible.
+                _logger.info('Checkng input files for compatibility')
                 intervals = pd.read_csv(args.intervals_file, sep='\t', header=None, names=['chrom', 'start', 'end'],
                      usecols=(0,1,2), dtype={'chrom':str, 'start':int, 'end':int})
+                sizes = pd.read_csv(args.sizes_file, sep='\t', header=None, names=['chrom', 'len'],
+                     usecols=(0,1), dtype={'chrom':str, 'len':int}) 
+                check_intervals(intervals, sizes, args.infer_files[0])
 
-                assert len(infer_dataset) == intervals.shape[0], \
-                        "Size of infer dataset ({}) doesn't match the intervals file ({})".format(len(infer_dataset), intervals.shape[0])
-                # Delete dataset and intervals objects in main thread
-                del infer_dataset
+                # Delete intervals and sizes objects in main thread
                 del intervals
+                del sizes
             else:
                 args.val_files = [infile]
                 _logger.debug("Evaluation data: ", args.val_files)
