@@ -85,6 +85,10 @@ def parse_args():
                         help='bed file containing the chr and max size values')
     parser.add_argument('--infer_threshold', type=float,
                         help='threshold the output peaks to this value')
+    parser.add_argument('--reg_rounding', type=int, default=0,
+                        help='rounding values for regression outputs')
+    parser.add_argument('--cla_rounding', type=int, default=3,
+                        help='rounding values for classification outputs')
     parser.add_argument('--batches_per_worker', type=int, default=16,
                         help='number of batches to run per worker during multiprocessing')
     parser.add_argument('--gen_bigwig', action='store_true',
