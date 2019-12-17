@@ -606,9 +606,14 @@ def main():
             #############################################################
             manager = mp.Manager()
             res_queue = manager.Queue()
-            write_proc = mp.Process(target=writer, args=(args.infer, args.intervals_file, args.exp_dir,
-                         args.result_fname, args.task, args.num_workers, args.infer_threshold, args.reg_rounding,
-                         args.cla_rounding, args.batches_per_worker, args.gen_bigwig, args.sizes_file, res_queue, prefix))
+            # Create a keyword argument dictionary to pass into the multiprocessor
+            keyword_args = {"infer" : args.infer, "intervals_file" : args.intervals_file, "exp_dir" : args.exp_dir,
+                            "result_fname" : args.result_fname, "task" : args.task, "num_workers" : args.num_workers,
+                            "infer_threshold" : args.infer_threshold, "reg_rounding" : args.reg_rounding,
+                            "cla_rounding" : args.cla_rounding, "batches_per_worker" : args.batches_per_worker,
+                            "gen_bigwig" : args.gen_bigwig, "sizes_file" : args.sizes_file,
+                            "res_queue" : res_queue, "prefix" : prefix}
+            write_proc = mp.Process(target=writer, kwargs=keyword_args)
             write_proc.start()
             #############################################################
 
