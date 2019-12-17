@@ -388,16 +388,16 @@ def writer(args, res_queue, prefix):
     if args.task == "regression":
         channels = [0]
         outfiles = [os.path.join(out_base_path + ".track.bedGraph")]
-        rounding = [0]
+        rounding = [args.reg_rounding]
     elif args.task == "classification":
         channels = [1]
         outfiles = [os.path.join(out_base_path + ".peaks.bedGraph")]
-        rounding = [3]
+        rounding = [args.cla_rounding]
     elif args.task == "both":
         channels = [0, 1]
         outfiles = [os.path.join(out_base_path + ".track.bedGraph"),
                     os.path.join(out_base_path + ".peaks.bedGraph")]
-        rounding = [0, 3]
+        rounding = [args.reg_rounding, args.cla_rounding]
 
     # Temp dir used to save temp files during multiprocessing.
     temp_dir = tempfile.mkdtemp()
@@ -488,7 +488,6 @@ def combiner(f1, f2):
 
 def main():
     args = parse_args()
-
     # Set log level
     if args.debug:
         _handler.setLevel(logging.DEBUG)
