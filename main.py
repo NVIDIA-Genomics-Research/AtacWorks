@@ -70,7 +70,7 @@ def set_random_seed(seed):
         mpu.model_parallel_cuda_manual_seed(seed)
 
 
-def get_losses(task, mse_weight, pearson_weight, gpu):
+def get_losses(task, mse_weight, pearson_weight, gpu, poisson_weight=None):
     """
     Return loss function. 
     Args:
@@ -87,9 +87,14 @@ def get_losses(task, mse_weight, pearson_weight, gpu):
                               mse_weight, pearson_weight], device=gpu)
     elif task == "classification":
         loss_func = MultiLoss('bce', 1, device=gpu)
-    elif task == 'both':  # shouldn't reach here for now
-        loss_func = [MultiLoss(['mse', 'pearsonloss'], [mse_weight, pearson_weight], device=gpu),
+    elif task == 'both': 
+        if poisson_weight is not None:
+            loss_func = [MultiLoss(['poissonloss'], [poisson_weight], device=gpu),
                      MultiLoss('bce', 1, device=gpu)]
+        else:
+            loss_func = [MultiLoss(['mse', 'pearsonloss'], [mse_weight, pearson_weight], device=gpu),
+                     MultiLoss('bce', 1, device=gpu)]
+        
     return loss_func
 
 
@@ -249,7 +254,7 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
         # drop_last=True # need to drop irregular batch for distributed evaluation due to limitation of dist.all_gather
     )
 
-    loss_func = get_losses(args.task, args.mse_weight, args.pearson_weight, args.gpu)
+    loss_func = get_losses(args.task, args.mse_weight, args.pearson_weight, args.gpu, args.poisson_weight)
 
     current_best = None
     for epoch in range(args.epochs):
