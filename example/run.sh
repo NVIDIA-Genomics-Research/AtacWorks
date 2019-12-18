@@ -109,10 +109,8 @@ echo ""
 python $root_dir/main.py --train \
     --train_files $out_dir/train_data.h5 \
     --val_files $out_dir/val_data.h5 \
-    --model resnet --nblocks 5 --nfilt 15 --width 50 \
-    --dil 8 --task both --epochs 2 --afunc relu --mse_weight 0.001 \
-    --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
-    --pearson_weight 1 --bs 8 --reg_rounding 0 --cla_rounding 3 \
+    --task both \
+    --bs 8 --reg_rounding 0 --cla_rounding 3 \
     --out_home $out_dir --label HSC.5M.model \
     --checkpoint_fname checkpoint.pth.tar \
     --save_freq=1 --eval_freq=1 --distributed
@@ -189,8 +187,6 @@ python $root_dir/main.py --infer \
     --weights_path $out_dir/HSC.5M.model_latest/model_best.pth.tar \
     --out_home $out_dir --label inference --reg_rounding 0 --cla_rounding 3 \
     --result_fname HSC.5M.output.probs \
-    --model resnet --nblocks 5 --nfilt 15 --width 50 --dil 8 \
-    --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
     --task both --num_workers 0 --gen_bigwig
 
 macs2 bdgpeakcall -i $out_dir/inference_latest/test_data_HSC.5M.output.probs.peaks.bedGraph -o $out_dir/inference_latest/test_data_HSC.5M.output.peaks.narrowPeak -c 0.5
@@ -208,8 +204,6 @@ python $root_dir/main.py --infer \
     --weights_path $saved_model_dir/bulk_blood_data/5000000.7cell.resnet.5.2.15.8.50.0803.pth.tar \
     --out_home $out_dir --label inference.pretrained \
     --result_fname HSC.5M.output.pretrained --reg_rounding 0 --cla_rounding 3 \
-    --model resnet --nblocks 5 --nfilt 15 --width 50 --dil 8 \
-    --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
     --task both --num_workers 0 --gen_bigwig
 
 echo ""
