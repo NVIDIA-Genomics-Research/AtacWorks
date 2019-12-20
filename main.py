@@ -83,8 +83,7 @@ def get_losses(task, mse_weight, pearson_weight, gpu, poisson_weight):
         loss_func : list of loss functions for each task.
     """
 
-    reg_loss_func = MultiLoss('poissonloss', poisson_weight, device=gpu) if poisson_weight > 0 
-                    else MultiLoss(['mse', 'pearsonloss'], [mse_weight, pearson_weight], device=gpu)
+    reg_loss_func = MultiLoss('poissonloss', poisson_weight, device=gpu) if poisson_weight > 0 else MultiLoss(['mse', 'pearsonloss'], [mse_weight, pearson_weight], device=gpu)
     cla_loss_func = MultiLoss('bce', 1, device=gpu)
 
     if task == "regression":
