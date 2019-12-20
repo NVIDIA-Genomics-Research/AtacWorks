@@ -486,7 +486,7 @@ def writer(infer, intervals_file, exp_dir, result_fname,
                         map_args = list(zip(tmp_batch_ranges, all_items,
                                             [channel]*len(tmp_batch_ranges), all_intervals,
                                             temp_files, [rounding[channel]]*len(tmp_batch_ranges),
-                                            [args.infer_threshold]*len(tmp_batch_ranges)))
+                                            [infer_threshold]*len(tmp_batch_ranges)))
 
                     pool.starmap(save_to_bedgraph, map_args)
 
