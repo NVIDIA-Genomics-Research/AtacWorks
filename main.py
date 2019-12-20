@@ -83,13 +83,15 @@ def get_losses(task, mse_weight, pearson_weight, gpu, poisson_weight=None):
     """
 
     if task == "regression":
-        loss_func = MultiLoss(['mse', 'pearsonloss'], [
-                              mse_weight, pearson_weight], device=gpu)
+        if poisson_weight > 0:
+            loss_func = MultiLoss('poissonloss', poisson_weight, device=gpu)
+        else:
+            loss_func = MultiLoss(['mse', 'pearsonloss'], [mse_weight, pearson_weight], device=gpu)
     elif task == "classification":
         loss_func = MultiLoss('bce', 1, device=gpu)
     elif task == 'both': 
-        if poisson_weight is not None:
-            loss_func = [MultiLoss(['poissonloss'], [poisson_weight], device=gpu),
+        if poisson_weight > 0:
+            loss_func = [MultiLoss('poissonloss', poisson_weight, device=gpu),
                      MultiLoss('bce', 1, device=gpu)]
         else:
             loss_func = [MultiLoss(['mse', 'pearsonloss'], [mse_weight, pearson_weight], device=gpu),
