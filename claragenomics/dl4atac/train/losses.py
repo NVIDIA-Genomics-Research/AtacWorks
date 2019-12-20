@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from collections import Iterable, OrderedDict
-from claragenomics.dl4atac.train.custom_losses import PearsonLoss
+from claragenomics.dl4atac.train.custom_losses import PearsonLoss, PoissonLoss
 
 
 class MultiLoss(object):
@@ -75,6 +75,12 @@ class MultiLoss(object):
     # Pearson loss
     def pearsonloss(self):
         loss_func = PearsonLoss()
+        loss_func = self.to_device(loss_func)
+        return loss_func
+
+    # Poisson loss
+    def poissonloss(self):
+        loss_func = PoissonLoss()
         loss_func = self.to_device(loss_func)
         return loss_func
 

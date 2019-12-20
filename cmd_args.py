@@ -61,7 +61,8 @@ def parse_args():
                         help='relative weight of mse loss', default=0.001)
     parser.add_argument('--pearson_weight', type=float,
                         help='relative weight of pearson loss', default=1)
-
+    parser.add_argument('--poisson_weight', type=float,
+                        help='relative weight of poisson loss', default=0)
 # =========================================================================================
     # experiment args
     parser.add_argument('--label', type=str, default='AtacWorks',
