@@ -90,7 +90,7 @@ def get_losses(task, mse_weight, pearson_weight, gpu, poisson_weight):
     if task == "regression":
         loss_func = reg_loss_func
     elif task == "classification":
-        loss_func = "cla_loss_func
+        loss_func = cla_loss_func
     else:
         loss_func = [reg_loss_func, cla_loss_func]
 
