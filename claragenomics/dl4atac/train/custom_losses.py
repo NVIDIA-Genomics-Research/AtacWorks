@@ -29,6 +29,5 @@ class PoissonLoss(nn.Module):
         super(PoissonLoss, self).__init__()
 
     def forward(self, input, targets):
-        #loss = torch.mean(torch.exp(input + 1e-7) - targets*(input + 1e-7))
         loss = torch.mean(input - targets*torch.log(input + 1e-7))
         return loss
