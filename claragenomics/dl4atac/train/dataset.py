@@ -16,13 +16,11 @@ import time
 import sys
 
 
-MAX_FILES = 26
 class DatasetBase(Dataset):
     def __init__(self, files):
         self.files = files
         self._h5_gen = None
         assert len(files) > 0, "Need to supply at least one file for dataset loading"
-        assert len(files) < MAX_FILES, "Only tested for up to %d files in dataset" % MAX_FILES
         self.running_counts = [0]
         for file in self.files:
             with h5py.File(file, 'r') as f:
