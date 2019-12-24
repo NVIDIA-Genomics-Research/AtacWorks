@@ -98,6 +98,8 @@ def parse_args():
                         help="checkpoint path to load the model from for inference or resume training")
     parser.add_argument('--result_fname', type=str, default='infer_results.h5',
                         help='filename of the inference results')
+    parser.add_argument('--deletebg', action='store_true',
+                        help='delete output bedGraph file')
 
     # training args
     parser.add_argument('--task', default='regression', choices=['regression', 'classification', 'both'],
