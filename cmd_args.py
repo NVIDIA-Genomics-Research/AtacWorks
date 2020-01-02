@@ -131,6 +131,8 @@ def parse_args():
                         help="evaluation frequency")
     parser.add_argument('--threshold', type=float, default=0.5,
                         help="threshold for classification metrics")
+    parser.add_argument('--best_metric_choice', type=str, default="AUROC", choices=['BCE', 'MSE', 'Recall', 'Specificity', 'CorrCoef', 'AUROC'],
+                        help="metric to be considered for best metric. Choice is case sensitive.")
 
     # dist-env args
     parser.add_argument('--gpu', default=0, type=int,

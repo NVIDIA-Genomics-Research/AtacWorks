@@ -35,6 +35,7 @@ from claragenomics.dl4atac.train.dataset import DatasetTrain, DatasetInfer
 from claragenomics.dl4atac.train.evaluate import evaluate
 from claragenomics.dl4atac.train.infer import infer
 from claragenomics.dl4atac.train.losses import MultiLoss
+from claragenomics.dl4atac.train import metrics
 from claragenomics.dl4atac.train.metrics import BCE, MSE, Recall, Specificity, CorrCoef, AUROC
 from claragenomics.dl4atac.train.models import *
 from claragenomics.dl4atac.train.train import train
@@ -96,12 +97,13 @@ def get_losses(task, mse_weight, pearson_weight, gpu, poisson_weight):
     return loss_func
 
 
-def get_metrics(task, threshold):
+def get_metrics(task, threshold, best_metric_choice):
     """
     Get metrics. 
     Args:
         task : Whether the task is regression or classification or both.
         threshold : the threshold for classification.
+        best_metric_choice : which metric to use for best metric.
     Return: #TODO
         metrics_reg :
         metrics_cla :
@@ -113,17 +115,27 @@ def get_metrics(task, threshold):
     best_metric = []
     if task == "regression":
         metrics_reg = [MSE(), CorrCoef()]
-        best_metric = metrics_reg[-1]
     elif task == "classification":
         metrics_cla = [BCE(), Recall(threshold),
                        Specificity(threshold), AUROC()]
-        best_metric = metrics_cla[-1]
     elif task == 'both':
         metrics_reg = [MSE(), CorrCoef()]
         metrics_cla = [BCE(), Recall(threshold),
                        Specificity(threshold), AUROC()]
-        best_metric = metrics_cla[-1]
+    try:
+        best_metric_class = getattr(metrics, best_metric_choice)
+        
+        if metrics_reg:
+            for obj in metrics_reg:
+                if isinstance(obj, best_metric_class):
+                    best_metric = obj
 
+        if metrics_cla:
+            for obj in metrics_cla:
+                if isinstance(obj, best_metric_class):
+                    best_metric = obj
+    except AttributeError as e:
+        print (e)
     return metrics_reg, metrics_cla, best_metric
 
 # build_model now does build, load, distribute in one go
@@ -265,7 +277,7 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
 
         if epoch % args.eval_freq == 0:
             # either create new objects or call reset on each metric obj
-            metrics_reg, metrics_cla, best_metric = get_metrics(args.task, args.threshold)
+            metrics_reg, metrics_cla, best_metric = get_metrics(args.task, args.threshold, args.best_metric_choice)
 
             # best_metric is the metric used to compare results across different evaluation runs
             # it's modified in place
@@ -353,7 +365,7 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
         num_workers=args.num_workers, pin_memory=True, sampler=eval_sampler, drop_last=False
     )
 
-    metrics_reg, metrics_cla, best_metric = get_metrics(args.task, args.threshold)
+    metrics_reg, metrics_cla, best_metric= get_metrics(args.task, args.threshold, args.best_metric_choice)
     evaluate(rank=args.rank, gpu=args.gpu, task=args.task,
              model=model, val_loader=eval_loader, metrics_reg=metrics_reg, metrics_cla=metrics_cla,
              world_size=args.world_size, distributed=args.distributed,
