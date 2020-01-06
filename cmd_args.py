@@ -25,6 +25,7 @@ def check_mutual_exclusive(
 
 def parse_args():
     parser = configargparse.ArgParser(default_config_files=['configs/*.yaml'])
+    parser.add('--config', required=False, is_config_file=True, help='config file path')
 
     # Learning args
     parser.add('--clip_grad', type=float, default=0.,

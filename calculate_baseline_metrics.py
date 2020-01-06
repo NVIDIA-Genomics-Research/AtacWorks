@@ -31,7 +31,7 @@ import pandas as pd
 import os
 import logging
 
-from claragenomics.dl4atac.train.metrics import BCE, MSE, Recall, Precision, Specificity, CorrCoef, Accuracy, AUROC, AUPRC, SpearmanCorrCoef, F1
+from claragenomics.dl4atac.metrics import BCE, MSE, Recall, Precision, Specificity, CorrCoef, Accuracy, AUROC, AUPRC, SpearmanCorrCoef, F1
 from claragenomics.io.bigwigio import extract_bigwig_intervals
 
 # Set up logging

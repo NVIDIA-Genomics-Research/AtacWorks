@@ -12,7 +12,7 @@ import pytest
 
 
 import torch
-import claragenomics.dl4atac.train.metrics as metrics
+import claragenomics.dl4atac.metrics as metrics
 
 
 test_cases = [

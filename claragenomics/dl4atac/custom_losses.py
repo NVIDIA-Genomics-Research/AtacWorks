@@ -10,7 +10,7 @@
 
 import torch
 import torch.nn as nn
-from claragenomics.dl4atac.train.metrics import CorrCoef
+from claragenomics.dl4atac.metrics import CorrCoef
 
 class PearsonLoss(nn.Module):
 

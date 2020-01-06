@@ -19,7 +19,7 @@ from datetime import datetime
 import torch
 import torch.distributed as dist
 from termcolor import colored
-
+import yaml
 
 def myprint(msg, color=None, rank=0):
     if rank == 0:
@@ -51,24 +51,20 @@ def make_experiment_dir(label, out_home, timestamp=True, create_latest_symlink=T
         os.symlink(os.path.abspath(exp_path), latest_symlink)
     return exp_path
 
-def save_config(exp_dir, root_dir, config_file_path=None):
+def save_config(config_path, config_params):
     """
     Save config files used for training. 
     Args:
         exp_dir : Directory where the models are being saved.
         root_dir : Directory where the main script resides. It's assumed that the configs
                    directory is at the same level as the script.
-        config_file_path : Path to a custom config file if any.
+        config_params : object containing config parameters.
     """
-    myprint("Saving config files to {}...".format(exp_dir))
-    # Save custom config file if provided
-    if config_file_path:
-        print ("comes here")
-        shutil.copy(config_file_path, exp_dir)
-    # Save default config
-    config_path = os.path.join(root_dir, "configs")
-    dst_path = os.path.join(exp_dir, "configs")
-    shutil.copytree(config_path, dst_path)
+    # Only write if config doesn't already exist
+    if not os.path.exists(config_path):
+        myprint("Saving config file to {}...".format(config_path))
+        with open(config_path, "w") as outfile:
+            yaml.dump(vars(config_params), outfile)
 
 
 def save_model(model, exp_dir, filename, epoch, is_best=True):

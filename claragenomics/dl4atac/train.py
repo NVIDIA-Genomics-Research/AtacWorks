@@ -15,7 +15,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributed as dist
-from claragenomics.dl4atac.train.utils import myprint, progbar, equal_width_formatter
+from claragenomics.dl4atac.utils import myprint, progbar, equal_width_formatter
 import h5py
 import numpy as np
 

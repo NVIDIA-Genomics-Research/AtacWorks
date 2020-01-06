@@ -20,7 +20,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributed as dist
 from torch.nn.parallel.scatter_gather import gather
-from claragenomics.dl4atac.train.utils import myprint, progbar, dump_results
+from claragenomics.dl4atac.utils import myprint, progbar, dump_results
 
 
 def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad, transform):
