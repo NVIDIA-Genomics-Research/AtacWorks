@@ -9,7 +9,7 @@
 #
 
 import configargparse
-
+import os
 
 def check_dependence(
         arg1, arg2, parser, err_msg="Argument mutual inclusive test failed."):
@@ -23,30 +23,41 @@ def check_mutual_exclusive(
         parser.error(err_msg)
 
 
-def parse_args():
-    parser = configargparse.ArgParser(default_config_files=['configs/*.yaml'])
+def type_or_none_fn(type):
+     def type_or_none(val):
+         if str(val) == "None":
+             return None
+         else:
+             return type(val)
+     return type_or_none
+
+
+def parse_args(root_dir):
+    config_path = os.path.join(root_dir, 'configs', 'config_params.yaml')
+    parser = configargparse.ArgParser(config_file_parser_class=configargparse.YAMLConfigFileParser,
+                                          default_config_files=[config_path])
     parser.add('--config', required=False, is_config_file=True, help='config file path')
 
     # Learning args
-    parser.add('--clip_grad', type=float, default=0.,
+    parser.add('--clip_grad', required=True, type=float,
                         help='Grad clipping for bad/extreme batches')
-    parser.add('--lr', type=float,
-                        help='learning rate', default=0.0001)
-    parser.add('--epochs', type=int,
-                        help='Number of epochs', default=5)
-    parser.add('--afunc', type=str,
-                        help='activation', default='relu')
-    parser.add('--mse_weight', type=float,
-                        help='relative weight of mse loss', default=0.001)
-    parser.add('--pearson_weight', type=float,
-                        help='relative weight of pearson loss', default=1)
-    parser.add_argument('--poisson_weight', type=float,
-                        help='relative weight of poisson loss', default=0)
+    parser.add('--lr', required=True, type=float,
+                        help='learning rate')
+    parser.add('--epochs', required=True, type=int,
+                        help='Number of epochs')
+    parser.add('--afunc', required=True, type=str,
+                        help='activation')
+    parser.add('--mse_weight', required=True, type=float,
+                        help='relative weight of mse loss')
+    parser.add('--pearson_weight', required=True, type=float,
+                        help='relative weight of pearson loss')
+    parser.add_argument('--poisson_weight', required=True, type=float,
+                        help='relative weight of poisson loss')
 # =========================================================================================
     # experiment args
-    parser.add('--label', type=str, default='AtacWorks',
+    parser.add('--label', required=True, type=str,
                         help='label of the experiment; used for naming output folder')
-    parser.add('--out_home', type=str, default='./Cache',
+    parser.add('--out_home', required=True, type=str,
                         help='parent directory for the experiment folder')
     parser.add('--train', action='store_true',
                         help='training; preempt --infer')
@@ -56,71 +67,71 @@ def parse_args():
                         help='resume training')
     parser.add('--eval', action='store_true',
                         help='evaluation: inference + result dumping + metrics evaluation')
-    parser.add('--infer_files', type=str, default="",
+    parser.add('--infer_files', required=True, type=str,
                         help='list of data files in the form of [file1, file2, ...];'
                         'or a single path to a folder of files')
-    parser.add('--intervals_file', type=str, default="",
+    parser.add('--intervals_file', required=True, type=str,
                         help='bed file containing the chr and interval values for inference')
-    parser.add('--sizes_file', type=str, default="",
+    parser.add('--sizes_file', required=True, type=str,
                         help='bed file containing the chr and max size values')
-    parser.add('--infer_threshold', type=float,
+    parser.add('--infer_threshold', required=True, type=type_or_none_fn(float),
                         help='threshold the output peaks to this value')
-    parser.add('--reg_rounding', type=int, default=0,
+    parser.add('--reg_rounding', required=True, type=int,
                         help='rounding values for regression outputs')
-    parser.add('--cla_rounding', type=int, default=3,
+    parser.add('--cla_rounding', required=True, type=int,
                         help='rounding values for classification outputs')
-    parser.add('--batches_per_worker', type=int, default=16,
+    parser.add('--batches_per_worker', required=True, type=int,
                         help='number of batches to run per worker during multiprocessing')
     parser.add('--gen_bigwig', action='store_true',
                         help='save the inference output to bigiwig in addition to bedgraph')
-    parser.add('--weights_path', type=str, default="",
+    parser.add('--weights_path', required=True, type=str,
                         help="checkpoint path to load the model from for inference or resume training")
-    parser.add('--result_fname', type=str, default='infer_results.h5',
+    parser.add('--result_fname', required=True, type=str,
                         help='filename of the inference results')
     parser.add_argument('--deletebg', action='store_true',
                         help='delete output bedGraph file')
 
     # training args
-    parser.add('--task', default='regression', choices=['regression', 'classification', 'both'],
+    parser.add('--task', required=True, choices=['regression', 'classification', 'both'],
                         help='Task can be regression or classification or both. (default: %(default)s)')
-    parser.add('--train_files', type=str, default="",
+    parser.add('--train_files', required=True, type=str,
                         help='list of data files in the form of [file1, file2, ...];'
                         'or a single path to a folder of files')
-    parser.add('--print_freq', type=int, default=10,
+    parser.add('--print_freq', required=True, type=int,
                         help="Logging frequency")
-    parser.add('--bs', type=int, default=32,
+    parser.add('--bs', required=True, type=int,
                         help="batch_size")
-    parser.add('--num_workers', type=int, default=4,
+    parser.add('--num_workers', required=True, type=int,
                         help="number of workers for dataloader")
-    parser.add('--checkpoint_fname', type=str, default="",
+    parser.add('--checkpoint_fname', required=True, type=str,
                         help="checkpoint filename to save the model")
-    parser.add('--save_freq', type=int, default=5,
+    parser.add('--save_freq', required=True, type=int,
                         help="model checkpoint saving frequency")
 
     # Dataset args
-    parser.add('--pad', type=int, help="Padding around intervals")
-    parser.add('--transform', default='none', choices=['log', 'none'],
+    parser.add('--pad', required=True, type=type_or_none_fn(int), help="Padding around intervals")
+    parser.add('--transform', required=True, type=str, choices=['log', 'None'],
                         help='transformation to apply to coverage tracks before training')
 
     # validation args
-    parser.add('--val_files', type=str, default="",
+    parser.add('--val_files', required=True, type=str,
                         help='list of data files in the form of [file1, file2, ...];'
                         'or a single path to a folder of files')
-    parser.add('--eval_freq', type=int, default=2,
+    parser.add('--eval_freq', required=True, type=int,
                         help="evaluation frequency")
-    parser.add('--threshold', type=float, default=0.5,
+    parser.add('--threshold', required=True, type=float,
                         help="threshold for classification metrics")
-    parser.add_argument('--best_metric_choice', type=str, default="AUROC", choices=['BCE', 'MSE', 'Recall', 'Specificity', 'CorrCoef', 'AUROC'],
+    parser.add_argument('--best_metric_choice', required=True, type=str, choices=['BCE', 'MSE', 'Recall', 'Specificity', 'CorrCoef', 'AUROC'],
                         help="metric to be considered for best metric. Choice is case sensitive.")
 
     # dist-env args
-    parser.add('--gpu', default=0, type=int,
+    parser.add('--gpu', required=True, type=int,
                         help='GPU id to use; preempted by --distributed which uses all available gpus ')
     parser.add('--distributed', action='store_true',
                         help='Do distributed training across all available gpus on the node')
-    parser.add('--dist-url', default='tcp://127.0.0.1:4321', type=str,
+    parser.add('--dist-url', required=True, type=str,
                         help='url used to set up distributed training')
-    parser.add('--dist-backend', default='gloo', type=str,
+    parser.add('--dist-backend', required=True, type=str,
                         help='distributed backend')
 
     # debug

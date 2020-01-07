@@ -109,11 +109,9 @@ echo ""
 python $root_dir/main.py --train \
     --train_files $out_dir/train_data.h5 \
     --val_files $out_dir/val_data.h5 \
-    --task both \
-    --bs 8 --reg_rounding 0 --cla_rounding 3 \
     --out_home $out_dir --label HSC.5M.model \
     --checkpoint_fname checkpoint.pth.tar \
-    --save_freq=1 --eval_freq=1 --distributed
+    --distributed
 
 echo ""
 echo "Step 5: Calculate baseline metrics on the test set..."
@@ -144,8 +142,8 @@ python $root_dir/main.py --infer \
     --infer_threshold 0.5 \
     --weights_path $out_dir/HSC.5M.model_latest/model_best.pth.tar \
     --out_home $out_dir --label inference --config_mparams $config_dir/model_structure.yaml \
-    --result_fname HSC.5M.output --reg_rounding 0 --cla_rounding 3 \
-    --task both --num_workers 0 --gen_bigwig
+    --result_fname HSC.5M.output \
+    --num_workers 0 --gen_bigwig
 
 echo ""
 echo "Step 7a: Calculate metrics for track coverage after inference..."
@@ -187,9 +185,9 @@ python $root_dir/main.py --infer \
     --intervals_file $out_dir/example.holdout_intervals.bed \
     --sizes_file $ref_dir/hg19.auto.sizes \
     --weights_path $out_dir/HSC.5M.model_latest/model_best.pth.tar \
-    --out_home $out_dir --label inference --reg_rounding 0 --cla_rounding 3 \
+    --out_home $out_dir --label inference \
     --result_fname HSC.5M.output.probs \
-    --task both --num_workers 0 --gen_bigwig
+    --num_workers 0 --gen_bigwig
 
 macs2 bdgpeakcall -i $out_dir/inference_latest/test_data_HSC.5M.output.probs.peaks.bedGraph -o $out_dir/inference_latest/test_data_HSC.5M.output.peaks.narrowPeak -c 0.5
 
@@ -205,8 +203,8 @@ python $root_dir/main.py --infer \
     --sizes_file $ref_dir/hg19.auto.sizes \
     --weights_path $saved_model_dir/bulk_blood_data/5000000.7cell.resnet.5.2.15.8.50.0803.pth.tar \
     --out_home $out_dir --label inference.pretrained \
-    --result_fname HSC.5M.output.pretrained --reg_rounding 0 --cla_rounding 3 \
-    --task both --num_workers 0 --gen_bigwig
+    --result_fname HSC.5M.output.pretrained \
+    --num_workers 0 --gen_bigwig
 
 echo ""
 echo "Calculate metrics after inference..."
