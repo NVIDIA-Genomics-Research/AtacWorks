@@ -31,15 +31,16 @@ from torch.nn.parallel import DistributedDataParallel
 from torch.optim import Adam
 
 # module imports
-from claragenomics.dl4atac.train.dataset import DatasetTrain, DatasetInfer
-from claragenomics.dl4atac.train.evaluate import evaluate
-from claragenomics.dl4atac.train.infer import infer
-from claragenomics.dl4atac.train.losses import MultiLoss
-from claragenomics.dl4atac.train import metrics
-from claragenomics.dl4atac.train.metrics import BCE, MSE, Recall, Specificity, CorrCoef, AUROC
-from claragenomics.dl4atac.train.models import *
-from claragenomics.dl4atac.train.train import train
-from claragenomics.dl4atac.train.utils import *
+from claragenomics.dl4atac.dataset import DatasetTrain, DatasetInfer
+from claragenomics.dl4atac.evaluate import evaluate
+from claragenomics.dl4atac.infer import infer
+from claragenomics.dl4atac.losses import MultiLoss
+from claragenomics.dl4atac import metrics
+from claragenomics.dl4atac.metrics import BCE, MSE, Recall, Specificity, CorrCoef, AUROC
+from claragenomics.dl4atac.models.models import *
+from claragenomics.dl4atac.models.model_utils import build_model
+from claragenomics.dl4atac.train import train
+from claragenomics.dl4atac.utils import *
 from claragenomics.io.bedgraphio import expand_interval, intervals_to_bg, df_to_bedGraph
 from claragenomics.io.bigwigio import bedgraph_to_bigwig
 from cmd_args import parse_args
@@ -138,55 +139,6 @@ def get_metrics(task, threshold, best_metric_choice):
         print (e)
     return metrics_reg, metrics_cla, best_metric
 
-# build_model now does build, load, distribute in one go
-
-
-def build_model(model, rank, interval_size, afunc, bn, nblocks,
-                nblocks_cla, nfilt, nfilt_cla, width, width_cla,
-                dil, dil_cla, field, resume, infer, evaluate,
-                weights_path, gpu, distributed):
-    myprint("Building model: {} ...".format(
-        model), color='yellow', rank=rank)
-    # TODO: implement a model dic for model instantiation
-
-    if model == 'unet':  # args.task == 'both'
-        model = DenoisingUNet(interval_size=interval_size,
-                              afunc=afunc, bn=bn)
-    elif model == 'fc2':  # args.task == 'classification'
-        model = FC2(interval_size=interval_size)
-
-    elif model == 'resnet':
-        model = DenoisingResNet(interval_size=interval_size, afunc=afunc, bn=bn, 
-                                num_blocks=nblocks, num_blocks_class=nblocks_cla,
-                                out_channels=nfilt, out_channels_class=nfilt_cla,
-                                kernel_size=width, kernel_size_class=width_cla,
-                                dilation=dil, dilation_class=dil_cla)
-
-    elif model == 'linear':
-        model = DenoisingLinear(
-            interval_size=interval_size, field=field)
-
-    elif model == 'logistic':
-        model = DenoisingLogistic(
-            interval_size=interval_size, field=field)
-
-    # TODO: there is a potential problem with loading model on each device like this. keep an eye on torch.load()'s map_location arg
-    if resume or infer or evaluate:
-        model = load_model(model, weights_path, rank)
-
-    model = model.cuda(gpu)
-
-    if distributed:
-        _logger.info('Compiling model in DistributedDataParallel')
-        model = DistributedDataParallel(model, device_ids=[gpu])
-    elif gpu > 1:
-        _logger.info('Compiling model in DataParallel')
-        model = nn.DataParallel(
-            model, device_ids=list(range(gpus))).cuda()
-
-    myprint("Finished building.", color='yellow', rank=rank)
-    return model
-
 
 def check_intervals(intervals_df, sizes_df, h5_file):
     """
@@ -230,12 +182,17 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
                                 world_size=args.world_size, rank=args.rank)
 
     # Why is model & optimizer built in spawned function?
-    model = build_model(model = args.model, rank = args.rank, interval_size = args.interval_size,
-                afunc = args.afunc, bn = args.bn, nblocks = args.nblocks, nblocks_cla = args.nblocks_cla,
-                nfilt = args.nfilt, nfilt_cla = args.nfilt_cla, width = args.width, width_cla = args.width_cla,
-                dil = args.dil, dil_cla = args.dil_cla, field = args.field, resume = args.resume,infer = args.infer,
-                evaluate = args.eval, weights_path = args.weights_path, gpu = args.gpu, distributed = args.distributed)
+    model, model_params = build_model(rank = args.rank, afunc = args.afunc, interval_size = args.interval_size,resume = args.resume,
+                        infer = args.infer, evaluate = args.eval, weights_path = args.weights_path,
+                        gpu = args.gpu, distributed = args.distributed)
     optimizer = Adam(model.parameters(), lr=args.lr)
+
+
+    config_dir = os.path.join(args.exp_dir, "configs")
+    if not os.path.exists(config_dir):
+        os.mkdir(config_dir)
+    dst_path = os.path.join(config_dir, "model_structure.yaml")
+    save_config(dst_path, model_params)
     # TODO: LR schedule
 
     train_dataset = DatasetTrain(args.train_files)
@@ -314,11 +271,9 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
         dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
                                 world_size=args.world_size, rank=args.rank)
 
-    model = build_model(model = args.model, rank = args.rank, interval_size = args.interval_size,
-                afunc = args.afunc, bn = args.bn, nblocks = args.nblocks, nblocks_cla = args.nblocks_cla,
-                nfilt = args.nfilt, nfilt_cla = args.nfilt_cla, width = args.width, width_cla = args.width_cla,
-                dil = args.dil, dil_cla = args.dil_cla, field = args.field, resume = args.resume,infer = args.infer,
-                evaluate = args.eval, weights_path = args.weights_path, gpu = args.gpu, distributed = args.distributed)
+    model, _ = build_model(rank = args.rank, afunc = args.afunc, interval_size = args.interval_size,resume = args.resume,
+                        infer = args.infer, evaluate = args.eval, weights_path = args.weights_path,
+                        gpu = args.gpu, distributed = args.distributed)
 
     infer_dataset = DatasetInfer(args.infer_files)
     infer_sampler = None
@@ -347,11 +302,10 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
     if args.distributed:
         dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
                                 world_size=args.world_size, rank=args.rank)
-    model = build_model(model = args.model, rank = args.rank, interval_size = args.interval_size,
-                afunc = args.afunc, bn = args.bn, nblocks = args.nblocks, nblocks_cla = args.nblocks_cla,
-                nfilt = args.nfilt, nfilt_cla = args.nfilt_cla, width = args.width, width_cla = args.width_cla,
-                dil = args.dil, dil_cla = args.dil_cla, field = args.field, resume = args.resume,infer = args.infer,
-                evaluate = args.eval, weights_path = args.weights_path, gpu = args.gpu, distributed = args.distributed)
+
+    model, _ = build_model(rank = args.rank, afunc = args.afunc, interval_size = args.interval_size,resume = args.resume,
+                        infer = args.infer, evaluate = args.eval, weights_path = args.weights_path,
+                        gpu = args.gpu, distributed = args.distributed)
 
     eval_dataset = DatasetTrain(args.val_files)
     eval_sampler = None
@@ -586,6 +540,7 @@ def main():
             assert_device_available(args.gpu)
             args.world_size = 1
             train_worker(args.gpu, ngpus_per_node, args, timers=Timers)
+
 
     # infer & eval
     ##########################################################################################

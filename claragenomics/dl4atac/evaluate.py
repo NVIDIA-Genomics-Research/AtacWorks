@@ -18,8 +18,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributed as dist
 from torch.nn.parallel.scatter_gather import gather
-from claragenomics.dl4atac.train.utils import myprint, gather_tensor
-from claragenomics.dl4atac.train.metrics import CorrCoef
+from claragenomics.dl4atac.utils import myprint, gather_tensor
+from claragenomics.dl4atac.metrics import CorrCoef
 
 
 def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, world_size, distributed, pad, transform, best_metric=None, res_queue=None):
