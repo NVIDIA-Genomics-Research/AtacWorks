@@ -4,16 +4,150 @@ AtacWorks is a deep learning toolkit for track denoising and peak calling from l
 
 ![AtacWorks](data/readme/atacworks_slides.gif)
 
-AtacWorks trains a deep neural network to learn a mapping between noisy (low coverage/low quality) ATAC-Seq data and matching clean (high coverage/high quality) ATAC-Seq data from the same cell type. Once this mapping is learned, the trained model can be applied to improve other noisy ATAC-Seq datasets. 
 
-AtacWorks models can be trained using one or more pairs of matching ATAC-Seq datasets from the same cell type. AtacWorks requires three specific inputs for each such pair of datasets:
-1. A coverage track representing the number of sequencing reads mapped to each position on the genome in the low-quality dataset.
-2. A coverage track representing the number of sequencing reads mapped to each position on the genome in the high-quality dataset. 
-3. The genomic positions of peaks called on the high-quality dataset. These can be obtained by using MACS2 or any other peak caller.
-The model learns a mapping from (1) to both (2) and (3); in other words, from the noisy coverage track, it learns to predict both the clean coverage track, and the positions of peaks in the clean dataset. We also provide pretrained models that can be applied to a noisy dataset.
+## System Setup
 
-Much more information and examples can be found in the AtacWorks preprint: https://www.biorxiv.org/content/10.1101/829481
+### System requirements
 
+* Ubuntu 16.04+
+* CUDA 9.0+
+* Python 3.6.7+
+* GCC 5+
+* (Optional) A conda or virtualenv setup
+* Any NVIDIA GPU. AtacWorks training and inference currently does not run on CPU.
+
+### Install dependencies
+
+* Download `bedGraphToBigWig` and `bigWigToBedGraph` binaries and add to your $PATH
+    ```
+    rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bedGraphToBigWig <custom_path>
+    rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bigWigToBedGraph <custom_path>
+    export PATH="$PATH:<custom_path>"
+    ```
+
+* Install pip dependencies
+
+    ```
+    pip install -r requirements-pip.txt
+    ```
+## Sample installation test
+* Run this command to ensure your environment is setup correctly.
+
+## Environment setup and pre-processing of data
+* Setup environment variables
+    ```
+    example_dir=$(readlink -f $(dirname "$0"));
+    data_dir="$example_dir/data";
+    ref_dir="$example_dir/reference";
+    out_dir="$example_dir/result";
+    root_dir=$(readlink -f "$example_dir/..");
+    saved_model_dir="$root_dir/data/pretrained_models";
+    ```
+
+* Convert peak files into bigwig format
+    ```
+    # Clean peaks
+    python $root_dir/peak2bw.py \
+        $data_dir/HSC.80M.chr123.10mb.peaks.bed \
+        $ref_dir/hg19.auto.sizes \
+        --prefix=$out_dir/HSC.80M.chr123.10mb.peaks.bed
+    ```
+    ```
+    # Noisy peaks
+    python $root_dir/peak2bw.py \
+        $data_dir/HSC.5M.chr123.10mb.peaks.bed \
+        $ref_dir/hg19.auto.sizes \
+        --prefix=$out_dir/HSC.5M.chr123.10mb.peaks.bed
+    ```
+
+* Split the dataset into train, val and holdout/test intervals.
+    ```
+    python $root_dir/get_intervals.py \
+        $data_dir/example.sizes 24000 $out_dir/example \
+        --val chr2 --holdout chr3
+    ```
+
+* Save the data in H5.
+    ```
+    # Training data
+    python $root_dir/bw2h5.py \
+        --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
+        --intervals $out_dir/example.training_intervals.bed \
+        --batch_size 4 \
+        --prefix $out_dir/train_data \
+        --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
+        --cleanpeakbw $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw \
+        --nonzero
+    # Validation data
+    python $root_dir/bw2h5.py \
+        --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
+        --intervals $out_dir/example.val_intervals.bed \
+        --batch_size 64 \
+        --prefix $out_dir/val_data \
+        --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
+        --cleanpeakbw $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw
+    # Test data
+    python $root_dir/bw2h5.py \
+        --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
+        --intervals $out_dir/example.holdout_intervals.bed \
+        --batch_size 64 \
+        --prefix $out_dir/test_data \
+        --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
+        --cleanpeakbw $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw
+    #No label
+    python $root_dir/bw2h5.py \
+        --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
+        --intervals $out_dir/example.holdout_intervals.bed \
+        --batch_size 64 \
+        --prefix $out_dir/no_label \
+        --nolabel
+    ```
+
+## Tutorial 1 - Inference and metrics using pretrained model
+* Follow steps under [pre-processing](#Environment-setup-and-pre-processing-of-data)
+* Run inference
+    ```
+    python $root_dir/main.py --infer \
+        --infer_files $out_dir/no_label.h5 \
+        --intervals_file $out_dir/example.holdout_intervals.bed \
+        --sizes_file $ref_dir/hg19.auto.sizes \
+        --weights_path $saved_model_dir/bulk_blood_data/5000000.7cell.resnet.5.2.15.8.50.0803.pth.tar \
+        --out_home $out_dir --label inference.pretrained \
+        --result_fname HSC.5M.output.pretrained --reg_rounding 0 --cla_rounding 3 \
+        --model resnet --nblocks 5 --nfilt 15 --width 50 --dil 8 \
+        --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
+        --task both --num_workers 0 --gen_bigwig
+    ```
+* Calculate regression metrics
+    ```
+    python $root_dir/calculate_baseline_metrics.py \
+        --label_file $out_dir/test_data.h5 --task regression \
+        --test_file $out_dir/inference.pretrained_latest/no_label_HSC.5M.output.pretrained.track.bw \
+        --intervals $out_dir/example.holdout_intervals.bed \
+        --sizes $ref_dir/hg19.auto.sizes \
+        --sep_peaks
+    ```
+* Calculate classification metrics
+    ```
+    python $root_dir/calculate_baseline_metrics.py \
+        --label_file $out_dir/test_data.h5 --task classification \
+        --test_file $out_dir/inference.pretrained_latest/no_label_HSC.5M.output.pretrained.peaks.bw \
+        --intervals $out_dir/example.holdout_intervals.bed \
+        --sizes $ref_dir/hg19.auto.sizes \
+        --thresholds 0.5
+    ```
+
+## Tutorial 2 - Train a model
+* Follow steps under [pre-processing](#Environment-setup-and-pre-processing-of-data)
+* Train and validate
+    ```
+    python $root_dir/main.py --train \
+        --train_files $out_dir/train_data.h5 \
+        --val_files $out_dir/val_data.h5 \
+        --out_home $out_dir --label HSC.5M.model \
+        --checkpoint_fname checkpoint.pth.tar \
+        --distributed
+    ```
 ## Runtime
 
 Training: Approximately 22 minutes per epoch to train on single whole genome.
@@ -42,31 +176,6 @@ This branch is subject to change frequently as features and bug fixes are pushed
 git clone --recursive https://github.com/clara-genomics/AtacWorks.git
 ```
 
-## System Setup
-
-### System requirements
-
-* Ubuntu 16.04+
-* CUDA 9.0+
-* Python 3.6.7+
-* GCC 5+
-* (Optional) A conda or virtualenv setup
-* Any NVIDIA GPU. AtacWorks training and inference currently does not run on CPU.
-
-### Install dependencies
-
-* Download `bedGraphToBigWig` and `bigWigToBedGraph` binaries and add to your $PATH
-    ```
-    rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bedGraphToBigWig <custom_path>
-    rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bigWigToBedGraph <custom_path>
-    export PATH="$PATH:<custom_path>"
-    ```
-
-* Install pip dependencies
-
-    ```
-    pip install -r requirements-pip.txt
-    ```
 
 ### Unit tests
 
