@@ -7,24 +7,20 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
+"""Infer module."""
 
-from collections import Iterable, OrderedDict
 import time
-import gc
-import sys
-import os
-import h5py
+
+from claragenomics.dl4atac.utils import myprint, progbar
+
 import numpy as np
+
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.distributed as dist
-from torch.nn.parallel.scatter_gather import gather
-from claragenomics.dl4atac.utils import myprint, progbar, dump_results
 
 
-def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad, transform):
-    ''' The infer function
+def infer(*, rank, gpu, task, model, infer_loader, print_freq,
+          res_queue, pad, transform):
+    """Run inference.
 
     Args:
         rank: rank of current process
@@ -33,14 +29,14 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad, t
         model: trained model
         infer_loader: dataloader
         print_freq: logging frequency
-        res_queue: network predictions will be put in the queue for result dumping
+        res_queue: network predictions will be put in the queue for
+        result dumping
         pad: padding on ends of interval
         transform: transformation to apply to coverage track
 
-    '''
-
+    """
     # inference
-    #################################################################################
+    ##########################################################################
     num_batches = len(infer_loader)
     model.eval()
     start = time.time()
@@ -58,7 +54,7 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad, t
 
             idxes = batch['idx']
             x = batch['x']
-            
+
             # move input to GPU for model forward pass
             x = x.unsqueeze(1)  # (N, 1, L)
             x = x.cuda(gpu, non_blocking=True)
@@ -74,8 +70,8 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad, t
             if task == 'both':
                 batch_res = np.stack([x.cpu().numpy() for x in pred], axis=-1)
             else:
-                batch_res = np.expand_dims(pred.cpu().numpy(), axis=-1)                    
-            
+                batch_res = np.expand_dims(pred.cpu().numpy(), axis=-1)
+
             # Remove padding before writing results
             if pad is not None:
                 center = range(pad, x.shape[2] - pad)
@@ -84,7 +80,7 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad, t
             # Reverse transformation before writing output
             if transform == 'log':
                 if task == 'both':
-                    batch_res[:,:,0] = np.exp(batch_res[:,:,0]) - 1
+                    batch_res[:, :, 0] = np.exp(batch_res[:, :, 0]) - 1
                 elif task == 'regression':
                     batch_res = np.exp(batch_res) - 1
 
@@ -100,5 +96,7 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad, t
             pred_total_time += pred_time
             local_init = time.time()
 
-    myprint("Inference time taken: {:8.3f}s (Load {:8.3f}s, Prediction {:8.3f}s)".format(
-        time.time()-start, load_total_time, pred_total_time), color='yellow', rank=rank)
+    myprint("Inference time taken: {:8.3f}s (Load {:8.3f}s,"
+            "Prediction {:8.3f}s)".format(time.time() - start,
+                                          load_total_time, pred_total_time),
+            color='yellow', rank=rank)

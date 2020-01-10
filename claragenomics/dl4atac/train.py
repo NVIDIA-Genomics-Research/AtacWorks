@@ -7,25 +7,42 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
+"""Train module."""
 
-import os
-import sys
 import time
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.distributed as dist
+
 from claragenomics.dl4atac.utils import myprint, progbar, equal_width_formatter
-import h5py
-import numpy as np
+
+import torch
+import torch.distributed as dist
 
 
 def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
-          epoch, epochs, clip_grad, print_freq, distributed, world_size, transform):
+          epoch, epochs, clip_grad, print_freq, distributed, world_size,
+          transform):
+    """Train with given data.
 
+    Args:
+        rank: rank of current process
+        gpu: GPU id to use
+        task: task among 'regression', 'classification' and 'both'
+        model: trained model
+        train_loader : dataloader
+        loss_func : Loss function
+        optimizer : Optimization object
+        pad : Padding
+        epoch : Current epoch
+        epochs : Total epochs to train for
+        clip_grad : Gradient clipping
+        print_freq : How frequently to print training information.
+        distributed : Distributed training
+        world_size : World size
+        transform : transformation to apply to coverage track
+
+    """
     num_batches = len(train_loader)
     epoch_formatter = "Epoch " + \
-        equal_width_formatter(total=epochs).format(epoch)
+                      equal_width_formatter(total=epochs).format(epoch)
     start = time.time()
     forward_time = 0.
     backward_time = 0.
@@ -33,7 +50,8 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
 
     model.train()
 
-    print('Num_batches %d; rank %s, gpu %s' % (num_batches, str(rank), str(gpu)))
+    print(
+        'Num_batches %d; rank %s, gpu %s' % (num_batches, str(rank), str(gpu)))
 
     # Loop training data
     for i, batch in enumerate(train_loader):
@@ -60,7 +78,7 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
                 y = torch.log(y + 1)
             elif task == 'both':
                 y_reg = torch.log(y_reg + 1)
-            
+
         # Model forward pass
         t = time.time()
         pred = model(x)
@@ -103,7 +121,7 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
         backward_time += time.time() - t
 
         # Loss is only reduced every X batches?
-        if (i % print_freq == 0) or (i == num_batches-1):
+        if (i % print_freq == 0) or (i == num_batches - 1):
             t = time.time()
             if (dist.is_initialized()):
                 for loss_type, value in losses_values.items():
@@ -113,15 +131,21 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
 
             if rank == 0:
                 post_bar_msg = " | ".join(
-                    [k + ':{:8.3f}'.format(v.cpu().item()) for k, v in losses_values.items()])
+                    [k + ':{:8.3f}'.format(v.cpu().item()) for k, v in
+                     losses_values.items()])
                 progbar(curr=i, total=num_batches, progbar_len=20,
                         pre_bar_msg=epoch_formatter, post_bar_msg=post_bar_msg)
             print_time += time.time() - t
 
     myprint(epoch_formatter +
-            " Time Taken: {:7.3f}s".format(time.time()-start), color='yellow', rank=rank)
+            " Time Taken: {:7.3f}s".format(time.time() - start),
+            color='yellow', rank=rank)
 
     # Time breakdown for the epoch...
     total_time = time.time() - start
     remainder_time = total_time - forward_time - backward_time - print_time
-    #print('Total train time: %.3f\tFor time: %.3f\tBack time: %.3f\tPrint time: %.3f\tRemain (data) time: %.3f' % (total_time, forward_time, backward_time, print_time, remainder_time))
+    print(
+        'Total train time: %.3f\tFor time: %.3f\tBack time: %.3f\tPrint '
+        'time: %.3f\tRemain (data) time: %.3f' % (total_time, forward_time,
+                                                  backward_time, print_time,
+                                                  remainder_time))
