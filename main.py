@@ -19,31 +19,18 @@ import tempfile
 import time
 
 import h5py
-import multiprocessing
 import numpy as np
 import pandas as pd
 import torch
-import torch.backends.cudnn as cudnn
-import torch.distributed as dist
 import torch.multiprocessing as mp
-import torch.nn as nn
-from torch.nn.parallel import DistributedDataParallel
-from torch.optim import Adam
 
 # module imports
-from claragenomics.dl4atac.dataset import DatasetTrain, DatasetInfer
-from claragenomics.dl4atac.evaluate import evaluate
-from claragenomics.dl4atac.infer import infer
-from claragenomics.dl4atac.losses import MultiLoss
-from claragenomics.dl4atac import metrics
-from claragenomics.dl4atac.metrics import BCE, MSE, Recall, Specificity, CorrCoef, AUROC
 from claragenomics.dl4atac.models.models import *
-from claragenomics.dl4atac.models.model_utils import build_model
-from claragenomics.dl4atac.train import train
 from claragenomics.dl4atac.utils import *
-from claragenomics.io.bedgraphio import expand_interval, intervals_to_bg, df_to_bedGraph
+from claragenomics.io.bedgraphio import intervals_to_bg, df_to_bedGraph
 from claragenomics.io.bigwigio import bedgraph_to_bigwig
 from cmd_args import parse_args
+from worker import train_worker, infer_worker, eval_worker 
 
 # python imports
 import warnings
@@ -72,74 +59,6 @@ def set_random_seed(seed):
         mpu.model_parallel_cuda_manual_seed(seed)
 
 
-def get_losses(task, mse_weight, pearson_weight, gpu, poisson_weight):
-    """
-    Return loss function. 
-    Args:
-        task : Whether the task is regression or classification or both.
-        mse_weight : Mean squared error weight.
-        pearson_weight : Pearson correlation loss weight.
-        poisson_weight : Poisson loss weight.
-        gpu : Number of gpus.
-    Return:
-        loss_func : list of loss functions for each task.
-    """
-
-    reg_loss_func = MultiLoss('poissonloss', poisson_weight, device=gpu) if poisson_weight > 0 else MultiLoss(['mse', 'pearsonloss'], [mse_weight, pearson_weight], device=gpu)
-    cla_loss_func = MultiLoss('bce', 1, device=gpu)
-
-    if task == "regression":
-        loss_func = reg_loss_func
-    elif task == "classification":
-        loss_func = cla_loss_func
-    else:
-        loss_func = [reg_loss_func, cla_loss_func]
-
-    return loss_func
-
-
-def get_metrics(task, threshold, best_metric_choice):
-    """
-    Get metrics. 
-    Args:
-        task : Whether the task is regression or classification or both.
-        threshold : the threshold for classification.
-        best_metric_choice : which metric to use for best metric.
-    Return: #TODO
-        metrics_reg :
-        metrics_cla :
-        best_metric :
-    """
-
-    metrics_reg = []
-    metrics_cla = []
-    best_metric = []
-    if task == "regression":
-        metrics_reg = [MSE(), CorrCoef()]
-    elif task == "classification":
-        metrics_cla = [BCE(), Recall(threshold),
-                       Specificity(threshold), AUROC()]
-    elif task == 'both':
-        metrics_reg = [MSE(), CorrCoef()]
-        metrics_cla = [BCE(), Recall(threshold),
-                       Specificity(threshold), AUROC()]
-    try:
-        best_metric_class = getattr(metrics, best_metric_choice)
-        
-        if metrics_reg:
-            for obj in metrics_reg:
-                if isinstance(obj, best_metric_class):
-                    best_metric = obj
-
-        if metrics_cla:
-            for obj in metrics_cla:
-                if isinstance(obj, best_metric_class):
-                    best_metric = obj
-    except AttributeError as e:
-        print (e)
-    return metrics_reg, metrics_cla, best_metric
-
-
 def check_intervals(intervals_df, sizes_df, h5_file):
     """
     Function to check intervals file used for inference.
@@ -165,165 +84,6 @@ def check_intervals(intervals_df, sizes_df, h5_file):
     excess_intervals = intervals_sizes[intervals_sizes['end'] > intervals_sizes['len']]
     assert len(excess_intervals) == 0, \
           "Intervals exceed chromosome sizes in sizes file ({})".format(excess_intervals)
-
-
-def train_worker(gpu, ngpu_per_node, args, timers=None):
-    # fix random seed so models have the same starting weights
-    torch.manual_seed(42)
-
-    args.rank = gpu if args.distributed else 0
-    args.gpu = gpu
-
-    torch.cuda.set_device(args.gpu)
-    _logger.debug('Rank %s' % str(args.rank))
-
-    if args.distributed:
-        dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
-                                world_size=args.world_size, rank=args.rank)
-
-    # Why is model & optimizer built in spawned function?
-    model, model_params = build_model(rank = args.rank, afunc = args.afunc, interval_size = args.interval_size,resume = args.resume,
-                        infer = args.infer, evaluate = args.eval, weights_path = args.weights_path,
-                        gpu = args.gpu, distributed = args.distributed)
-    optimizer = Adam(model.parameters(), lr=args.lr)
-
-
-    config_dir = os.path.join(args.exp_dir, "configs")
-    if not os.path.exists(config_dir):
-        os.mkdir(config_dir)
-    dst_path = os.path.join(config_dir, "model_structure.yaml")
-    save_config(dst_path, model_params)
-    # TODO: LR schedule
-
-    train_dataset = DatasetTrain(args.train_files)
-    train_sampler = None
-    if args.distributed:
-        train_sampler = torch.utils.data.distributed.DistributedSampler(
-            train_dataset)
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=args.bs, shuffle=(train_sampler is None),
-        # collate_fn=custom_collate_train,
-        num_workers=args.num_workers, pin_memory=True, sampler=train_sampler,
-        drop_last=False
-    )
-
-    # TODO: need DatasetVal? Not for now
-    val_dataset = DatasetTrain(args.val_files)
-    val_sampler = None
-    if args.distributed:
-        val_sampler = torch.utils.data.distributed.DistributedSampler(
-            val_dataset)
-    val_loader = torch.utils.data.DataLoader(
-        val_dataset, batch_size=args.bs, shuffle=False,
-        # collate_fn=custom_collate_train,
-        num_workers=args.num_workers, pin_memory=True, sampler=val_sampler,
-        drop_last=False
-        # drop_last=True # need to drop irregular batch for distributed evaluation due to limitation of dist.all_gather
-    )
-
-    loss_func = get_losses(args.task, args.mse_weight, args.pearson_weight, args.gpu, args.poisson_weight)
-
-    current_best = None
-    for epoch in range(args.epochs):
-        if args.distributed:
-            train_sampler.set_epoch(epoch)
-        train(rank=args.rank, gpu=args.gpu, task=args.task, model=model, train_loader=train_loader,
-              loss_func=loss_func, optimizer=optimizer, epoch=epoch, epochs=args.epochs,
-              clip_grad=args.clip_grad, print_freq=args.print_freq, pad=args.pad,
-              distributed=args.distributed, world_size=args.world_size, transform=args.transform)
-
-        if epoch % args.eval_freq == 0:
-            # either create new objects or call reset on each metric obj
-            metrics_reg, metrics_cla, best_metric = get_metrics(args.task, args.threshold, args.best_metric_choice)
-
-            # best_metric is the metric used to compare results across different evaluation runs
-            # it's modified in place
-            evaluate(rank=args.rank, gpu=args.gpu, task=args.task,
-                     model=model, val_loader=val_loader,
-                     metrics_reg=metrics_reg, metrics_cla=metrics_cla,
-                     world_size=args.world_size, distributed=args.distributed,
-                     best_metric=best_metric, pad=args.pad, transform=args.transform)
-
-            if args.rank == 0:
-                new_best = best_metric.better_than(current_best)
-                if new_best:
-                    current_best = best_metric
-                    myprint("New best metric found - {}".format(current_best),
-                            color='yellow', rank=args.rank)
-                if new_best or epoch % args.save_freq == 0:
-                    # give it the module attribute of the model (DistributedDataParallel wrapper)
-                    if args.distributed:
-                        save_model(
-                            model.module, args.exp_dir, args.checkpoint_fname, epoch=epoch, is_best=new_best)
-                    else:
-                        save_model(
-                            model, args.exp_dir, args.checkpoint_fname, epoch=epoch, is_best=new_best)
-
-
-def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
-
-    args.rank = gpu if args.distributed else 0
-    args.gpu = gpu
-
-    torch.cuda.set_device(args.gpu)
-
-    if args.distributed:
-        dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
-                                world_size=args.world_size, rank=args.rank)
-
-    model, _ = build_model(rank = args.rank, afunc = args.afunc, interval_size = args.interval_size,resume = args.resume,
-                        infer = args.infer, evaluate = args.eval, weights_path = args.weights_path,
-                        gpu = args.gpu, distributed = args.distributed)
-
-    infer_dataset = DatasetInfer(args.infer_files)
-    infer_sampler = None
-
-    if args.distributed:
-        infer_sampler = torch.utils.data.distributed.DistributedSampler(
-            infer_dataset, shuffle=False)
-
-    infer_loader = torch.utils.data.DataLoader(
-        infer_dataset, batch_size=args.bs, shuffle=False,
-        num_workers=args.num_workers, pin_memory=True, sampler=infer_sampler, drop_last=False
-    )
-
-    infer(rank=args.rank, gpu=args.gpu, task=args.task, model=model, infer_loader=infer_loader,
-          print_freq=args.print_freq, res_queue=res_queue, pad=args.pad, transform=args.transform)
-
-
-def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
-
-    args.rank = gpu if args.distributed else 0
-    args.gpu = gpu
-
-    torch.cuda.set_device(args.gpu)
-    _logger.debug('Initialize Eval worker for Node %s' % (str(args.gpu)))
-
-    if args.distributed:
-        dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
-                                world_size=args.world_size, rank=args.rank)
-
-    model, _ = build_model(rank = args.rank, afunc = args.afunc, interval_size = args.interval_size,resume = args.resume,
-                        infer = args.infer, evaluate = args.eval, weights_path = args.weights_path,
-                        gpu = args.gpu, distributed = args.distributed)
-
-    eval_dataset = DatasetTrain(args.val_files)
-    eval_sampler = None
-
-    if args.distributed:
-        eval_sampler = torch.utils.data.distributed.DistributedSampler(
-            eval_dataset)
-
-    eval_loader = torch.utils.data.DataLoader(
-        eval_dataset, batch_size=args.bs, shuffle=False,
-        num_workers=args.num_workers, pin_memory=True, sampler=eval_sampler, drop_last=False
-    )
-
-    metrics_reg, metrics_cla, best_metric= get_metrics(args.task, args.threshold, args.best_metric_choice)
-    evaluate(rank=args.rank, gpu=args.gpu, task=args.task,
-             model=model, val_loader=eval_loader, metrics_reg=metrics_reg, metrics_cla=metrics_cla,
-             world_size=args.world_size, distributed=args.distributed,
-             best_metric=best_metric, res_queue=res_queue, pad=args.pad, transform=args.transform)
 
 
 def save_to_bedgraph(batch_range, item, channel, intervals, outfile, rounding=None, threshold=None):
