@@ -65,8 +65,11 @@ git clone --recursive https://github.com/clara-genomics/AtacWorks.git
 * Install pip dependencies
 
     ```
-    pip install -r requirements-pip.txt
+    pip install -r requirements-base.txt && pip install -r requirements-macs2.txt
     ```
+
+Note: The above non-standard installation is necessary to ensure the requirements for macs2 are installed
+before macs2 itself.
 
 ### Unit tests
 
@@ -107,10 +110,7 @@ These are based on bulk ATAC-Seq data from 7 blood cell types. They are trained 
 
 ### FAQ
 1. What's the preferred way for setting up the environment ?
-A. A virtual environment or conda installation is preferred. You can follow conda installation instructions on their website and then follow the instructions in the README.
-
-2. If you face "no module named numpy" error while installing requirement-pip.txt.
-A. In your terminal, run pip install numpy==<version-from-requirements-pip.txt> and then run pip install -r requirements-pip.txt. If you are running inside a conda or venv, run these commands inside your environment.
+    > A virtual environment or conda installation is preferred. You can follow conda installation instructions on their website and then follow the instructions in the README.
 
 ### Citation
 

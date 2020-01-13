@@ -492,7 +492,8 @@ def combiner(f1, f2):
 
 
 def main():
-    args = parse_args()
+    root_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+    args = parse_args(root_dir)
     # Set log level
     if args.debug:
         _handler.setLevel(logging.DEBUG)
@@ -609,7 +610,9 @@ def main():
             _logger.info("Waiting for writer to finish...")
             write_proc.join()
             #############################################################
-
+    # Save config parameters
+    dst_config_path = os.path.join(args.out_home, "config_params.yaml")
+    save_config(dst_config_path, args)
 
 if __name__ == '__main__':
     main()
