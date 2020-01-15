@@ -11,7 +11,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from claragenomics.dl4atac.train.layers import ZeroSamePad1d, Activation, ConvAct1d, ResBlock, DownBlock, UpBlock
+from claragenomics.dl4atac.layers import ZeroSamePad1d, Activation, ConvAct1d, ResBlock, DownBlock, UpBlock
 
 
 class FC3(nn.Module):

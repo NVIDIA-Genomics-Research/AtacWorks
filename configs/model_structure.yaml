@@ -1,0 +1,24 @@
+#
+# Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
+#
+# NVIDIA CORPORATION and its licensors retain all intellectual property
+# and proprietary rights in and to this software, related documentation
+# and any modifications thereto.  Any use, reproduction, disclosure or
+# distribution of this software and related documentation without an express
+# license agreement from NVIDIA CORPORATION is strictly prohibited.
+#
+
+
+# Define model parameters
+
+model: resnet            # model type unet, resnet, linear, logistic, fc2, fc3
+bn: False                # batch normalization
+nblocks: 5               # number of regression blocks in resnet
+dil: 8                   # dilation for regression blocks in resnet
+width: 50                # kernel size for regression blocks in resnet
+nfilt: 15                # number of filters for regression blocks in resnet 
+nblocks_cla: 2           # number of classification blocks for resnet
+dil_cla: 10              # dilation for classification blocks in resnet
+width_cla: 50            # kernel size for classification blocks in resnet
+nfilt_cla: 15            # number of filters for classification blocks in resnet
+field: 1000              # receptive field for linear/logistic regression

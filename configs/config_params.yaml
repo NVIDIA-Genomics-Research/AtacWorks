@@ -1,0 +1,59 @@
+#
+# Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
+#
+# NVIDIA CORPORATION and its licensors retain all intellectual property
+# and proprietary rights in and to this software, related documentation
+# and any modifications thereto.  Any use, reproduction, disclosure or
+# distribution of this software and related documentation without an express
+# license agreement from NVIDIA CORPORATION is strictly prohibited.
+#
+
+
+#Learning args
+clip_grad: 0 
+lr: 0.0001 
+epochs: 5
+afunc: relu 
+mse_weight: 0.001 
+pearson_weight: 1
+poisson_weight: 0
+# Experiment args
+label: 'AtacWorks'
+out_home: './Cache'
+train: False
+infer: False
+resume: False
+eval: False
+infer_files: "None"
+intervals_file: "None"
+sizes_file: "None"
+infer_threshold: "None"
+reg_rounding: 0
+cla_rounding: 3
+batches_per_worker: 16
+gen_bigwig: False
+weights_path: "None"
+result_fname: 'infer_results.h5'
+deletebg: False
+# Training args
+task: 'both'
+train_files: "None"
+print_freq: 10
+bs: 8
+num_workers: 4
+checkpoint_fname: "None"
+save_freq: 1
+# Dataset args
+pad: "None"
+transform: "None"
+# validation args
+val_files: "None"
+eval_freq: 1
+threshold: 0.5
+best_metric_choice: "AUROC"
+# dist-env args
+gpu: 0
+distributed: False
+dist-url: 'tcp://127.0.0.1:4321'
+dist-backend: 'gloo'
+debug: False

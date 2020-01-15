@@ -10,6 +10,7 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
+# Example run script from version v0.1 to ensure backward compatibility.
 
 set -e
 
@@ -24,19 +25,21 @@ set -e
 # (These cover the first 10 Mb each of chr1, chr2, and chr3)
 
 # 5. example.sizes - lists the regions of the genome to cover (first 10 Mb each of chr1, chr2, and chr3)
+echo "Testing v0.1 run script to ensure backward compatibility"
 
 echo ""
 echo "Step 0: Initialize environment..."
 echo ""
-example_dir=$(readlink -f $(dirname "$0"))
+test_dir=$(readlink -f $(dirname "$0"))
 
+example_dir="$test_dir/../example"
 data_dir="$example_dir/data"
 ref_dir="$example_dir/reference"
 out_dir="$example_dir/result"
 
 root_dir=$(readlink -f "$example_dir/..")
 saved_model_dir="$root_dir/data/pretrained_models"
-config_dir="$root_dir/configs"
+
 # Switch to root directory before running script.
 cd $root_dir
 
@@ -109,9 +112,13 @@ echo ""
 python $root_dir/main.py --train \
     --train_files $out_dir/train_data.h5 \
     --val_files $out_dir/val_data.h5 \
+    --model resnet --nblocks 5 --nfilt 15 --width 50 \
+    --dil 8 --task both --epochs 2 --afunc relu --mse_weight 0.001 \
+    --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
+    --pearson_weight 1 --bs 8 --reg_rounding 0 --cla_rounding 3 \
     --out_home $out_dir --label HSC.5M.model \
     --checkpoint_fname checkpoint.pth.tar \
-    --distributed
+    --save_freq=1 --eval_freq=1 --distributed
 
 echo ""
 echo "Step 5: Calculate baseline metrics on the test set..."
@@ -130,10 +137,6 @@ python $root_dir/calculate_baseline_metrics.py \
 echo ""
 echo "Step 6a: Run inference on test set with default peak calling setting..."
 echo ""
-
-# Feature alert: usage of --config_mparams. 
-##This option allows you to specify a custom model config file.
-
 # Note: change --weights_path to the path for your saved model!
 python $root_dir/main.py --infer \
     --infer_files $out_dir/test_data.h5 \
@@ -141,9 +144,11 @@ python $root_dir/main.py --infer \
     --sizes_file $ref_dir/hg19.auto.sizes \
     --infer_threshold 0.5 \
     --weights_path $out_dir/HSC.5M.model_latest/model_best.pth.tar \
-    --out_home $out_dir --label inference --config_mparams $config_dir/model_structure.yaml \
-    --result_fname HSC.5M.output \
-    --num_workers 0 --gen_bigwig
+    --out_home $out_dir --label inference \
+    --result_fname HSC.5M.output --reg_rounding 0 --cla_rounding 3 \
+    --model resnet --nblocks 5 --nfilt 15 --width 50 --dil 8 \
+    --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
+    --task both --num_workers 0 --gen_bigwig
 
 echo ""
 echo "Step 7a: Calculate metrics for track coverage after inference..."
@@ -185,9 +190,11 @@ python $root_dir/main.py --infer \
     --intervals_file $out_dir/example.holdout_intervals.bed \
     --sizes_file $ref_dir/hg19.auto.sizes \
     --weights_path $out_dir/HSC.5M.model_latest/model_best.pth.tar \
-    --out_home $out_dir --label inference \
+    --out_home $out_dir --label inference --reg_rounding 0 --cla_rounding 3 \
     --result_fname HSC.5M.output.probs \
-    --num_workers 0 --gen_bigwig
+    --model resnet --nblocks 5 --nfilt 15 --width 50 --dil 8 \
+    --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
+    --task both --num_workers 0 --gen_bigwig
 
 macs2 bdgpeakcall -i $out_dir/inference_latest/test_data_HSC.5M.output.probs.peaks.bedGraph -o $out_dir/inference_latest/test_data_HSC.5M.output.peaks.narrowPeak -c 0.5
 
@@ -203,8 +210,10 @@ python $root_dir/main.py --infer \
     --sizes_file $ref_dir/hg19.auto.sizes \
     --weights_path $saved_model_dir/bulk_blood_data/5000000.7cell.resnet.5.2.15.8.50.0803.pth.tar \
     --out_home $out_dir --label inference.pretrained \
-    --result_fname HSC.5M.output.pretrained \
-    --num_workers 0 --gen_bigwig
+    --result_fname HSC.5M.output.pretrained --reg_rounding 0 --cla_rounding 3 \
+    --model resnet --nblocks 5 --nfilt 15 --width 50 --dil 8 \
+    --nblocks_cla 2 --nfilt_cla 15 --width_cla 50 --dil_cla 10 \
+    --task both --num_workers 0 --gen_bigwig
 
 echo ""
 echo "Calculate metrics after inference..."
