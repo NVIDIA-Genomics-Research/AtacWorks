@@ -44,7 +44,7 @@ import pandas as pd
 import logging
 import h5py
 from claragenomics.io.bigwigio import extract_bigwig_to_numpy, extract_bigwig_intervals, check_bigwig_nonzero, check_bigwig_intervals_nonzero
-
+from claragenomics.io.bedio import read_intervals
 
 # Set up logging
 log_formatter = logging.Formatter(
@@ -93,7 +93,7 @@ _logger.debug(args)
 
 # Read intervals
 _logger.info('Reading intervals')
-intervals = pd.read_csv(args.intervals, header=None, sep='\t')
+intervals = read_intervals(args.intervals)
 _logger.info('Read {} intervals'.format(len(intervals)))
 
 # Optionally, select intervals with nonzero coverage
