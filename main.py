@@ -29,6 +29,7 @@ from claragenomics.dl4atac.models.models import *
 from claragenomics.dl4atac.utils import *
 from claragenomics.io.bedgraphio import intervals_to_bg, df_to_bedGraph
 from claragenomics.io.bigwigio import bedgraph_to_bigwig
+from claragenomics.io.bedio import read_intervals, read_sizes
 from cmd_args import parse_args
 from worker import train_worker, infer_worker, eval_worker 
 
@@ -64,7 +65,7 @@ def check_intervals(intervals_df, sizes_df, h5_file):
     Function to check intervals file used for inference.
     Args:
         intervals_df(Pandas DataFrame): df with cols chrom, start, end
-        sizes_df(Pandas dataframe): df with cols chrom, len
+        sizes_df(Pandas dataframe): df with cols chrom, length
         h5_file(str): path to h5 file to match intervals
     """
     # Length of intervals == length of dataset in h5 file
@@ -81,7 +82,7 @@ def check_intervals(intervals_df, sizes_df, h5_file):
 
     # Interval bounds do not exceed chromosome lengths
     intervals_sizes = intervals_df.merge(sizes_df, on='chrom')
-    excess_intervals = intervals_sizes[intervals_sizes['end'] > intervals_sizes['len']]
+    excess_intervals = intervals_sizes[intervals_sizes['end'] > intervals_sizes['length']]
     assert len(excess_intervals) == 0, \
           "Intervals exceed chromosome sizes in sizes file ({})".format(excess_intervals)
 
@@ -144,8 +145,7 @@ def writer(infer, intervals_file, exp_dir, result_fname,
     if not infer:
         assert False, "writer called but infer = False. Not sure what file to write?"
 
-    intervals = pd.read_csv(intervals_file, sep='\t', header=None, names=['chrom', 'start', 'end'], 
-         usecols=(0,1,2), dtype={'chrom':str, 'start':int, 'end':int})
+    intervals = read_intervals(intervals_file)
 
     channels = []
     outputfiles = []
@@ -316,10 +316,8 @@ def main():
 
                 # Check that intervals, sizes and h5 file are all compatible.
                 _logger.info('Checkng input files for compatibility')
-                intervals = pd.read_csv(args.intervals_file, sep='\t', header=None, names=['chrom', 'start', 'end'],
-                     usecols=(0,1,2), dtype={'chrom':str, 'start':int, 'end':int})
-                sizes = pd.read_csv(args.sizes_file, sep='\t', header=None, names=['chrom', 'len'],
-                     usecols=(0,1), dtype={'chrom':str, 'len':int}) 
+                intervals = read_intervals(args.intervals_file)
+                sizes = read_sizes(args.sizes_file)
                 check_intervals(intervals, sizes, args.infer_files[0])
 
                 # Delete intervals and sizes objects in main thread
