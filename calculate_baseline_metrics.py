@@ -33,6 +33,7 @@ import logging
 
 from claragenomics.dl4atac.metrics import BCE, MSE, Recall, Precision, Specificity, CorrCoef, Accuracy, AUROC, AUPRC, SpearmanCorrCoef, F1
 from claragenomics.io.bigwigio import extract_bigwig_intervals
+from claragenomics.io.bedio import read_intervals, read_sizes
 
 # Set up logging
 log_formatter = logging.Formatter(
@@ -146,12 +147,10 @@ args = parse_args()
 # Load intervals if supplied
 _logger.info('Loading intervals')
 if args.intervals is not None:
-    intervals = pd.read_csv(args.intervals, header=None, sep='\t')
+    intervals = read_intervals(args.intervals)
+# If not, use whole chromosome lengths
 elif args.sizes is not None:
-    intervals = pd.read_csv(args.sizes, header=None, sep='\t')
-    # Convert to interval format - add a column of zeros for start value
-    intervals[2] = [0]*len(intervals)
-    intervals.rename(columns={0: 0, 2: 1, 1: 2}, inplace=True)
+    intervals = read_sizes(args.sizes, as_intervals=True)
 else:
     intervals = None
 
