@@ -25,7 +25,7 @@ class DatasetBase(Dataset):
         for file in self.files:
             with h5py.File(file, 'r') as f:
                 self.running_counts.append(
-                    self.running_counts[-1] + f["data"].shape[0])
+                    self.running_counts[-1] + f["x"].shape[0])
 
     def __len__(self):
         return (self.running_counts[-1])
@@ -64,25 +64,26 @@ class DatasetTrain(DatasetBase):
 
     def _get_generator(self):
         # Support 2+ datasets
-        hdrecs = []
+        # Assumption - all files have the same set of named fields
+        # All fields will be read
+        # List fields in file 0 and create dictionary
+        hrecs = {'x':[], 'y_reg':[], 'y_cla':[]}
         for i,filename in enumerate(self.files):
             #print('loading H5Py file %s' % filename)
             hf = h5py.File(filename, 'r')
-            hd = hf["data"]
-            #print('shape %s' % str(hd.shape))
-            hdrecs.append(hd)
+            for key in hf.keys():
+                hrecs[key].append(hf[key])
         idx = yield
         while True:
             # Find correct dataset, given idx
             file_id, local_idx = self._get_file_id(idx)
-            assert file_id < len(hdrecs), "No file reference %d" % file_id
-            rec = hdrecs[file_id][local_idx]
-            if len(rec.shape) == 1:
-                # When no labels, return just the input data
-                idx = yield {'idx':idx, 'x':rec}
-            else:
-                # Return 4 items -- IDX (for saving/tracing), input data, upsampled data, peaks/classifications
-                idx = yield {'idx':idx, 'x':rec[:,0], 'y_reg':rec[:,1], 'y_cla':rec[:,2]}
+            assert file_id < len(hrecs['x']), "No file reference %d" % file_id
+            rec = {'idx':idx}
+            rec['x'] = hrecs['x'][file_id][local_idx]
+            rec['y_reg'] = hrecs['y_reg'][file_id][local_idx]
+            rec['y_cla'] = hrecs['y_cla'][file_id][local_idx]
+            yield rec
+                
 
 class DatasetInfer(DatasetBase):
     ''' Infer Dataset
@@ -106,7 +107,7 @@ class DatasetInfer(DatasetBase):
         hdrecs = []
         for i,filename in enumerate(self.files):
             hf = h5py.File(filename, 'r')
-            hd = hf["data"]
+            hd = hf["x"]
             hdrecs.append(hd)
             sys.stdout.flush()
         idx = yield
@@ -121,12 +122,13 @@ class DatasetInfer(DatasetBase):
                 sys.stdout.flush()
             rec = self.fh_data[file_id][local_idx - self.fh_indices[file_id][0]]
             sys.stdout.flush()
-            if len(rec.shape) == 1:
+            idx = yield {'idx':idx, 'x':rec}
+            #if len(rec.shape) == 1:
                 # When no labels, return just the input data
-                idx = yield {'idx':idx, 'x':rec}
-            else:
+            #    idx = yield {'idx':idx, 'x':rec}
+            #else:
                 # Return 4 items -- IDX (for saving/tracing), input data, upsampled data, peaks/classifications
-                idx = yield {'idx':idx, 'x':rec[:,0], 'y_reg':rec[:,1], 'y_cla':rec[:,2]}
+                #idx = yield {'idx':idx, 'x':rec[:,0], 'y_reg':rec[:,1], 'y_cla':rec[:,2]}
 
 """
 # Is this even used?

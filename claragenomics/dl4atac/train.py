@@ -42,7 +42,10 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
         y_cla = batch['y_cla']
 
         # move data and labels to GPU for forward pass
-        x = x.unsqueeze(1)  # (N, 1, L)
+        if len(x.shape) == 2:
+            x = x.unsqueeze(1)  # (N, 1, L)
+        else:
+        	x = np.swapaxes(x, 1,2)
         x = x.cuda(gpu, non_blocking=True)
 
         if task == 'regression':

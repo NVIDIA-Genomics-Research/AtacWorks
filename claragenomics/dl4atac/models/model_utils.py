@@ -61,6 +61,8 @@ def model_args_v1(root_dir):
                         help='number of filters for classification blocks in resnet')
     parser.add('--field', required=True, type=int,
                         help='receptive field for linear/logistic regression')
+    parser.add('--in_channels', required=True, type=int,
+                        help='number of channels for input data')
 
     args = parser.parse_known_args()
 
@@ -90,7 +92,8 @@ def build_model(rank, afunc, interval_size, resume,
                                 num_blocks=model_args.nblocks, num_blocks_class=model_args.nblocks_cla,
                                 out_channels=model_args.nfilt, out_channels_class=model_args.nfilt_cla,
                                 kernel_size=model_args.width, kernel_size_class=model_args.width_cla,
-                                dilation=model_args.dil, dilation_class=model_args.dil_cla)
+                                dilation=model_args.dil, dilation_class=model_args.dil_cla, 
+                                in_channels=model_args.in_channels)
 
     elif model == 'linear':
         model = DenoisingLinear(

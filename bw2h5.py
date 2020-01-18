@@ -45,6 +45,7 @@ import logging
 import h5py
 from claragenomics.io.bigwigio import extract_bigwig_to_numpy, extract_bigwig_intervals, check_bigwig_nonzero, check_bigwig_intervals_nonzero
 from claragenomics.io.bedio import read_intervals
+from claragenomics.dl4atac.utils import *
 
 # Set up logging
 log_formatter = logging.Formatter(
@@ -62,6 +63,8 @@ def parse_args():
         description='Data processing for genome-wide denoising models.')
     parser.add_argument('--noisybw', type=str,
                         help='Path to noisy bigwig file', required=True)
+    parser.add_argument('--layersbw', type=str,
+                        help='Path to bigWig file containing additional layers, or folder containing bigwig files', required=True)
     parser.add_argument('--intervals', type=str,
                         help='Path to interval file', required=True)
     parser.add_argument('--batch_size', type=int,
@@ -116,61 +119,68 @@ batch_starts = np.array(range(0, len(intervals), args.batch_size))
 batch_ends = batch_starts + args.batch_size
 batch_ends[-1] = len(intervals)
 
-# Write batches to hdf5 file
-_logger.info('Extracting data for each batch and writing to h5 file')
+# Get output hdf5 filename
 df = None
 filename = args.prefix + '.h5'
+
+# Write batches to hdf5 file
+_logger.info('Extracting data for each batch and writing to h5 file')
 with h5py.File(filename, 'w') as f:
     # Create a single dataset -- expand locations as we go along
     for i in range(batches_per_epoch):
+        batch_name = 'batch' + str(i)
         if i % 10 == 0:
-            _logger.info("batch: " + str(i) + " of " + str(batches_per_epoch))
+            _logger.info(batch_name + " of " + str(batches_per_epoch))
+            batch_data = {}
 
         # Subset intervals
         batch_intervals = intervals.iloc[batch_starts[i]:batch_ends[i], :]
 
         # Read noisy data
-        batch_data = extract_bigwig_intervals(
+        batch_data['x'] = extract_bigwig_intervals(
             batch_intervals, args.noisybw, pad=args.pad)
+
+        # Add other input layers
+        if args.layersbw is not None:
+            # Read additional layers
+            layer_files = gather_files_from_cmdline(args.layersbw, ".bw")
+            for layer_file in layer_files:
+                layer_data = extract_bigwig_intervals(
+                    batch_intervals, layer_file, pad=args.pad
+                )
+                batch_data['x'] = np.dstack((batch_data['x'], layer_data))
 
         if not args.nolabel:
 
             # Read clean data: regression labels
-            clean_data = extract_bigwig_intervals(
+            batch_data['y_reg'] = extract_bigwig_intervals(
                 batch_intervals, args.cleanbw, pad=args.pad
             )
 
             # Read clean data: classification labels
-            clean_peak_data = extract_bigwig_intervals(
+            batch_data['y_cla'] = extract_bigwig_intervals(
                 batch_intervals, args.cleanpeakbw, pad=args.pad
             )
 
-            batch_data = np.dstack([batch_data, clean_data, clean_peak_data])
-
-        _logger.debug(batch_data.shape)
-
-        batch_name = 'batch' + str(i)
+        _logger.debug(len(batch_data))
         _logger.debug('Saving batch: |%s|' % batch_name)
 
         # Create dataset, or expand and append batch.
-        # TODO: Write as named numpy fields
         if df == None:
-            if args.nolabel:
-                max_shape = (None,  batch_data.shape[1])
-            else:
-                max_shape = (None, batch_data.shape[1], batch_data.shape[2])
-            df = f.create_dataset("data", data=batch_data, maxshape=max_shape, compression='lzf')
-            _logger.debug('Created new dataset! Shape %d -- file %s' %
-                          (batch_data.shape[0], filename))
+            for key in batch_data.keys():
+                max_shape = list(batch_data[key].shape)
+                max_shape[0] = None
+                df = f.create_dataset(key, data=batch_data[key], maxshape=max_shape, compression='lzf')
+                _logger.debug('Created new dataset! Shape %s -- file %s' %
+                          (str(batch_data[key].shape[0]), filename))
         else:
-            df = f["data"]
-            d_len = df.shape[0]
-            if args.nolabel:
-                data_dimension = (d_len+batch_data.shape[0], batch_data.shape[1])
-            else:
-                data_dimension = (d_len+batch_data.shape[0], batch_data.shape[1], batch_data.shape[2])
-            df.resize(data_dimension)
-            df[d_len:] = batch_data
-            _logger.debug('expanded HDF from %d to %d' % (d_len, df.shape[0]))
+            for key in batch_data.keys():
+                df = f[key]
+                d_len = df.shape[0]
+                data_dimension = list(batch_data[key].shape)
+                data_dimension[0] += d_len
+                df.resize(data_dimension)
+                df[d_len:] = batch_data[key]
+                _logger.debug('expanded HDF dataset %s from %d to %d' % (key, d_len, df.shape[0]))
 
 _logger.info('Done! Saved to %s' % filename)

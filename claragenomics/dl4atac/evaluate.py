@@ -67,7 +67,10 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
                 (x, y_reg, y_cla) = batch
                 """
             # move input to GPU for model forward pass
-            x = x.unsqueeze(1)  # (N, 1, L)
+            if len(x.shape) == 2:
+                x = x.unsqueeze(1)  # (N, 1, L)
+            else:
+                x = np.swapaxes(x, 1,2)
             x = x.cuda(gpu, non_blocking=True)
 
             # transform coverage track if required

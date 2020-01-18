@@ -115,19 +115,19 @@ def progbar(*, curr, total, progbar_len, pre_bar_msg, post_bar_msg):
     #sys.stdout.flush()
 
 
-def gather_files_from_cmdline(input):
+def gather_files_from_cmdline(input, extension=".h5"):
     path = input.strip("[]")
     res = None
     if path == input:
         # a single path is provided; not wrapped in []
         # could be a regular file or a directory
         if os.path.isfile(path):
-            assert path.endswith(".h5")
+            assert path.endswith(extension)
             res = [path]
         elif os.path.isdir(path):
             paths = [os.path.join(path, f)
                      for f in os.listdir(path)]
-            paths = [f for f in paths if os.path.isfile(f) and f.endswith(".h5")]
+            paths = [f for f in paths if os.path.isfile(f) and f.endswith(extension)]
             res = paths
     else:
         # multiple regular files wrapped in []

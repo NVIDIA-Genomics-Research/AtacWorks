@@ -82,6 +82,7 @@ def get_losses(task, mse_weight, pearson_weight, gpu, poisson_weight):
 
     return loss_func
 
+
 def get_metrics(task, threshold, best_metric_choice):
     """
     Get metrics. 
@@ -148,7 +149,6 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
     model, model_params = get_model(args, gpu, rank)
 
     optimizer = Adam(model.parameters(), lr=args.lr)
-
 
     config_dir = os.path.join(args.exp_dir, "configs")
     if not os.path.exists(config_dir):

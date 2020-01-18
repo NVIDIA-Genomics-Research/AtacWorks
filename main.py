@@ -283,7 +283,7 @@ def main():
 
         # Get model parameters
         with h5py.File(args.train_files[0], 'r') as f:
-            args.interval_size = f['data'].shape[1]
+            args.interval_size = f['x'].shape[1]
             args.batch_size = 1
 
         ngpus_per_node = torch.cuda.device_count()
