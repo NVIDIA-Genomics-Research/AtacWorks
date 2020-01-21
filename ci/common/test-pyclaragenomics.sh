@@ -18,7 +18,7 @@ PYCLARAGENOMICS_DIR=$1
 cd $PYCLARAGENOMICS_DIR
 
 #Install external dependencies.
-pip install -r requirements-base.txt && pip install -r requirements-macs2.txt
+python -m pip install --ignore-installed -r requirements-base.txt && python -m pip install -r requirements-macs2.txt
 
 LOCAL_BIN_DIR="local_bin"
 mkdir -p $LOCAL_BIN_DIR
