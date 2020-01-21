@@ -93,14 +93,6 @@ python $root_dir/bw2h5.py \
     --intervals $out_dir/example.holdout_intervals.bed \
     --batch_size 64 \
     --prefix $out_dir/test_data \
-    --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
-    --cleanpeakbw $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw
-#No label
-python $root_dir/bw2h5.py \
-    --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
-    --intervals $out_dir/example.holdout_intervals.bed \
-    --batch_size 64 \
-    --prefix $out_dir/no_label \
     --nolabel
 
 echo ""
@@ -118,11 +110,16 @@ echo "Step 5: Calculate baseline metrics on the test set..."
 echo ""
 # Regression metrics on noisy data
 python $root_dir/calculate_baseline_metrics.py \
-    --label_file $out_dir/test_data.h5 --task regression --sep_peaks
+    --label_file $data_dir/HSC.80M.chr123.10mb.coverage.bw \
+    --test_file $data_dir/HSC.5M.chr123.10mb.coverage.bw \
+    --task regression \
+    --intervals $out_dir/example.holdout_intervals.bed \
+    --sep_peaks --peak_file $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw
 
 # Classification metrics on the noisy data peak calls
 python $root_dir/calculate_baseline_metrics.py \
-    --label_file $out_dir/test_data.h5 --task classification \
+    --label_file $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw \
+    --task classification \
     --test_file $out_dir/HSC.5M.chr123.10mb.peaks.bed.bw \
     --intervals $out_dir/example.holdout_intervals.bed \
     --thresholds 0.5
@@ -149,17 +146,19 @@ echo ""
 echo "Step 7a: Calculate metrics for track coverage after inference..."
 echo ""
 python $root_dir/calculate_baseline_metrics.py \
-    --label_file $out_dir/test_data.h5 --task regression \
+    --label_file $data_dir/HSC.80M.chr123.10mb.coverage.bw \
+    --task regression \
     --test_file $out_dir/inference_latest/test_data_HSC.5M.output.track.bw \
     --intervals $out_dir/example.holdout_intervals.bed \
     --sizes $ref_dir/hg19.auto.sizes \
-    --sep_peaks
+    --sep_peaks --peak_file $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw
 
 echo ""
 echo "Step 7b: Calculate metrics for peak classification after inference..."
 echo ""
 python $root_dir/calculate_baseline_metrics.py \
-    --label_file $out_dir/test_data.h5 --task classification \
+    --label_file $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw \
+    --task classification \
     --test_file $out_dir/inference_latest/test_data_HSC.5M.output.peaks.bw \
     --intervals $out_dir/example.holdout_intervals.bed \
     --sizes $ref_dir/hg19.auto.sizes \
@@ -194,11 +193,11 @@ macs2 bdgpeakcall -i $out_dir/inference_latest/test_data_HSC.5M.output.probs.pea
 #######
 
 echo ""
-echo "Alternatively, run inference using a pretrained model on dataset without label..."
+echo "Alternatively, run inference using a pretrained model on the test dataset..."
 echo ""
 # Inference output track
 python $root_dir/main.py --infer \
-    --infer_files $out_dir/no_label.h5 \
+    --infer_files $out_dir/test_data.h5 \
     --intervals_file $out_dir/example.holdout_intervals.bed \
     --sizes_file $ref_dir/hg19.auto.sizes \
     --weights_path $saved_model_dir/bulk_blood_data/5000000.7cell.resnet.5.2.15.8.50.0803.pth.tar \
@@ -210,15 +209,16 @@ echo ""
 echo "Calculate metrics after inference..."
 echo ""
 python $root_dir/calculate_baseline_metrics.py \
-    --label_file $out_dir/test_data.h5 --task regression \
-    --test_file $out_dir/inference.pretrained_latest/no_label_HSC.5M.output.pretrained.track.bw \
+    --label_file $data_dir/HSC.80M.chr123.10mb.coverage.bw \
+    --task regression \
+    --test_file $out_dir/inference.pretrained_latest/test_data_HSC.5M.output.pretrained.track.bw \
     --intervals $out_dir/example.holdout_intervals.bed \
     --sizes $ref_dir/hg19.auto.sizes \
-    --sep_peaks
+    --sep_peaks --peak_file $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw
 
 python $root_dir/calculate_baseline_metrics.py \
-    --label_file $out_dir/test_data.h5 --task classification \
-    --test_file $out_dir/inference.pretrained_latest/no_label_HSC.5M.output.pretrained.peaks.bw \
+    --label_file $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw --task classification \
+    --test_file $out_dir/inference.pretrained_latest/test_data_HSC.5M.output.pretrained.peaks.bw \
     --intervals $out_dir/example.holdout_intervals.bed \
     --sizes $ref_dir/hg19.auto.sizes \
-    --thresholds 0.5
+    --auc --thresholds 0.5
