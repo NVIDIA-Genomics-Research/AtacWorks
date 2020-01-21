@@ -70,7 +70,7 @@ def check_intervals(intervals_df, sizes_df, h5_file):
     """
     # Length of intervals == length of dataset in h5 file
     with h5py.File(h5_file, 'r') as hf:
-        len_data = len(hf['data'])
+        len_data = len(hf['x'])
     assert len_data == intervals_df.shape[0], \
         "Size of infer dataset ({}) doesn't match the intervals file ({})".format(len_data, intervals_df.shape[0])
 
@@ -328,7 +328,7 @@ def main():
                 _logger.debug("Evaluation data: ", args.val_files)
             # Get model parameters
             with h5py.File(files[x], 'r') as f:
-                args.interval_size = f['data'].shape[1]
+                args.interval_size = f['x'].shape[1]
                 args.batch_size = 1
 
             prefix = os.path.basename(infile).split(".")[0]
