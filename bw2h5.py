@@ -45,7 +45,7 @@ import logging
 import h5py
 from claragenomics.io.bigwigio import extract_bigwig_to_numpy, extract_bigwig_intervals, check_bigwig_nonzero, check_bigwig_intervals_nonzero
 from claragenomics.io.bedio import read_intervals
-from claragenomics.dl4atac.utils import *
+from claragenomics.dl4atac.utils import gather_files_from_cmdline
 
 # Set up logging
 log_formatter = logging.Formatter(
@@ -64,7 +64,7 @@ def parse_args():
     parser.add_argument('--noisybw', type=str,
                         help='Path to noisy bigwig file', required=True)
     parser.add_argument('--layersbw', type=str,
-                        help='Path to bigWig file containing additional layers, or folder containing bigwig files', required=True)
+                        help='Path to bigWig file containing additional layers, or folder containing bigwig files')
     parser.add_argument('--intervals', type=str,
                         help='Path to interval file', required=True)
     parser.add_argument('--batch_size', type=int,
