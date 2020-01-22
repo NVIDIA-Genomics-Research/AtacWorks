@@ -45,8 +45,6 @@ def parse_args(root_dir):
                         help='learning rate')
     parser.add('--epochs', required=True, type=int,
                         help='Number of epochs')
-    parser.add('--afunc', required=True, type=str,
-                        help='activation')
     parser.add('--mse_weight', required=True, type=float,
                         help='relative weight of mse loss')
     parser.add('--pearson_weight', required=True, type=float,

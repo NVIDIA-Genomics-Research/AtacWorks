@@ -13,7 +13,6 @@
 clip_grad: 0 
 lr: 0.0001 
 epochs: 5
-afunc: relu 
 mse_weight: 0.001 
 pearson_weight: 1
 poisson_weight: 0

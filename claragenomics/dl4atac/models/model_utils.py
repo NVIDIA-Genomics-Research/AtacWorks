@@ -43,6 +43,8 @@ def model_args_v1(root_dir):
                         help='model type', choices=(
         'unet', 'resnet', 'linear', 'logistic', 'fc2', 'fc3'))
     parser.add('--bn', action='store_true', help='batch norm')
+    parser.add('--afunc', required=True, type=str,
+                        help='activation')
     parser.add('--nblocks', required=True, type=int,
                         help='number of regression blocks for resnet')
     parser.add('--dil', required=True, type=int,
@@ -67,7 +69,7 @@ def model_args_v1(root_dir):
     return args
 
 
-def build_model(rank, afunc, interval_size, resume,
+def build_model(rank, interval_size, resume,
                 infer, evaluate, weights_path,
                 gpu, distributed):
 
@@ -81,12 +83,12 @@ def build_model(rank, afunc, interval_size, resume,
 
     if model_args.model == 'unet':  # args.task == 'both'
         model = DenoisingUNet(interval_size=interval_size,
-                              afunc=afunc, bn=bn)
+                              afunc=model_args.afunc, bn=bn)
     elif model_args.model == 'fc2':  # args.task == 'classification'
         model = FC2(interval_size=interval_size)
 
     elif model_args.model == 'resnet':
-        model = DenoisingResNet(interval_size=interval_size, afunc=afunc, bn=model_args.bn,
+        model = DenoisingResNet(interval_size=interval_size, afunc=model_args.afunc, bn=model_args.bn,
                                 num_blocks=model_args.nblocks, num_blocks_class=model_args.nblocks_cla,
                                 out_channels=model_args.nfilt, out_channels_class=model_args.nfilt_cla,
                                 kernel_size=model_args.width, kernel_size_class=model_args.width_cla,
