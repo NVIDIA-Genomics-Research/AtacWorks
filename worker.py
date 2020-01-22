@@ -133,7 +133,7 @@ def get_model(args, gpu, rank):
                                 world_size=args.world_size, rank=rank)
 
     # Why is model & optimizer built in spawned function?
-    model, model_params = build_model(rank = rank, afunc = args.afunc, interval_size = args.interval_size,resume = args.resume,
+    model, model_params = build_model(rank = rank, interval_size = args.interval_size,resume = args.resume,
                         infer = args.infer, evaluate = args.eval, weights_path = args.weights_path,
                         gpu = gpu, distributed = args.distributed)
     return model, model_params
