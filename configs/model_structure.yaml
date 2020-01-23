@@ -22,3 +22,4 @@ dil_cla: 10              # dilation for classification blocks in resnet
 width_cla: 50            # kernel size for classification blocks in resnet
 nfilt_cla: 15            # number of filters for classification blocks in resnet
 field: 1000              # receptive field for linear/logistic regression
+afunc: relu              # Activation function.
