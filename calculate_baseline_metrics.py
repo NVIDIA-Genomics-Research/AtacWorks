@@ -162,14 +162,14 @@ if args.task == 'regression':
 
     # Load labels
     _logger.info("Loading labels for regression") 
-    y = read_data_file(args.label_file, 'y_reg', intervals, pad=args.pad)
+    y = read_data_file(args.label_file, 'label_reg', intervals, pad=args.pad)
 
     # Load data
     _logger.info("Loading data for regression")
     if args.test_file is None:
-        x = read_data_file(args.label_file, 'x', pad=args.pad)
+        x = read_data_file(args.label_file, 'input', pad=args.pad)
     else:
-        x = read_data_file(args.test_file, 'x', intervals)
+        x = read_data_file(args.test_file, 'input', intervals)
 
     # Calculate metrics
     _logger.info("Calculating metrics for regression")
@@ -186,9 +186,9 @@ if args.task == 'regression':
         # Load peak labels
         _logger.info("Loading labels for classification")
         if args.peak_file is not None:
-            y_peaks = read_data_file(args.peak_file, 'y_cla', intervals, pad=args.pad)
+            y_peaks = read_data_file(args.peak_file, 'label_cla', intervals, pad=args.pad)
         else:
-            y_peaks = read_data_file(args.label_file, 'y_cla', intervals, pad=args.pad)
+            y_peaks = read_data_file(args.label_file, 'label_cla', intervals, pad=args.pad)
 
         # Calculate separate metrics for peak and non-peak regions
         _logger.info("Calculating metrics for regression in peaks")
@@ -208,15 +208,15 @@ else:
 
     # Load labels
     _logger.info("Loading labels for classification")
-    y_peaks = read_data_file(args.label_file, 'y_cla', intervals, pad=args.pad, dtype='int8')
+    y_peaks = read_data_file(args.label_file, 'label_cla', intervals, pad=args.pad, dtype='int8')
 
     # Load data
     _logger.info("Loading data for classification")
     if args.thresholds is not None:
-        x_peaks = read_data_file(args.test_file, 'y_cla', intervals, dtype='float32')
+        x_peaks = read_data_file(args.test_file, 'label_cla', intervals, dtype='float32')
         # fp32 is required by torch for sensitivity/specificity calculation
     else:
-        x_peaks = read_data_file(args.test_file, 'y_cla', intervals, dtype='float16')
+        x_peaks = read_data_file(args.test_file, 'label_cla', intervals, dtype='float16')
 
     # Calculate number of bases in peaks
     calculate_class_nums(y_peaks, message="Bases per class in clean data")
@@ -247,4 +247,4 @@ else:
         metrics = calculate_metrics([AUROC(), AUPRC()], x_peaks, y_peaks)
         print("AUC metrics: " + " | ".join([str(metric) for metric in metrics]))
 
-_logger.info('Done!') 
+_logger.info('Done!')
