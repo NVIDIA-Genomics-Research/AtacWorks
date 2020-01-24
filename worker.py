@@ -10,40 +10,32 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
+"""Worker functions for training, inference and evaluation."""
+
 # system imports
 import logging
 import os
-import random
-import sys
-import tempfile
-import time
-
-import h5py
-import multiprocessing
-import numpy as np
-import pandas as pd
-import torch
-import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel
-from torch.optim import Adam
-
-# module imports
-from claragenomics.dl4atac.dataset import DatasetTrain, DatasetInfer
-from claragenomics.dl4atac.evaluate import evaluate
-from claragenomics.dl4atac.losses import MultiLoss
-from claragenomics.dl4atac.infer import infer
-from claragenomics.dl4atac import metrics
-from claragenomics.dl4atac.metrics import BCE, MSE, Recall, Specificity, CorrCoef, AUROC
-from claragenomics.dl4atac.models.models import *
-from claragenomics.dl4atac.models.model_utils import build_model
-from claragenomics.dl4atac.train import train
-from claragenomics.dl4atac.utils import *
-from claragenomics.io.bigwigio import bedgraph_to_bigwig
-
 # python imports
 import warnings
-import glob
-import math
+
+from claragenomics.dl4atac import metrics
+# module imports
+from claragenomics.dl4atac.dataset import DatasetInfer, DatasetTrain
+from claragenomics.dl4atac.evaluate import evaluate
+from claragenomics.dl4atac.infer import infer
+from claragenomics.dl4atac.losses import MultiLoss
+from claragenomics.dl4atac.metrics import (AUROC, BCE, CorrCoef, MSE,
+                                           Recall, Specificity)
+from claragenomics.dl4atac.models.model_utils import build_model
+from claragenomics.dl4atac.train import train
+from claragenomics.dl4atac.utils import myprint, save_config, save_model
+
+import torch
+
+import torch.distributed as dist
+
+from torch.optim import Adam
+
 warnings.filterwarnings("ignore")
 
 # Set up logging
@@ -58,19 +50,23 @@ _logger.addHandler(_handler)
 
 
 def get_losses(task, mse_weight, pearson_weight, gpu, poisson_weight):
-    """
-    Return loss function. 
+    """Return loss function.
+
     Args:
         task : Whether the task is regression or classification or both.
         mse_weight : Mean squared error weight.
         pearson_weight : Pearson correlation loss weight.
         poisson_weight : Poisson loss weight.
         gpu : Number of gpus.
+
     Return:
         loss_func : list of loss functions for each task.
-    """
 
-    reg_loss_func = MultiLoss('poissonloss', poisson_weight, device=gpu) if poisson_weight > 0 else MultiLoss(['mse', 'pearsonloss'], [mse_weight, pearson_weight], device=gpu)
+    """
+    reg_loss_func = MultiLoss('poissonloss', poisson_weight, device=gpu) \
+        if poisson_weight > 0 else MultiLoss(['mse', 'pearsonloss'],
+                                             [mse_weight, pearson_weight],
+                                             device=gpu)
     cla_loss_func = MultiLoss('bce', 1, device=gpu)
 
     if task == "regression":
@@ -84,18 +80,19 @@ def get_losses(task, mse_weight, pearson_weight, gpu, poisson_weight):
 
 
 def get_metrics(task, threshold, best_metric_choice):
-    """
-    Get metrics. 
+    """Get metrics.
+
     Args:
         task : Whether the task is regression or classification or both.
         threshold : the threshold for classification.
         best_metric_choice : which metric to use for best metric.
-    Return: #TODO
-        metrics_reg :
-        metrics_cla :
-        best_metric :
-    """
 
+    Return:
+        metrics_reg : List of metrics to calculate for regression.
+        metrics_cla : List of metrics to calculate for classification
+        best_metric : Metric to choose best model from.
+
+    """
     metrics_reg = []
     metrics_cla = []
     best_metric = []
@@ -110,7 +107,7 @@ def get_metrics(task, threshold, best_metric_choice):
                        Specificity(threshold), AUROC()]
     try:
         best_metric_class = getattr(metrics, best_metric_choice)
-        
+
         if metrics_reg:
             for obj in metrics_reg:
                 if isinstance(obj, best_metric_class):
@@ -121,26 +118,51 @@ def get_metrics(task, threshold, best_metric_choice):
                 if isinstance(obj, best_metric_class):
                     best_metric = obj
     except AttributeError as e:
-        print (e)
+        print(e)
     return metrics_reg, metrics_cla, best_metric
 
 
 def get_model(args, gpu, rank):
+    """Build and return the model.
+
+    Args:
+        args : Parsed argument object.
+        gpu : GPU identity, if using specific GPU.
+        rank : .
+
+    Return:
+        model : built model
+        model_params : model parameters
+
+    """
     torch.cuda.set_device(gpu)
     _logger.debug('Rank %s' % str(rank))
 
     if args.distributed:
-        dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
+        dist.init_process_group(backend=args.dist_backend,
+                                init_method=args.dist_url,
                                 world_size=args.world_size, rank=rank)
 
     # Why is model & optimizer built in spawned function?
-    model, model_params = build_model(rank = rank, afunc = args.afunc, interval_size = args.interval_size,resume = args.resume,
-                        infer = args.infer, evaluate = args.eval, weights_path = args.weights_path,
-                        gpu = gpu, distributed = args.distributed)
+    model, model_params = build_model(rank=rank,
+                                      interval_size=args.interval_size,
+                                      resume=args.resume,
+                                      infer=args.infer, evaluate=args.eval,
+                                      weights_path=args.weights_path,
+                                      gpu=gpu, distributed=args.distributed)
     return model, model_params
 
 
 def train_worker(gpu, ngpu_per_node, args, timers=None):
+    """Build models and run training.
+
+    Args:
+        gpu : GPU identity, if using specific GPU.
+        ngpu_per_node : Number of GPUs per node.
+        args : argument object.
+        timers : .
+
+    """
     # fix random seed so models have the same starting weights
     torch.manual_seed(42)
 
@@ -180,31 +202,38 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
         # collate_fn=custom_collate_train,
         num_workers=args.num_workers, pin_memory=True, sampler=val_sampler,
         drop_last=False
-        # drop_last=True # need to drop irregular batch for distributed evaluation due to limitation of dist.all_gather
+        # drop_last=True # need to drop irregular batch for distributed
+        # evaluation due to limitation of dist.all_gather
     )
 
-    loss_func = get_losses(args.task, args.mse_weight, args.pearson_weight, gpu, args.poisson_weight)
+    loss_func = get_losses(args.task, args.mse_weight,
+                           args.pearson_weight, gpu, args.poisson_weight)
 
     current_best = None
     for epoch in range(args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
-        train(rank=rank, gpu=gpu, task=args.task, model=model, train_loader=train_loader,
-              loss_func=loss_func, optimizer=optimizer, epoch=epoch, epochs=args.epochs,
-              clip_grad=args.clip_grad, print_freq=args.print_freq, pad=args.pad,
-              distributed=args.distributed, world_size=args.world_size, transform=args.transform)
+        train(rank=rank, gpu=gpu, task=args.task, model=model,
+              train_loader=train_loader,
+              loss_func=loss_func, optimizer=optimizer, epoch=epoch,
+              epochs=args.epochs, clip_grad=args.clip_grad,
+              print_freq=args.print_freq, pad=args.pad,
+              distributed=args.distributed, world_size=args.world_size,
+              transform=args.transform)
 
         if epoch % args.eval_freq == 0:
             # either create new objects or call reset on each metric obj
-            metrics_reg, metrics_cla, best_metric = get_metrics(args.task, args.threshold, args.best_metric_choice)
+            metrics_reg, metrics_cla, best_metric = get_metrics(
+                args.task, args.threshold, args.best_metric_choice)
 
-            # best_metric is the metric used to compare results across different evaluation runs
-            # it's modified in place
+            # best_metric is the metric used to compare results
+            # across different evaluation runs. It's modified in place.
             evaluate(rank=rank, gpu=gpu, task=args.task,
                      model=model, val_loader=val_loader,
                      metrics_reg=metrics_reg, metrics_cla=metrics_cla,
                      world_size=args.world_size, distributed=args.distributed,
-                     best_metric=best_metric, pad=args.pad, transform=args.transform)
+                     best_metric=best_metric, pad=args.pad,
+                     transform=args.transform)
 
             if rank == 0:
                 new_best = best_metric.better_than(current_best)
@@ -213,17 +242,28 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
                     myprint("New best metric found - {}".format(current_best),
                             color='yellow', rank=rank)
                 if new_best or epoch % args.save_freq == 0:
-                    # give it the module attribute of the model (DistributedDataParallel wrapper)
+                    # give it the module attribute of the model
+                    # (DistributedDataParallel wrapper)
                     if args.distributed:
                         save_model(
-                            model.module, args.exp_dir, args.checkpoint_fname, epoch=epoch, is_best=new_best)
+                            model.module, args.exp_dir, args.checkpoint_fname,
+                            epoch=epoch, is_best=new_best)
                     else:
                         save_model(
-                            model, args.exp_dir, args.checkpoint_fname, epoch=epoch, is_best=new_best)
+                            model, args.exp_dir, args.checkpoint_fname,
+                            epoch=epoch, is_best=new_best)
 
 
 def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
+    """Run inference.
 
+    Args:
+        gpu : GPU identity number, if using specific GPU.
+        ngpu_per_node : Number of GPUs per node.
+        args : argument object.
+        res_queue : Inference queue.
+
+    """
     rank = gpu if args.distributed else 0
 
     model, _ = get_model(args, gpu, rank)
@@ -237,15 +277,26 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
 
     infer_loader = torch.utils.data.DataLoader(
         infer_dataset, batch_size=args.bs, shuffle=False,
-        num_workers=args.num_workers, pin_memory=True, sampler=infer_sampler, drop_last=False
+        num_workers=args.num_workers, pin_memory=True, sampler=infer_sampler,
+        drop_last=False
     )
 
-    infer(rank=rank, gpu=gpu, task=args.task, model=model, infer_loader=infer_loader,
-          print_freq=args.print_freq, res_queue=res_queue, pad=args.pad, transform=args.transform)
+    infer(rank=rank, gpu=gpu, task=args.task, model=model,
+          infer_loader=infer_loader,
+          print_freq=args.print_freq, res_queue=res_queue,
+          pad=args.pad, transform=args.transform)
 
 
 def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
+    """Run evaluation.
 
+    Args:
+        gpu : GPU identity number, if using specific GPU.
+        ngpu_per_node : Number of GPUs per node.
+        args : argument object.
+        res_queue : Evaluate queue.
+
+    """
     rank = gpu if args.distributed else 0
 
     model, _ = get_model(args, gpu, rank)
@@ -259,11 +310,15 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
 
     eval_loader = torch.utils.data.DataLoader(
         eval_dataset, batch_size=args.bs, shuffle=False,
-        num_workers=args.num_workers, pin_memory=True, sampler=eval_sampler, drop_last=False
+        num_workers=args.num_workers, pin_memory=True, sampler=eval_sampler,
+        drop_last=False
     )
 
-    metrics_reg, metrics_cla, best_metric= get_metrics(args.task, args.threshold, args.best_metric_choice)
+    metrics_reg, metrics_cla, best_metric = get_metrics(
+        args.task, args.threshold, args.best_metric_choice)
     evaluate(rank=rank, gpu=gpu, task=args.task,
-             model=model, val_loader=eval_loader, metrics_reg=metrics_reg, metrics_cla=metrics_cla,
+             model=model, val_loader=eval_loader, metrics_reg=metrics_reg,
+             metrics_cla=metrics_cla,
              world_size=args.world_size, distributed=args.distributed,
-             best_metric=best_metric, res_queue=res_queue, pad=args.pad, transform=args.transform)
+             best_metric=best_metric, res_queue=res_queue,
+             pad=args.pad, transform=args.transform)

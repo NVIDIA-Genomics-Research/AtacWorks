@@ -10,9 +10,7 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
-"""
-bw2h5.py:
-    Reads data from bigWig files in intervals and generates batch data for model.
+"""Read data from bigWig files in intervals and generate batch data for model.
 
 Workflow:
     1. Reads a BED file containing genomic intervals
@@ -37,15 +35,19 @@ Examples:
 
 """
 # Import requirements
+
 import argparse
-import numpy as np
-import pyBigWig
-import pandas as pd
+
 import logging
-import h5py
-from claragenomics.io.bigwigio import extract_bigwig_to_numpy, extract_bigwig_intervals, check_bigwig_nonzero, check_bigwig_intervals_nonzero
+
 from claragenomics.io.bedio import read_intervals
 from claragenomics.dl4atac.utils import gather_files_from_cmdline
+from claragenomics.io.bigwigio import (check_bigwig_intervals_nonzero,
+                                       extract_bigwig_intervals)
+import h5py
+
+import numpy as np
+
 
 # Set up logging
 log_formatter = logging.Formatter(
@@ -59,6 +61,12 @@ _logger.addHandler(_handler)
 
 
 def parse_args():
+    """Parse command line arguments.
+
+    Return:
+        args : parsed argument object.
+
+    """
     parser = argparse.ArgumentParser(
         description='Data processing for genome-wide denoising models.')
     parser.add_argument('--noisybw', type=str,
@@ -75,9 +83,11 @@ def parse_args():
     parser.add_argument('--nolabel', action='store_true',
                         help='only saving noisy data')
     parser.add_argument('--cleanbw', type=str,
-                        help='Path to clean bigwig file. Not used with --nolabel.')
+                        help='Path to clean bigwig file.\
+                            Not used with --nolabel.')
     parser.add_argument('--cleanpeakbw', type=str,
-                        help='Path to clean peak bigwig file. Not used with --nolabel.')
+                        help='Path to clean peak bigwig file.\
+                            Not used with --nolabel.')
     parser.add_argument('--nonzero', action='store_true',
                         help='subset to intervals with nonzero coverage')
     parser.add_argument('--debug', action='store_true',
@@ -169,7 +179,7 @@ with h5py.File(filename, 'w') as f:
         _logger.debug("Saving batch " + str(i))
 
         # Create dataset, or expand and append batch.
-        if df == None:
+        if df is None:
             for key in batch_data.keys():
                 max_shape = list(batch_data[key].shape)
                 max_shape[0] = None

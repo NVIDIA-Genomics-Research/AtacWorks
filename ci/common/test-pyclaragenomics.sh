@@ -28,10 +28,12 @@ export PATH="$PATH:$LOCAL_BIN_DIR"
 rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bedGraphToBigWig $LOCAL_BIN_DIR/ ||
 rsync -aP rsync://hgdownload-euro.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bedGraphToBigWig $LOCAL_BIN_DIR/
 
-
 rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bigWigToBedGraph $LOCAL_BIN_DIR/ ||
 rsync -aP rsync://hgdownload-euro.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bigWigToBedGraph $LOCAL_BIN_DIR/
 
+# Run linting and documentation tests.
+flake8 --ignore=E901 $PYCLARAGENOMICS_DIR
+pydocstyle --convention=google $PYCLARAGENOMICS_DIR
 # Run tests.
 if [ "${TEST_ON_GPU}" == '1' ]; then
     ./example/run.sh

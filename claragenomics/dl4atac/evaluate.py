@@ -7,23 +7,17 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
+"""Evaluate module."""
 
-from collections import Iterable, OrderedDict
 import time
-import gc
-import sys
-import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.distributed as dist
-from torch.nn.parallel.scatter_gather import gather
 from claragenomics.dl4atac.utils import myprint, gather_tensor
-from claragenomics.dl4atac.metrics import CorrCoef
 
 
-def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, world_size, distributed, pad, transform, best_metric=None, res_queue=None):
-    ''' The evaluate function
+def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg,
+             metrics_cla, world_size, distributed, pad, transform,
+             best_metric=None, res_queue=None):
+    """Evaluate given data and calculate metrics.
 
     Args:
         rank: rank of current process
@@ -36,12 +30,12 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
         world_size: number of gpus used for evaluation
         distributed: distributed
         best_metric: metric object for comparison
-        res_queue: network predictions will be put in the queue for result dumping
+        res_queue: network predictions will be put in the
+        queue for result dumping
         pad: padding around intervals
         transform: transformation to apply to coverage track
 
-    '''
-
+    """
     model.eval()
     start = time.time()
 
@@ -80,11 +74,11 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
             # model forward pass
             pred = model(x)
 
-            ###################################################################
+            ##################################################################
             # Remove padding before evaluation
-            if pad is not None:            
+            if pad is not None:
                 center = range(pad, x.shape[2] - pad)
-                if task == 'regression' or task =='both':
+                if task == 'regression' or task == 'both':
                     y_reg = y_reg[:, center]
                 if task == 'classification' or task == 'both':
                     y_cla = y_cla[:, center]
@@ -93,7 +87,7 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
                 else:
                     pred = pred[:, center]
 
-            ###################################################################
+            ##################################################################
             # dump results in eval mode
             """
             if res_queue:
@@ -104,7 +98,7 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
                     batch_res = np.expand_dims(pred.cpu().numpy(), axis=-1)
                 res_queue.put((idxes, batch_res))
             """
-            ###################################################################
+            ##################################################################
             # Store all the batch predictions and labels in a list
             if task == 'both':
                 y_reg_list.append(y_reg.detach())
@@ -138,14 +132,17 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
         # gather the results across all devices
         if distributed:
             if task == 'both' or task == 'regression':
-                ys_reg = gather_tensor(ys_reg, world_size=world_size, rank=rank)
+                ys_reg = gather_tensor(ys_reg, world_size=world_size,
+                                       rank=rank)
                 preds_reg = gather_tensor(
                     preds_reg, world_size=world_size, rank=rank)
             if task == 'both' or task == 'classification':
-                ys_cla = gather_tensor(ys_cla, world_size=world_size, rank=rank)
+                ys_cla = gather_tensor(ys_cla, world_size=world_size,
+                                       rank=rank)
                 preds_cla = gather_tensor(
                     preds_cla, world_size=world_size, rank=rank)
-            #myprint("Gathering takes {}s".format(time.time()-gather_start), rank=rank)
+            # myprint("Gathering takes {}s".format(time.time()-gather_start),
+            # rank=rank)
 
         # now with the results of whole dataset, compute metrics on device 0
         if rank == 0:
@@ -158,7 +155,7 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
         ###################################################################
 
         metrics = metrics_reg + metrics_cla
-        
+
         if rank == 0:
             result_str = " | ".join([str(metric) for metric in metrics])
             if task == 'regression' or task == 'both':
@@ -166,4 +163,5 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg, metrics_cla, wo
             else:
                 myprint("Evaluating on {} points.".format(preds_cla.shape[1]))
             myprint("Evaluation result: " + result_str, rank=rank)
-            myprint("Evaluation time taken: {:7.3f}s".format(time.time()-start), color='yellow', rank=rank)
+            myprint("Evaluation time taken: {:7.3f}s".format(
+                time.time() - start), color='yellow', rank=rank)
