@@ -57,7 +57,7 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq, res_queue, pad, t
             local_init = time.time()
 
             idxes = batch['idx']
-            x = batch['x']
+            x = batch['input']
             
             # move input to GPU for model forward pass
             if len(x.shape) == 2:
