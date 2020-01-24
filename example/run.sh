@@ -222,3 +222,57 @@ python $root_dir/calculate_baseline_metrics.py \
     --intervals $out_dir/example.holdout_intervals.bed \
     --sizes $ref_dir/hg19.auto.sizes \
     --auc --thresholds 0.5
+    
+########
+
+echo ""
+echo "Test the ability of the model to take additional inputs"
+echo ""
+
+# Encode data with CTCF motif layer
+python $root_dir/bw2h5.py \
+    --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
+    --intervals $out_dir/example.training_intervals.bed \
+    --batch_size 4 \
+    --prefix $out_dir/train_data_layers \
+    --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
+    --cleanpeakbw $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw \
+    --layersbw $data_dir/ctcf_motifs_for.sorted.bg.bw \
+    --nonzero
+# Validation data
+python $root_dir/bw2h5.py \
+    --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
+    --intervals $out_dir/example.val_intervals.bed \
+    --batch_size 64 \
+    --prefix $out_dir/val_data_layers \
+    --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
+    --cleanpeakbw $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw \
+    --layersbw $data_dir/ctcf_motifs_for.sorted.bg.bw
+# Test data
+python $root_dir/bw2h5.py \
+    --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
+    --layersbw $data_dir/ctcf_motifs_for.sorted.bg.bw \
+    --intervals $out_dir/example.holdout_intervals.bed \
+    --batch_size 64 \
+    --prefix $out_dir/test_data_layers \
+    --nolabel
+
+#Train and validate model..."
+python $root_dir/main.py --train \
+    --train_files $out_dir/train_data_layers.h5 \
+    --val_files $out_dir/val_data_layers.h5 \
+    --out_home $out_dir --label HSC.5M.model.layers \
+    --checkpoint_fname checkpoint.pth.tar \
+    --distributed
+
+# Inference
+# Note: change --weights_path to the path for your saved model!
+python $root_dir/main.py --infer \
+    --infer_files $out_dir/test_data_layers.h5 \
+    --intervals_file $out_dir/example.holdout_intervals.bed \
+    --sizes_file $ref_dir/hg19.auto.sizes \
+    --infer_threshold 0.5 \
+    --weights_path $out_dir/HSC.5M.model.layers_latest/model_best.pth.tar \
+    --out_home $out_dir --label inference --config_mparams $config_dir/model_structure.yaml \
+    --result_fname HSC.5M.layers.output \
+    --num_workers 0 --gen_bigwig
