@@ -8,29 +8,30 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
-# Import requirements
-import argparse
-import numpy as np
-import pyBigWig
-import pandas as pd
-import logging
-import subprocess
+"""Read peak bigWig file and produce BED file with scored peaks and summits.
 
-from claragenomics.io.bigwigio import extract_bigwig_to_numpy, extract_bigwig_intervals
-
-
-"""
-peaksummary.py:
-    Reads data from peak bigWig file and produces BED file with scored peaks and summits.
 Workflow:
-    1. Reads a bigWig file (produced by postprocess.py) containing peak labels at each position
+    1. Read a bigWig file (produced by postprocess.py) containing peak labels
+    at each position
     2. Collapses peaks to BED format using bigWigToBedGraph
-    3. For each peak, calculates the summit location, max score and average score
+    3. For each peak, calculates the summit location, max score and
+    average score
 Output:
     BED file containing scored peaks and summits
 Example:
     python peaksummary.py --peakbw peaks.bw --trackbw tracks.bw --prefix peaks
 """
+
+# Import requirements
+import argparse
+import logging
+import subprocess
+
+from claragenomics.io.bigwigio import extract_bigwig_intervals
+
+import numpy as np
+
+import pandas as pd
 
 # Set up logging
 log_formatter = logging.Formatter(
@@ -43,15 +44,26 @@ _logger.setLevel(logging.INFO)
 _logger.addHandler(_handler)
 
 # TODO: add optional command to filter by length of peak?
+
+
 def parse_args():
+    """Parse command line arguments.
+
+    Return:
+        args : parsed argument object.
+
+    """
     parser = argparse.ArgumentParser(
         description='Data processing for genome-wide denoising models.')
-    parser.add_argument('--peakbw', type=str, help='Path to bigwig file with peak labels')
-    parser.add_argument('--trackbw', type=str, help='Path to bigwig file with coverage track')
+    parser.add_argument('--peakbw', type=str,
+                        help='Path to bigwig file with peak labels')
+    parser.add_argument('--trackbw', type=str,
+                        help='Path to bigwig file with coverage track')
     parser.add_argument('--prefix', type=str, help='output file prefix')
     parser.add_argument('--minlen', type=int, help='minimum peak length')
     args = parser.parse_args()
     return args
+
 
 args = parse_args()
 
@@ -61,7 +73,8 @@ subprocess.call(['bigWigToBedGraph', args.peakbw, args.prefix + '.bedGraph'])
 
 # Read collapsed peaks
 _logger.info('Reading peaks')
-peaks = pd.read_csv(args.prefix + '.bedGraph', header=None, sep='\t', usecols=(0,1,2))
+peaks = pd.read_csv(args.prefix + '.bedGraph', header=None,
+                    sep='\t', usecols=(0, 1, 2))
 peaks.columns = ['#chrom', 'start', 'end']
 
 # Add length of peaks
@@ -78,7 +91,7 @@ peaks['mean'] = peakscores.apply(np.mean)
 peaks['max'] = peakscores.apply(np.max)
 
 # Add summit
-# TODO: we might want to make this more complicated - if there 
+# TODO: we might want to make this more complicated - if there
 # are multiple positions with same value, pick the central one?
 peaks['relativesummit'] = peakscores.apply(np.argmax)
 peaks['summit'] = peaks['start'] + peaks['relativesummit']
@@ -87,7 +100,8 @@ peaks['summit'] = peaks['start'] + peaks['relativesummit']
 if args.minlen is not None:
     num_before_cut = len(peaks)
     peaks = peaks[peaks['len'] >= args.minlen]
-    _logger.info("reduced number of peaks from {} to {}.".format(num_before_cut, len(peaks)))
+    _logger.info("reduced number of peaks from {} to {}.".format(
+        num_before_cut, len(peaks)))
 
 # Write to BED
 _logger.info('Writing peaks to BED file {}.bed'.format(args.prefix))
