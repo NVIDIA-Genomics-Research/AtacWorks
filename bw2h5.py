@@ -128,9 +128,13 @@ _logger.info('Extracting data for each batch and writing to h5 file')
 with h5py.File(filename, 'w') as f:
     # Create a single dataset -- expand locations as we go along
     for i in range(batches_per_epoch):
+        
+        # Print current batch
         if i % 10 == 0:
             _logger.info("batch " + str(i) + " of " + str(batches_per_epoch))
-            batch_data = {}
+        
+        # Create dictionary to store data
+        batch_data = {}
 
         # Subset intervals
         batch_intervals = intervals.iloc[batch_starts[i]:batch_ends[i], :]
