@@ -25,7 +25,7 @@ class DatasetBase(Dataset):
         for file in self.files:
             with h5py.File(file, 'r') as f:
                 self.running_counts.append(
-                    self.running_counts[-1] + f["x"].shape[0])
+                    self.running_counts[-1] + f["input"].shape[0])
 
     def __len__(self):
         return (self.running_counts[-1])
@@ -67,7 +67,7 @@ class DatasetTrain(DatasetBase):
         # Assumption - all files have the same set of named fields
         # All fields will be read
         # List fields in file 0 and create dictionary
-        hrecs = {'x':[], 'y_reg':[], 'y_cla':[]}
+        hrecs = {'input':[], 'label_reg':[], 'label_cla':[]}
         for i,filename in enumerate(self.files):
             #print('loading H5Py file %s' % filename)
             hf = h5py.File(filename, 'r')
@@ -77,11 +77,11 @@ class DatasetTrain(DatasetBase):
         while True:
             # Find correct dataset, given idx
             file_id, local_idx = self._get_file_id(idx)
-            assert file_id < len(hrecs['x']), "No file reference %d" % file_id
+            assert file_id < len(hrecs['input']), "No file reference %d" % file_id
             rec = {'idx':idx}
-            rec['x'] = hrecs['x'][file_id][local_idx]
-            rec['y_reg'] = hrecs['y_reg'][file_id][local_idx]
-            rec['y_cla'] = hrecs['y_cla'][file_id][local_idx]
+            rec['input'] = hrecs['input'][file_id][local_idx]
+            rec['label_reg'] = hrecs['label_reg'][file_id][local_idx]
+            rec['label_cla'] = hrecs['label_cla'][file_id][local_idx]
             yield rec
                 
 
@@ -107,7 +107,7 @@ class DatasetInfer(DatasetBase):
         hdrecs = []
         for i,filename in enumerate(self.files):
             hf = h5py.File(filename, 'r')
-            hd = hf["x"]
+            hd = hf["input"]
             hdrecs.append(hd)
             sys.stdout.flush()
         idx = yield
@@ -122,7 +122,7 @@ class DatasetInfer(DatasetBase):
                 sys.stdout.flush()
             rec = self.fh_data[file_id][local_idx - self.fh_indices[file_id][0]]
             sys.stdout.flush()
-            idx = yield {'idx':idx, 'x':rec}
+            idx = yield {'idx':idx, 'input':rec}
             #if len(rec.shape) == 1:
                 # When no labels, return just the input data
             #    idx = yield {'idx':idx, 'x':rec}
