@@ -37,9 +37,9 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
 
     # Loop training data
     for i, batch in enumerate(train_loader):
-        x = batch['x']
-        y_reg = batch['y_reg']
-        y_cla = batch['y_cla']
+        x = batch['input']
+        y_reg = batch['label_reg']
+        y_cla = batch['label_cla']
 
         # move data and labels to GPU for forward pass
         if len(x.shape) == 2:
