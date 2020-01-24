@@ -84,7 +84,7 @@ class CorrCoef(Metric):
     def __init__(self):
         super(CorrCoef, self).__init__()
 
-    def __call__(self, x, y):
+    def __call__(self, x, y, eps=0):
         x = Metric.convert_to_tensor(x)
         y = Metric.convert_to_tensor(y)
         xm = x.mean()
@@ -92,7 +92,7 @@ class CorrCoef(Metric):
         x = x - xm
         y = y - ym
         self.val = torch.sum(x*y) / (torch.sqrt(torch.sum(x**2))
-                                             * torch.sqrt(torch.sum(y**2)))
+                                        * torch.sqrt(torch.sum(y**2)) + eps)
         return self.val
 
     def better_than(self, metric):

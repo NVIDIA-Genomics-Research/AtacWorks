@@ -17,8 +17,8 @@ class PearsonLoss(nn.Module):
     def __init__(self):
         super(PearsonLoss, self).__init__()
 
-    def forward(self, input, targets):
-        r = CorrCoef()(input, targets)
+    def forward(self, input, targets, eps=1e-7):
+        r = CorrCoef()(input, targets, eps)
         r_loss = 1 - r
         return r_loss
 
@@ -28,6 +28,6 @@ class PoissonLoss(nn.Module):
     def __init__(self):
         super(PoissonLoss, self).__init__()
 
-    def forward(self, input, targets):
-        loss = torch.mean(input - (targets*torch.log(input + 1e-7)))
+    def forward(self, input, targets, eps=1e-7):
+        loss = torch.mean(input - (targets*torch.log(input + eps)))
         return loss
