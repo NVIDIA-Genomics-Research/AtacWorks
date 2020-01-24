@@ -140,7 +140,7 @@ with h5py.File(filename, 'w') as f:
         batch_intervals = intervals.iloc[batch_starts[i]:batch_ends[i], :]
 
         # Read noisy data
-        batch_data['x'] = extract_bigwig_intervals(
+        batch_data['input'] = extract_bigwig_intervals(
             batch_intervals, args.noisybw, pad=args.pad)
 
         # Add other input layers
@@ -151,17 +151,17 @@ with h5py.File(filename, 'w') as f:
                 layer_data = extract_bigwig_intervals(
                     batch_intervals, layer_file, pad=args.pad
                 )
-                batch_data['x'] = np.dstack((batch_data['x'], layer_data))
+                batch_data['input'] = np.dstack((batch_data['input'], layer_data))
 
         if not args.nolabel:
 
             # Read clean data: regression labels
-            batch_data['y_reg'] = extract_bigwig_intervals(
+            batch_data['label_reg'] = extract_bigwig_intervals(
                 batch_intervals, args.cleanbw, pad=args.pad
             )
 
             # Read clean data: classification labels
-            batch_data['y_cla'] = extract_bigwig_intervals(
+            batch_data['label_cla'] = extract_bigwig_intervals(
                 batch_intervals, args.cleanpeakbw, pad=args.pad
             )
 
