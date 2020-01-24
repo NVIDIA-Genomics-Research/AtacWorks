@@ -128,9 +128,8 @@ _logger.info('Extracting data for each batch and writing to h5 file')
 with h5py.File(filename, 'w') as f:
     # Create a single dataset -- expand locations as we go along
     for i in range(batches_per_epoch):
-        batch_name = 'batch' + str(i)
         if i % 10 == 0:
-            _logger.info(batch_name + " of " + str(batches_per_epoch))
+            _logger.info("batch " + str(i) + " of " + str(batches_per_epoch))
             batch_data = {}
 
         # Subset intervals
@@ -163,7 +162,7 @@ with h5py.File(filename, 'w') as f:
             )
 
         _logger.debug(len(batch_data))
-        _logger.debug('Saving batch: |%s|' % batch_name)
+        _logger.debug("Saving batch " + str(i))
 
         # Create dataset, or expand and append batch.
         if df == None:
