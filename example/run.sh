@@ -262,6 +262,7 @@ python $root_dir/main.py --train \
     --train_files $out_dir/train_data_layers.h5 \
     --val_files $out_dir/val_data_layers.h5 \
     --out_home $out_dir --label HSC.5M.model.layers \
+    --in_channels 2 \
     --checkpoint_fname checkpoint.pth.tar \
     --distributed
 
@@ -275,4 +276,5 @@ python $root_dir/main.py --infer \
     --weights_path $out_dir/HSC.5M.model.layers_latest/model_best.pth.tar \
     --out_home $out_dir --label inference --config_mparams $config_dir/model_structure.yaml \
     --result_fname HSC.5M.layers.output \
+    --in_channels 2 \
     --num_workers 0 --gen_bigwig
