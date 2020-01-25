@@ -11,6 +11,7 @@
 
 import time
 import torch
+import numpy as np
 from claragenomics.dl4atac.utils import myprint, gather_tensor
 
 
@@ -49,7 +50,7 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg,
     print('Eval for %d batches' % len(val_loader))
     with torch.no_grad():
         for i, batch in enumerate(val_loader):
-            idxes = batch['idx']
+            # idxes = batch['idx']
             x = batch['input']
             y_reg = batch['label_reg']
             y_cla = batch['label_cla']
@@ -64,7 +65,7 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg,
             if len(x.shape) == 2:
                 x = x.unsqueeze(1)  # (N, 1, L)
             else:
-                x = np.swapaxes(x, 1,2)
+                x = np.swapaxes(x, 1, 2)
             x = x.cuda(gpu, non_blocking=True)
 
             # transform coverage track if required

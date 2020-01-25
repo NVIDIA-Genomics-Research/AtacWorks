@@ -193,7 +193,7 @@ class ResBlock(nn.Module):
         """Execute layer on input.
 
         Args:
-            x : Input data.
+            input : Input data.
 
         """
         x = self.conv_act1(input)
@@ -238,7 +238,7 @@ class DownBlock(nn.Module):
         """Execute layer on input.
 
         Args:
-            x : Input data.
+            input : Input data.
 
         """
         x = self.conv_act1(input)
@@ -283,7 +283,8 @@ class UpBlock(nn.Module):
         """Execute layer on input.
 
         Args:
-            x : Input data.
+            x_up : Input data.
+            x_down: Data from previous layer to concatenate.
 
         """
         x_up = F.interpolate(x_up, scale_factor=2, mode='nearest')

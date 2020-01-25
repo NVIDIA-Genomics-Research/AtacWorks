@@ -57,8 +57,8 @@ def contract_interval(expanded_df, positive=True):
     expanded_df['prevscore'] = [-1] + list(expanded_df['score'])[:-1]
     # Select bases where score changes - or the last base
     intervals_df = expanded_df[
-        (expanded_df['score'] != expanded_df['prevscore']) |
-        (expanded_df.index == len(expanded_df) - 1)].copy()
+        (expanded_df['score'] != expanded_df['prevscore']) | (
+            expanded_df.index == len(expanded_df) - 1)].copy()
     # Each interval ends at the next point where the score changes,
     # or at the last base
     intervals_df['end'] = list(intervals_df['start'])[1:] + [

@@ -72,7 +72,8 @@ def parse_args():
     parser.add_argument('--noisybw', type=str,
                         help='Path to noisy bigwig file', required=True)
     parser.add_argument('--layersbw', type=str,
-                        help='Path to bigWig file containing additional layers, or folder containing bigwig files')
+                        help='Path to bigWig file containing additional \
+                            layers, or folder containing bigwig files')
     parser.add_argument('--intervals', type=str,
                         help='Path to interval file', required=True)
     parser.add_argument('--batch_size', type=int,
@@ -138,11 +139,11 @@ _logger.info('Extracting data for each batch and writing to h5 file')
 with h5py.File(filename, 'w') as f:
     # Create a single dataset -- expand locations as we go along
     for i in range(batches_per_epoch):
-        
+
         # Print current batch
         if i % 10 == 0:
             _logger.info("batch " + str(i) + " of " + str(batches_per_epoch))
-        
+
         # Create dictionary to store data
         batch_data = {}
 
@@ -161,7 +162,8 @@ with h5py.File(filename, 'w') as f:
                 layer_data = extract_bigwig_intervals(
                     batch_intervals, layer_file, pad=args.pad
                 )
-                batch_data['input'] = np.dstack((batch_data['input'], layer_data))
+                batch_data['input'] = np.dstack((batch_data['input'],
+                                                 layer_data))
 
         if not args.nolabel:
 
@@ -183,9 +185,10 @@ with h5py.File(filename, 'w') as f:
             for key in batch_data.keys():
                 max_shape = list(batch_data[key].shape)
                 max_shape[0] = None
-                df = f.create_dataset(key, data=batch_data[key], maxshape=max_shape, compression='lzf')
+                df = f.create_dataset(key, data=batch_data[key],
+                                      maxshape=max_shape, compression='lzf')
                 _logger.debug('Created new dataset! Shape %s -- file %s' %
-                          (str(batch_data[key].shape[0]), filename))
+                              (str(batch_data[key].shape[0]), filename))
         else:
             for key in batch_data.keys():
                 df = f[key]
@@ -194,6 +197,7 @@ with h5py.File(filename, 'w') as f:
                 data_dimension[0] += d_len
                 df.resize(data_dimension)
                 df[d_len:] = batch_data[key]
-                _logger.debug('expanded HDF dataset %s from %d to %d' % (key, d_len, df.shape[0]))
+                _logger.debug('expanded HDF dataset %s from %d to %d' %
+                              (key, d_len, df.shape[0]))
 
 _logger.info('Done! Saved to %s' % filename)

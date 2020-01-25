@@ -202,7 +202,8 @@ def gather_files_from_cmdline(input, extension=".h5"):
     """Gather all input files and return as list.
 
     Args:
-        input: Input of files.
+        input: Input file or list of files.
+        extension: extension of files
 
     Return:
         List of input files.
@@ -219,7 +220,7 @@ def gather_files_from_cmdline(input, extension=".h5"):
         elif os.path.isdir(path):
             paths = [os.path.join(path, f)
                      for f in os.listdir(path)]
-            paths = [f for f in paths if 
+            paths = [f for f in paths if
                      os.path.isfile(f) and f.endswith(extension)]
             res = paths
     else:

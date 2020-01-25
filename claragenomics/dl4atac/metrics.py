@@ -201,8 +201,9 @@ class CorrCoef(Metric):
         ym = y.mean()
         x = x - xm
         y = y - ym
-        self.val = torch.sum(x * y) / (torch.sqrt(torch.sum(x ** 2)) *
-                                       torch.sqrt(torch.sum(y ** 2)) + eps)
+        self.val = torch.sum(x * y) / (
+            torch.sqrt(torch.sum(x ** 2)) * torch.sqrt(
+                torch.sum(y ** 2)) + eps)
         return self.val
 
     def better_than(self, metric):
@@ -607,8 +608,9 @@ class SpearmanCorrCoef(Metric):
         ym = y.mean()
         np.subtract(x, xm, out=x)
         np.subtract(y, ym, out=y)
-        self.val = np.sum(x * y) / (np.sqrt(np.sum(x ** 2)) *
-                                    np.sqrt(np.sum(y ** 2)))
+        self.val = np.sum(x * y) / (
+            np.sqrt(np.sum(x ** 2)) * np.sqrt(
+                np.sum(y ** 2)))
         return self.val
 
     def better_than(self, metric):

@@ -19,6 +19,7 @@ from torch.utils.data import Dataset
 
 class DatasetBase(Dataset):
     """Base class."""
+
     def __init__(self, files):
         """Initialize base class.
 
@@ -91,9 +92,9 @@ class DatasetTrain(DatasetBase):
         # Assumption - all files have the same set of named fields
         # All fields will be read
         # List fields and create dictionary
-        hrecs = {'input':[], 'label_reg':[], 'label_cla':[]}
-        for i,filename in enumerate(self.files):
-            #print('loading H5Py file %s' % filename)
+        hrecs = {'input': [], 'label_reg': [], 'label_cla': []}
+        for i, filename in enumerate(self.files):
+            # print('loading H5Py file %s' % filename)
             hf = h5py.File(filename, 'r')
             for key in hf.keys():
                 hrecs[key].append(hf[key])
@@ -101,8 +102,9 @@ class DatasetTrain(DatasetBase):
         while True:
             # Find correct dataset, given idx
             file_id, local_idx = self._get_file_id(idx)
-            assert file_id < len(hrecs['input']), "No file reference %d" % file_id
-            rec = {'idx':idx}
+            assert file_id < len(
+                hrecs['input']), "No file reference %d" % file_id
+            rec = {'idx': idx}
             rec['input'] = hrecs['input'][file_id][local_idx]
             rec['label_reg'] = hrecs['label_reg'][file_id][local_idx]
             rec['label_cla'] = hrecs['label_cla'][file_id][local_idx]
@@ -115,6 +117,7 @@ class DatasetInfer(DatasetBase):
     Not intended to be shuffled
 
     """
+
     def __init__(self, files, prefetch_size=256):
         """Initialize class.
 
@@ -161,22 +164,23 @@ class DatasetInfer(DatasetBase):
             if (local_idx < self.fh_indices[file_id][0]) or (
                     local_idx >= self.fh_indices[file_id][1]):
                 # Data is not pre loaded, so load new data
-                self.fh_indices[file_id] = (local_idx, local_idx +
-                                            self.prefetch_size)
-                self.fh_data[file_id] = hdrecs[file_id][local_idx:
-                                                        local_idx +
-                                                        self.prefetch_size]
+                self.fh_indices[file_id] = (
+                    local_idx, local_idx + self.prefetch_size)
+                self.fh_data[file_id] = hdrecs[file_id][
+                    local_idx: local_idx + self.prefetch_size]
                 sys.stdout.flush()
-            rec = self.fh_data[file_id][local_idx -
-                                        self.fh_indices[file_id][0]]
+            rec = self.fh_data[file_id][
+                local_idx - self.fh_indices[file_id][0]]
             sys.stdout.flush()
-            idx = yield {'idx':idx, 'input':rec}
-            #if len(rec.shape) == 1:
-                # When no labels, return just the input data
+            idx = yield {'idx': idx, 'input': rec}
+            # if len(rec.shape) == 1:
+            # When no labels, return just the input data
             #    idx = yield {'idx':idx, 'x':rec}
-            #else:
-                # Return 4 items -- IDX (for saving/tracing), input data, upsampled data, peaks/classifications
-                #idx = yield {'idx':idx, 'x':rec[:,0], 'y_reg':rec[:,1], 'y_cla':rec[:,2]}
+            # else:
+            # Return 4 items -- IDX (for saving/tracing),
+            # input data, upsampled data, peaks/classifications
+            # idx = yield {'idx':idx, 'x':rec[:,0], 'y_reg':rec[:,1],
+            # 'y_cla':rec[:,2]}
 
 
 """

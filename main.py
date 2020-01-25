@@ -81,8 +81,8 @@ def check_intervals(intervals_df, sizes_df, h5_file):
 
     # Interval bounds do not exceed chromosome lengths
     intervals_sizes = intervals_df.merge(sizes_df, on='chrom')
-    excess_intervals = intervals_sizes[intervals_sizes['end'] >
-                                       intervals_sizes['len']]
+    excess_intervals = intervals_sizes[
+        intervals_sizes['end'] > intervals_sizes['len']]
     assert len(excess_intervals) == 0, \
         "Intervals exceed chromosome sizes in sizes file ({})".format(
             excess_intervals)
@@ -233,22 +233,22 @@ def writer(infer, intervals_file, exp_dir, result_fname,
                     ) for num in range(num_jobs)]
                     if infer_threshold is None:
                         map_args = list(zip(tmp_batch_ranges, all_items,
-                                            [channel] *
-                                            len(tmp_batch_ranges),
+                                            [channel] * len(
+                                                tmp_batch_ranges),
                                             all_intervals,
                                             temp_files,
                                             [rounding[channel]] * len(
                                                 tmp_batch_ranges)))
                     else:
                         map_args = list(zip(tmp_batch_ranges, all_items,
-                                            [channel] *
-                                            len(tmp_batch_ranges),
+                                            [channel] * len(
+                                                tmp_batch_ranges),
                                             all_intervals,
                                             temp_files,
-                                            [rounding[channel]] *
-                                            len(tmp_batch_ranges),
-                                            [infer_threshold] *
-                                            len(tmp_batch_ranges)))
+                                            [rounding[channel]] * len(
+                                                tmp_batch_ranges),
+                                            [infer_threshold] * len(
+                                                tmp_batch_ranges)))
 
                     pool.starmap(save_to_bedgraph, map_args)
 
