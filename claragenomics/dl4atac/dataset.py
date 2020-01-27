@@ -173,18 +173,9 @@ class DatasetInfer(DatasetBase):
                 local_idx - self.fh_indices[file_id][0]]
             sys.stdout.flush()
             idx = yield {'idx': idx, 'input': rec}
-            # if len(rec.shape) == 1:
-            # When no labels, return just the input data
-            #    idx = yield {'idx':idx, 'x':rec}
-            # else:
-            # Return 4 items -- IDX (for saving/tracing),
-            # input data, upsampled data, peaks/classifications
-            # idx = yield {'idx':idx, 'x':rec[:,0], 'y_reg':rec[:,1],
-            # 'y_cla':rec[:,2]}
 
 
 """
-# Is this even used?
 class DatasetEval(DatasetBase):
 
     def __getitem__(self, idx):
