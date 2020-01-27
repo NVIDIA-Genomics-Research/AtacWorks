@@ -131,7 +131,7 @@ def parse_args(root_dir):
                help='transformation to apply to\
                        coverage tracks before training')
     parser.add('--layers', type=str,
-               help='Names of additional layers to read from h5 file as input. \
+               help='Names of additional layers to read from h5 file as input.\
                If multiple names, use format: "[name1, name2]". \
                Layers will be concatenated to the input in the \
                order supplied.')
