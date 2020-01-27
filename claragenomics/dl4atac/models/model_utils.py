@@ -126,7 +126,7 @@ def build_model(rank, interval_size, resume,
                               afunc=model_args.afunc, bn=model_args.bn)
     elif model_args.model == 'resnet':
         model = DenoisingResNet(interval_size=interval_size,
-                                afunc=model_args.afunc, 
+                                afunc=model_args.afunc,
                                 bn=model_args.bn,
                                 num_blocks=model_args.nblocks,
                                 num_blocks_class=model_args.nblocks_cla,
