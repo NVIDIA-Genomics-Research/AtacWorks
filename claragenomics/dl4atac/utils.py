@@ -226,7 +226,7 @@ def gather_files_from_cmdline(input, extension=".h5"):
     else:
         # multiple regular files wrapped in []
         paths = [f.strip() for f in path.split(',')]
-        paths = [f for f in paths if os.path.isfile(f) and f.endswith(".h5")]
+        paths = [f for f in paths if os.path.isfile(f) and f.endswith(extension)]
         res = paths
 
     if not res:

@@ -72,8 +72,11 @@ def parse_args():
     parser.add_argument('--noisybw', type=str,
                         help='Path to noisy bigwig file', required=True)
     parser.add_argument('--layersbw', type=str,
-                        help='Path to bigWig file containing additional \
-                            layers, or folder containing bigwig files')
+                        help='Path to bigWig file(s) containing additional \
+                            layers, or folder containing bigwig files. \
+                            Files will be read and saved in the order provided. \
+                            If supplying a list of files, use format \
+                            "file_1, file_2, ..., file_n".')
     parser.add_argument('--intervals', type=str,
                         help='Path to interval file', required=True)
     parser.add_argument('--batch_size', type=int,
