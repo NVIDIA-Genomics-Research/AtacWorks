@@ -32,8 +32,7 @@ from claragenomics.dl4atac.metrics import (AUPRC, AUROC, Accuracy, CorrCoef,
                                            SpearmanCorrCoef, Specificity)
 from claragenomics.io.bedio import read_intervals, read_sizes
 from claragenomics.io.bigwigio import extract_bigwig_intervals
-
-import h5py
+from claragenomics.io.h5io import h5_to_array
 
 import numpy as np
 
@@ -68,35 +67,6 @@ def calculate_class_nums(x, threshold=0.5, message='Bases per class'):
         " | ".join([key + ": {:0.0f}".format(value)
                     for key, value in nums.items()])
     print(result_str)
-
-
-def h5_to_array(h5file, dataset, pad):
-    """Read test data into a NumPy array.
-
-    Args:
-        h5file(str): path to hdf5 file containing batched data
-        dataset(str): dataset in hdf5 file to read
-        pad(int): interval padding in h5 file
-
-    Returns:
-        data: NumPy array containing a channel of the data.
-
-    """
-    with h5py.File(h5file, 'r') as f:
-        assert dataset in f.keys()
-        if len(f[dataset].shape) == 2:
-            data = np.array(f[dataset])
-        elif len(f[dataset].shape) > 2:
-            data = f[dataset][:, :, 0]
-    # ignore padding
-    if pad is not None:
-        center = range(pad, data.shape[1] - pad)
-        print("Remove padding and reduce interval size from {} to {}".format(
-            data.shape[1], len(center)))
-        data = data[:, center]
-    # Flatten data
-    data = data.flatten()
-    return data
 
 
 def read_data_file(filename, dataset=None, intervals=None,

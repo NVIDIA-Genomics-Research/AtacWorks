@@ -14,20 +14,24 @@ import sys
 
 import h5py
 
+import numpy as np
+
 from torch.utils.data import Dataset
 
 
 class DatasetBase(Dataset):
     """Base class."""
 
-    def __init__(self, files):
+    def __init__(self, files, layers):
         """Initialize base class.
 
         Args:
             files: Dataset files to load.
+            layers: list of names of additional input layers to read.
 
         """
         self.files = files
+        self.layers = layers
         self._h5_gen = None
         assert len(files) > 0,\
             "Need to supply at least one file for dataset loading"
@@ -71,6 +75,7 @@ class DatasetTrain(DatasetBase):
 
     Args:
         files: list of data file paths.
+        layers: list of names of additional input layers to read.
 
     """
 
@@ -93,9 +98,13 @@ class DatasetTrain(DatasetBase):
         # All fields will be read
         # List fields and create dictionary
         hrecs = {'input': [], 'label_reg': [], 'label_cla': []}
+        if self.layers is not None:
+            for layer_key in self.layers:
+                hrecs[layer_key] = []
         for i, filename in enumerate(self.files):
             # print('loading H5Py file %s' % filename)
             hf = h5py.File(filename, 'r')
+            # Read noisy data and labels
             for key in hf.keys():
                 hrecs[key].append(hf[key])
         idx = yield
@@ -108,6 +117,11 @@ class DatasetTrain(DatasetBase):
             rec['input'] = hrecs['input'][file_id][local_idx]
             rec['label_reg'] = hrecs['label_reg'][file_id][local_idx]
             rec['label_cla'] = hrecs['label_cla'][file_id][local_idx]
+            if self.layers is not None:
+                for layer_key in self.layers:
+                    rec['input'] = np.dstack(rec['input'],
+                                             hrecs[layer_key][file_id]
+                                             [local_idx])
             yield rec
 
 
@@ -118,11 +132,12 @@ class DatasetInfer(DatasetBase):
 
     """
 
-    def __init__(self, files, prefetch_size=256):
+    def __init__(self, files, layers, prefetch_size=256):
         """Initialize class.
 
         Args:
             files: Files to infer on.
+            layers: list of names of additional input layers to read.
             prefetch_size: Number of samples to prefetch.
 
         """
@@ -152,10 +167,14 @@ class DatasetInfer(DatasetBase):
         """Get generator."""
         hdrecs = []
         for i, filename in enumerate(self.files):
-            hf = h5py.File(filename, 'r')
-            hd = hf["input"]
-            hdrecs.append(hd)
-            sys.stdout.flush()
+            with h5py.File(filename, 'r') as hf:
+                hd = hf["input"]
+                # Read additional layers
+                if self.layers is not None:
+                    for layer_key in self.layers:
+                        hd = np.dstack(hd, hf[layer_key])
+                hdrecs.append(hd)
+                sys.stdout.flush()
         idx = yield
         while True:
             # Find correct dataset, given idx

@@ -320,6 +320,10 @@ def main():
     args.exp_dir = make_experiment_dir(
         args.label, args.out_home, timestamp=True)
 
+    # Convert layer names to a list
+    if args.layers is not None:
+        args.layers = gather_files_from_cmdline(args.layers)
+
     # train & resume
     ##########################################################################
     if args.train or args.resume:

@@ -44,7 +44,7 @@ from claragenomics.io.bedio import read_intervals
 from claragenomics.dl4atac.utils import gather_files_from_cmdline
 from claragenomics.io.bigwigio import (check_bigwig_intervals_nonzero,
                                        extract_bigwig_intervals)
-import h5py
+from claragenomics.io.h5io import dict_to_h5
 
 import numpy as np
 
@@ -72,12 +72,11 @@ def parse_args():
     parser.add_argument('--noisybw', type=str,
                         help='Path to noisy bigwig file', required=True)
     parser.add_argument('--layersbw', type=str,
-                        help='Path to bigWig file(s) containing \
-                            additional layers, or folder containing \
-                            bigwig files. Files will be read and \
-                            saved in the order provided. If supplying \
-                            a list of files, use format \
-                            "file_1, file_2, ..., file_n".')
+                        help='Paths to bigWig files containing \
+                            additional layers. If single file,  \
+                            use format: "name:file". \
+                            If there are multiple files, use format: \
+                            "[name1:file1, name2:file2,...]"')
     parser.add_argument('--intervals', type=str,
                         help='Path to interval file', required=True)
     parser.add_argument('--batch_size', type=int,
@@ -135,73 +134,58 @@ batch_ends = batch_starts + args.batch_size
 batch_ends[-1] = len(intervals)
 
 # Get output hdf5 filename
-df = None
 filename = args.prefix + '.h5'
 
 # Write batches to hdf5 file
 _logger.info('Extracting data for each batch and writing to h5 file')
-with h5py.File(filename, 'w') as f:
-    # Create a single dataset -- expand locations as we go along
-    for i in range(batches_per_epoch):
+for i in range(batches_per_epoch):
 
-        # Print current batch
-        if i % 10 == 0:
-            _logger.info("batch " + str(i) + " of " + str(batches_per_epoch))
+    # Print current batch
+    if i % 10 == 0:
+        _logger.info("batch " + str(i) + " of " + str(batches_per_epoch))
 
-        # Create dictionary to store data
-        batch_data = {}
+    # Create dictionary to store data
+    batch_data = {}
 
-        # Subset intervals
-        batch_intervals = intervals.iloc[batch_starts[i]:batch_ends[i], :]
+    # Subset intervals
+    batch_intervals = intervals.iloc[batch_starts[i]:batch_ends[i], :]
 
-        # Read noisy data
-        batch_data['input'] = extract_bigwig_intervals(
-            batch_intervals, args.noisybw, pad=args.pad)
+    # Read noisy data
+    batch_data['input'] = extract_bigwig_intervals(
+        batch_intervals, args.noisybw, pad=args.pad
+    )
 
-        # Add other input layers
-        if args.layersbw is not None:
-            # Read additional layers
-            layer_files = gather_files_from_cmdline(args.layersbw, ".bw")
-            for layer_file in layer_files:
-                layer_data = extract_bigwig_intervals(
-                    batch_intervals, layer_file, pad=args.pad
-                )
-                batch_data['input'] = np.dstack((batch_data['input'],
-                                                 layer_data))
-
-        if not args.nolabel:
-
-            # Read clean data: regression labels
-            batch_data['label_reg'] = extract_bigwig_intervals(
-                batch_intervals, args.cleanbw, pad=args.pad
+    # Add other input layers
+    if args.layersbw is not None:
+        # Read additional layers
+        layer_files = gather_files_from_cmdline(args.layersbw, ".bw")
+        for layer_file in layer_files:
+            layer_name, layer_file = layer_file.split(":")
+            batch_data[layer_name] = extract_bigwig_intervals(
+                batch_intervals, layer_file, pad=args.pad
             )
 
-            # Read clean data: classification labels
-            batch_data['label_cla'] = extract_bigwig_intervals(
-                batch_intervals, args.cleanpeakbw, pad=args.pad
-            )
+    # Add labels
+    if not args.nolabel:
 
-        _logger.debug(len(batch_data))
-        _logger.debug("Saving batch " + str(i))
+        # Read clean data: regression labels
+        batch_data['label_reg'] = extract_bigwig_intervals(
+            batch_intervals, args.cleanbw, pad=args.pad
+        )
 
-        # Create dataset, or expand and append batch.
-        if df is None:
-            for key in batch_data.keys():
-                max_shape = list(batch_data[key].shape)
-                max_shape[0] = None
-                df = f.create_dataset(key, data=batch_data[key],
-                                      maxshape=max_shape, compression='lzf')
-                _logger.debug('Created new dataset! Shape %s -- file %s' %
-                              (str(batch_data[key].shape[0]), filename))
-        else:
-            for key in batch_data.keys():
-                df = f[key]
-                d_len = df.shape[0]
-                data_dimension = list(batch_data[key].shape)
-                data_dimension[0] += d_len
-                df.resize(data_dimension)
-                df[d_len:] = batch_data[key]
-                _logger.debug('expanded HDF dataset %s from %d to %d' %
-                              (key, d_len, df.shape[0]))
+        # Read clean data: classification labels
+        batch_data['label_cla'] = extract_bigwig_intervals(
+            batch_intervals, args.cleanpeakbw, pad=args.pad
+        )
+
+    _logger.debug(len(batch_data))
+    _logger.debug("Saving batch " + str(i) + " with keys " + str(
+        batch_data.keys()))
+
+    # Create dataset, or expand and append batch.
+    if i == 0:
+        dict_to_h5(batch_data, h5file=filename, create_new=True)
+    else:
+        dict_to_h5(batch_data, h5file=filename, create_new=False)
 
 _logger.info('Done! Saved to %s' % filename)
