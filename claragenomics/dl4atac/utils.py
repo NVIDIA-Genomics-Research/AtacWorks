@@ -252,7 +252,7 @@ def gather_key_files_from_cmdline(input, extension=".h5"):
     if key_files == input:
         # a single path is provided; not wrapped in []
         # could be a regular file or a directory
-        key, path = key_files.split(':')            
+        key, path = key_files.split(':')
         assert os.path.isfile(path)
         assert path.endswith(extension)
         res = {key: path}
@@ -260,7 +260,7 @@ def gather_key_files_from_cmdline(input, extension=".h5"):
         # multiple regular files wrapped in []
         key_files = [f.strip() for f in key_files.split(',')]
         key_files = [f.split(':') for f in key_files]
-        res = {key:path for key, path in key_files if os.path.isfile(
+        res = {key: path for key, path in key_files if os.path.isfile(
             path) and path.endswith(extension)}
 
     if not res:

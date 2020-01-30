@@ -47,8 +47,6 @@ from claragenomics.io.h5io import dict_to_h5
 from claragenomics.dl4atac.utils import gather_key_files_from_cmdline
 import numpy as np
 
-import json
-
 
 # Set up logging
 log_formatter = logging.Formatter(
