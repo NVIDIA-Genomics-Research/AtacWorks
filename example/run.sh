@@ -264,7 +264,7 @@ python $root_dir/main.py --train \
     --layers ctcf_for \
     --in_channels 2 \
     --checkpoint_fname checkpoint.pth.tar \
-    --distributed
+    --gpu 0
 
 # Inference
 python $root_dir/main.py --infer \
