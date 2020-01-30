@@ -41,12 +41,13 @@ import argparse
 import logging
 
 from claragenomics.io.bedio import read_intervals
-from claragenomics.dl4atac.utils import gather_files_from_cmdline
 from claragenomics.io.bigwigio import (check_bigwig_intervals_nonzero,
                                        extract_bigwig_intervals)
 from claragenomics.io.h5io import dict_to_h5
-
+from claragenomics.dl4atac.utils import gather_key_files_from_cmdline
 import numpy as np
+
+import json
 
 
 # Set up logging
@@ -158,11 +159,10 @@ for i in range(batches_per_epoch):
     # Add other input layers
     if args.layersbw is not None:
         # Read additional layers
-        layer_files = gather_files_from_cmdline(args.layersbw, ".bw")
-        for layer_file in layer_files:
-            layer_name, layer_file = layer_file.split(":")
-            batch_data[layer_name] = extract_bigwig_intervals(
-                batch_intervals, layer_file, pad=args.pad
+        layers = gather_key_files_from_cmdline(args.layersbw, extension='.bw')
+        for key in layers.keys():
+            batch_data[key] = extract_bigwig_intervals(
+                batch_intervals, layers[key], pad=args.pad
             )
 
     # Add labels

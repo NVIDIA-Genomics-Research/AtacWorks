@@ -28,6 +28,7 @@ from claragenomics.dl4atac.utils import (Timers, assert_device_available,
                                          make_experiment_dir, save_config)
 from claragenomics.io.bedgraphio import df_to_bedGraph, intervals_to_bg
 from claragenomics.io.bigwigio import bedgraph_to_bigwig
+from claragenomics.io.bedio import read_intervals, read_sizes
 
 from cmd_args import parse_args
 
@@ -82,7 +83,7 @@ def check_intervals(intervals_df, sizes_df, h5_file):
     # Interval bounds do not exceed chromosome lengths
     intervals_sizes = intervals_df.merge(sizes_df, on='chrom')
     excess_intervals = intervals_sizes[
-        intervals_sizes['end'] > intervals_sizes['len']]
+        intervals_sizes['end'] > intervals_sizes['length']]
     assert len(excess_intervals) == 0, \
         "Intervals exceed chromosome sizes in sizes file ({})".format(
             excess_intervals)
@@ -322,7 +323,7 @@ def main():
 
     # Convert layer names to a list
     if args.layers is not None:
-        args.layers = gather_files_from_cmdline(args.layers)
+        args.layers = args.layers.strip("[]").split(",")
 
     # train & resume
     ##########################################################################
@@ -367,16 +368,8 @@ def main():
 
                 # Check that intervals, sizes and h5 file are all compatible.
                 _logger.info('Checkng input files for compatibility')
-                intervals = pd.read_csv(args.intervals_file, sep='\t',
-                                        header=None,
-                                        names=['chrom', 'start', 'end'],
-                                        usecols=(0, 1, 2),
-                                        dtype={'chrom': str, 'start': int,
-                                               'end': int})
-                sizes = pd.read_csv(args.sizes_file, sep='\t',
-                                    header=None, names=['chrom', 'len'],
-                                    usecols=(0, 1),
-                                    dtype={'chrom': str, 'len': int})
+                intervals = read_intervals(args.intervals_file)
+                sizes = read_sizes(args.sizes_file)
                 check_intervals(intervals, sizes, args.infer_files[0])
 
                 # Delete intervals and sizes objects in main thread

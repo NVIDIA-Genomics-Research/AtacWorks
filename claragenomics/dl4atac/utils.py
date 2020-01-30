@@ -236,6 +236,39 @@ def gather_files_from_cmdline(input, extension=".h5"):
     return res
 
 
+def gather_key_files_from_cmdline(input, extension=".h5"):
+    """Gather all input files and return as list.
+
+    Args:
+        input: Input file or list of files with names.
+        extension: extension of files
+
+    Return:
+        Dictionary of names and input files.
+
+    """
+    key_files = input.strip("[]")
+    res = None
+    if key_files == input:
+        # a single path is provided; not wrapped in []
+        # could be a regular file or a directory
+        key, path = key_files.split(':')            
+        assert os.path.isfile(path)
+        assert path.endswith(extension)
+        res = {key: path}
+    else:
+        # multiple regular files wrapped in []
+        key_files = [f.strip() for f in key_files.split(',')]
+        key_files = [f.split(':') for f in key_files]
+        res = {key:path for key, path in key_files if os.path.isfile(
+            path) and path.endswith(extension)}
+
+    if not res:
+        raise Exception("Invalid format for file paths provided.")
+
+    return res
+
+
 def gather_tensor(tensor, world_size, rank):
     """Gather tensor.
 

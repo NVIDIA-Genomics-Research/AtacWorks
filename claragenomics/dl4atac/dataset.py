@@ -119,9 +119,9 @@ class DatasetTrain(DatasetBase):
             rec['label_cla'] = hrecs['label_cla'][file_id][local_idx]
             if self.layers is not None:
                 for layer_key in self.layers:
-                    rec['input'] = np.dstack(rec['input'],
+                    rec['input'] = np.swapaxes(np.vstack((rec['input'],
                                              hrecs[layer_key][file_id]
-                                             [local_idx])
+                                             [local_idx])), 0,1)
             yield rec
 
 
@@ -141,7 +141,7 @@ class DatasetInfer(DatasetBase):
             prefetch_size: Number of samples to prefetch.
 
         """
-        super(DatasetInfer, self).__init__(files)
+        super(DatasetInfer, self).__init__(files, layers)
         self.fh_indices = {}
         for i in range(len(self.files)):
             self.fh_indices[i] = (0, 0)
@@ -167,14 +167,14 @@ class DatasetInfer(DatasetBase):
         """Get generator."""
         hdrecs = []
         for i, filename in enumerate(self.files):
-            with h5py.File(filename, 'r') as hf:
-                hd = hf["input"]
-                # Read additional layers
-                if self.layers is not None:
-                    for layer_key in self.layers:
-                        hd = np.dstack(hd, hf[layer_key])
-                hdrecs.append(hd)
-                sys.stdout.flush()
+            hf = h5py.File(filename, 'r')
+            hd = hf["input"]
+            # Read additional layers
+            if self.layers is not None:
+                for layer_key in self.layers:
+                    hd = np.dstack((hd, hf[layer_key]))
+            hdrecs.append(hd)
+            sys.stdout.flush()
         idx = yield
         while True:
             # Find correct dataset, given idx
