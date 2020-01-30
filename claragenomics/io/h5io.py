@@ -21,8 +21,9 @@ def dict_to_h5(x, h5file, create_new=True, compression='lzf'):
         x: dictionary with numpy arrays
         h5file: path to hdf5 file to write
         create_new: Create new datasets in the h5 file
-        compression: compression type to use for h5 file. \
+        compression: compression type to use for h5 file.
             Only valid with create_new=True.
+
     """
     with h5py.File(h5file) as f:
         if create_new:
@@ -48,9 +49,10 @@ def h5_to_array(h5file, dataset, pad, flatten=True):
     """Read test data into a NumPy array.
 
     Args:
-        h5file(str): path to hdf5 file containing data
-        dataset(str): dataset in hdf5 file to read
-        pad(int): interval padding in h5 file
+        h5file: path to hdf5 file containing data
+        dataset: dataset in hdf5 file to read
+        pad: interval padding in h5 file
+        flatten: Flatten the output into a 1-D array
 
     Returns:
         data: NumPy array containing a channel of the data.
