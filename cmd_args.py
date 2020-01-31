@@ -88,17 +88,18 @@ def parse_args(root_dir):
         config_file_parser_class=configargparse.YAMLConfigFileParser,
         default_config_files=[config_path])
     parser.add('--config', required=False,
-               is_config_file=True, help='config file path')
+               is_config_file=True, help='Provide a custom config file path.\
+               Default config values will be overwritten with custom config values.')
 
     # Learning args
     parser.add('--clip_grad', required=True, type=float,
-               help='Grad clipping for bad/extreme batches')
+               help='Whether to perform gradient clipping for bad/extreme batches')
     parser.add('--lr', required=True, type=float,
-               help='learning rate')
+               help='learning rate to use for training.')
     parser.add('--epochs', required=True, type=int,
-               help='Number of epochs')
+               help='Number of epochs to train the model for.')
     parser.add('--mse_weight', required=True, type=float,
-               help='relative weight of mse loss')
+               help='relative weight of mean squared error loss')
     parser.add('--pearson_weight', required=True, type=float,
                help='relative weight of pearson loss')
     parser.add_argument('--poisson_weight', required=True, type=float,
@@ -112,7 +113,7 @@ def parse_args(root_dir):
     parser.add('--train', action='store_true',
                help='training; preempt --infer')
     parser.add('--infer', action='store_true',
-               help='inference')
+               help='run inference')
     parser.add('--resume', action='store_true',
                help='resume training')
     parser.add('--eval', action='store_true',
