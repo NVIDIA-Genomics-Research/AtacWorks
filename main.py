@@ -28,6 +28,7 @@ from claragenomics.dl4atac.utils import (Timers, assert_device_available,
                                          make_experiment_dir, save_config)
 from claragenomics.io.bedgraphio import df_to_bedGraph, intervals_to_bg
 from claragenomics.io.bigwigio import bedgraph_to_bigwig
+from claragenomics.io.bedio import read_intervals, read_sizes
 
 from cmd_args import parse_args
 
@@ -67,7 +68,7 @@ def check_intervals(intervals_df, sizes_df, h5_file):
     """
     # Length of intervals == length of dataset in h5 file
     with h5py.File(h5_file, 'r') as hf:
-        len_data = len(hf['data'])
+        len_data = len(hf['input'])
     assert len_data == intervals_df.shape[0], \
         "Infer dataset size ({}) doesn't match the \
         intervals file ({})".format(len_data, intervals_df.shape[0])
@@ -81,8 +82,8 @@ def check_intervals(intervals_df, sizes_df, h5_file):
 
     # Interval bounds do not exceed chromosome lengths
     intervals_sizes = intervals_df.merge(sizes_df, on='chrom')
-    excess_intervals = intervals_sizes[intervals_sizes['end'] >
-                                       intervals_sizes['len']]
+    excess_intervals = intervals_sizes[
+        intervals_sizes['end'] > intervals_sizes['length']]
     assert len(excess_intervals) == 0, \
         "Intervals exceed chromosome sizes in sizes file ({})".format(
             excess_intervals)
@@ -233,22 +234,22 @@ def writer(infer, intervals_file, exp_dir, result_fname,
                     ) for num in range(num_jobs)]
                     if infer_threshold is None:
                         map_args = list(zip(tmp_batch_ranges, all_items,
-                                            [channel] *
-                                            len(tmp_batch_ranges),
+                                            [channel] * len(
+                                                tmp_batch_ranges),
                                             all_intervals,
                                             temp_files,
                                             [rounding[channel]] * len(
                                                 tmp_batch_ranges)))
                     else:
                         map_args = list(zip(tmp_batch_ranges, all_items,
-                                            [channel] *
-                                            len(tmp_batch_ranges),
+                                            [channel] * len(
+                                                tmp_batch_ranges),
                                             all_intervals,
                                             temp_files,
-                                            [rounding[channel]] *
-                                            len(tmp_batch_ranges),
-                                            [infer_threshold] *
-                                            len(tmp_batch_ranges)))
+                                            [rounding[channel]] * len(
+                                                tmp_batch_ranges),
+                                            [infer_threshold] * len(
+                                                tmp_batch_ranges)))
 
                     pool.starmap(save_to_bedgraph, map_args)
 
@@ -320,6 +321,10 @@ def main():
     args.exp_dir = make_experiment_dir(
         args.label, args.out_home, timestamp=True)
 
+    # Convert layer names to a list
+    if args.layers is not None:
+        args.layers = args.layers.strip("[]").split(",")
+
     # train & resume
     ##########################################################################
     if args.train or args.resume:
@@ -330,7 +335,7 @@ def main():
 
         # Get model parameters
         with h5py.File(args.train_files[0], 'r') as f:
-            args.interval_size = f['data'].shape[1]
+            args.interval_size = f['input'].shape[1]
             args.batch_size = 1
 
         ngpus_per_node = torch.cuda.device_count()
@@ -363,16 +368,8 @@ def main():
 
                 # Check that intervals, sizes and h5 file are all compatible.
                 _logger.info('Checkng input files for compatibility')
-                intervals = pd.read_csv(args.intervals_file, sep='\t',
-                                        header=None,
-                                        names=['chrom', 'start', 'end'],
-                                        usecols=(0, 1, 2),
-                                        dtype={'chrom': str, 'start': int,
-                                               'end': int})
-                sizes = pd.read_csv(args.sizes_file, sep='\t',
-                                    header=None, names=['chrom', 'len'],
-                                    usecols=(0, 1),
-                                    dtype={'chrom': str, 'len': int})
+                intervals = read_intervals(args.intervals_file)
+                sizes = read_sizes(args.sizes_file)
                 check_intervals(intervals, sizes, args.infer_files[0])
 
                 # Delete intervals and sizes objects in main thread
@@ -383,7 +380,7 @@ def main():
                 _logger.debug("Evaluation data: ", args.val_files)
             # Get model parameters
             with h5py.File(files[x], 'r') as f:
-                args.interval_size = f['data'].shape[1]
+                args.interval_size = f['input'].shape[1]
                 args.batch_size = 1
 
             prefix = os.path.basename(infile).split(".")[0]

@@ -32,8 +32,7 @@ from claragenomics.dl4atac.metrics import (AUPRC, AUROC, Accuracy, CorrCoef,
                                            SpearmanCorrCoef, Specificity)
 from claragenomics.io.bedio import read_intervals, read_sizes
 from claragenomics.io.bigwigio import extract_bigwig_intervals
-
-import h5py
+from claragenomics.io.h5io import h5_to_array
 
 import numpy as np
 
@@ -70,40 +69,13 @@ def calculate_class_nums(x, threshold=0.5, message='Bases per class'):
     print(result_str)
 
 
-def h5_to_array(h5file, channel, pad):
-    """Read test data into a NumPy array.
-
-    Args:
-        h5file(str): path to hdf5 file containing batched data
-        channel(int): channel of hdf5 file to read
-        pad(int): interval padding in h5 file
-
-    Returns:
-        data: NumPy array containing a channel of the data.
-
-    """
-    with h5py.File(h5file, 'r') as f:
-        if f['data'].shape[2] == 1:
-            channel = 0
-        data = f['data'][:, :, channel]
-    # ignore padding
-    if pad is not None:
-        center = range(pad, data.shape[1] - pad)
-        print("Remove padding and reduce interval size from {} to {}".format(
-            data.shape[1], len(center)))
-        data = data[:, center]
-    # Flatten data
-    data = data.flatten()
-    return data
-
-
-def read_data_file(filename, channel=None, intervals=None,
+def read_data_file(filename, dataset=None, intervals=None,
                    pad=None, dtype='float32'):
     """Read clean and noisy data for evaluation.
 
     Args:
         filename: path to file
-        channel: channel to read if file is an hdf5 file with labels
+        dataset: dataset to read from h5 file
         intervals: intervals to read if file is in bigWig format
         pad(int): interval padding in h5 file
         dtype(str): numpy dtype to return
@@ -113,7 +85,7 @@ def read_data_file(filename, channel=None, intervals=None,
 
     """
     if os.path.splitext(filename)[1] == '.h5':
-        data = h5_to_array(filename, channel, pad)
+        data = h5_to_array(filename, dataset, pad)
         data = data.astype(dtype)
     elif os.path.splitext(filename)[1] == '.bw':
         data = extract_bigwig_intervals(
@@ -197,49 +169,49 @@ if args.task == 'regression':
 
     # Load labels
     _logger.info("Loading labels for regression")
-    y = read_data_file(args.label_file, 1, intervals, pad=args.pad)
+    y = read_data_file(args.label_file, 'label_reg', intervals, pad=args.pad)
 
     # Load data
     _logger.info("Loading data for regression")
     if args.test_file is None:
-        x = read_data_file(args.label_file, 0, pad=args.pad)
+        x = read_data_file(args.label_file, 'input', pad=args.pad)
     else:
-        x = read_data_file(args.test_file, 0, intervals)
+        x = read_data_file(args.test_file, 'input', intervals)
 
     # Calculate metrics
     _logger.info("Calculating metrics for regression")
     metrics = calculate_metrics([MSE(), CorrCoef(), SpearmanCorrCoef()], x, y)
-    print("Regression metrics on full data : " +
-          " | ".join([str(metric) for metric in metrics]))
+    print("Regression metrics on full data : " + " | ".join(
+        [str(metric) for metric in metrics]))
 
     if args.ratio:
         metrics = calculate_metrics([MSE()], x / args.ratio, y)
-        print("MSE for data/subsampling ratio : " +
-              " | ".join([str(metric) for metric in metrics]))
+        print("MSE for data/subsampling ratio : " + " | ".join(
+            [str(metric) for metric in metrics]))
 
     if args.sep_peaks:
         # Load peak labels
         _logger.info("Loading labels for classification")
         if args.peak_file is not None:
             y_peaks = read_data_file(
-                args.peak_file, 2, intervals, pad=args.pad)
+                args.peak_file, 'label_cla', intervals, pad=args.pad)
         else:
             y_peaks = read_data_file(
-                args.label_file, 2, intervals, pad=args.pad)
+                args.label_file, 'label_cla', intervals, pad=args.pad)
 
         # Calculate separate metrics for peak and non-peak regions
         _logger.info("Calculating metrics for regression in peaks")
         metrics = calculate_metrics(
             [MSE(), CorrCoef(), SpearmanCorrCoef()],
             x[y_peaks == 1], y[y_peaks == 1])
-        print("Regression metrics in peaks : " +
-              " | ".join([str(metric) for metric in metrics]))
+        print("Regression metrics in peaks : " + " | ".join(
+            [str(metric) for metric in metrics]))
         _logger.info("Calculating metrics for regression outside peaks")
         metrics = calculate_metrics(
             [MSE(), CorrCoef(), SpearmanCorrCoef()],
             x[y_peaks == 0], y[y_peaks == 0])
-        print("Regression metrics outside peaks : " +
-              " | ".join([str(metric) for metric in metrics]))
+        print("Regression metrics outside peaks : " + " | ".join(
+            [str(metric) for metric in metrics]))
 
 
 # Calculate classification metrics
@@ -247,16 +219,18 @@ else:
 
     # Load labels
     _logger.info("Loading labels for classification")
-    y_peaks = read_data_file(
-        args.label_file, 2, intervals, pad=args.pad, dtype='int8')
+    y_peaks = read_data_file(args.label_file, 'label_cla',
+                             intervals, pad=args.pad, dtype='int8')
 
     # Load data
     _logger.info("Loading data for classification")
     if args.thresholds is not None:
-        x_peaks = read_data_file(args.test_file, 1, intervals, dtype='float32')
+        x_peaks = read_data_file(
+            args.test_file, 'label_cla', intervals, dtype='float32')
         # fp32 is required by torch for sensitivity/specificity calculation
     else:
-        x_peaks = read_data_file(args.test_file, 1, intervals, dtype='float16')
+        x_peaks = read_data_file(
+            args.test_file, 'label_cla', intervals, dtype='float16')
 
     # Calculate number of bases in peaks
     calculate_class_nums(y_peaks, message="Bases per class in clean data")
@@ -279,14 +253,16 @@ else:
                 message="Bases per class at threshold {}".format(t))
             metrics = calculate_metrics([Recall(t), Precision(
                 t), Specificity(t), Accuracy(t), F1(t)], x_peaks, y_peaks)
-            print("Classification metrics at threshold {}".format(t) +
-                  " : " + " | ".join([str(metric) for metric in metrics]))
+            print(
+                "Classification metrics at threshold {}"
+                .format(t) + " : " + " | ".
+                join([str(metric) for metric in metrics]))
 
     # Calculate AUC
     if args.auc is not None:
         _logger.info("Calculating AUC metrics")
         metrics = calculate_metrics([AUROC(), AUPRC()], x_peaks, y_peaks)
-        print("AUC metrics: " +
-              " | ".join([str(metric) for metric in metrics]))
+        print("AUC metrics: " + " | ".join(
+            [str(metric) for metric in metrics]))
 
 _logger.info('Done!')

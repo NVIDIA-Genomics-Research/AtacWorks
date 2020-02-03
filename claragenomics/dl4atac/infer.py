@@ -53,10 +53,13 @@ def infer(*, rank, gpu, task, model, infer_loader, print_freq,
             local_init = time.time()
 
             idxes = batch['idx']
-            x = batch['x']
+            x = batch['input']
 
             # move input to GPU for model forward pass
-            x = x.unsqueeze(1)  # (N, 1, L)
+            if len(x.shape) == 2:
+                x = x.unsqueeze(1)  # (N, 1, L)
+            else:
+                x = np.swapaxes(x, 1, 2)
             x = x.cuda(gpu, non_blocking=True)
             count += x.shape[0]
 

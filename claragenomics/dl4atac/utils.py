@@ -198,11 +198,12 @@ def progbar(*, curr, total, progbar_len, pre_bar_msg, post_bar_msg):
     # sys.stdout.flush()
 
 
-def gather_files_from_cmdline(input):
+def gather_files_from_cmdline(input, extension=".h5"):
     """Gather all input files and return as list.
 
     Args:
-        input: Input of files.
+        input: Input file or list of files.
+        extension: extension of files
 
     Return:
         List of input files.
@@ -214,19 +215,53 @@ def gather_files_from_cmdline(input):
         # a single path is provided; not wrapped in []
         # could be a regular file or a directory
         if os.path.isfile(path):
-            assert path.endswith(".h5")
+            assert path.endswith(extension)
             res = [path]
         elif os.path.isdir(path):
             paths = [os.path.join(path, f)
                      for f in os.listdir(path)]
             paths = [f for f in paths if
-                     os.path.isfile(f) and f.endswith(".h5")]
+                     os.path.isfile(f) and f.endswith(extension)]
             res = paths
     else:
         # multiple regular files wrapped in []
         paths = [f.strip() for f in path.split(',')]
-        paths = [f for f in paths if os.path.isfile(f) and f.endswith(".h5")]
+        paths = [f for f in paths if os.path.isfile(f) and f.endswith(
+            extension)]
         res = paths
+
+    if not res:
+        raise Exception("Invalid format for file paths provided.")
+
+    return res
+
+
+def gather_key_files_from_cmdline(input, extension=".h5"):
+    """Gather all input files and return as list.
+
+    Args:
+        input: Input file or list of files with names.
+        extension: extension of files
+
+    Return:
+        Dictionary of names and input files.
+
+    """
+    key_files = input.strip("[]")
+    res = None
+    if key_files == input:
+        # a single path is provided; not wrapped in []
+        # could be a regular file or a directory
+        key, path = key_files.split(':')
+        assert os.path.isfile(path)
+        assert path.endswith(extension)
+        res = {key: path}
+    else:
+        # multiple regular files wrapped in []
+        key_files = [f.strip() for f in key_files.split(',')]
+        key_files = [f.split(':') for f in key_files]
+        res = {key: path for key, path in key_files if os.path.isfile(
+            path) and path.endswith(extension)}
 
     if not res:
         raise Exception("Invalid format for file paths provided.")

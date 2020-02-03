@@ -14,19 +14,24 @@ import sys
 
 import h5py
 
+import numpy as np
+
 from torch.utils.data import Dataset
 
 
 class DatasetBase(Dataset):
     """Base class."""
-    def __init__(self, files):
+
+    def __init__(self, files, layers):
         """Initialize base class.
 
         Args:
             files: Dataset files to load.
+            layers: list of names of additional input layers to read.
 
         """
         self.files = files
+        self.layers = layers
         self._h5_gen = None
         assert len(files) > 0,\
             "Need to supply at least one file for dataset loading"
@@ -34,7 +39,7 @@ class DatasetBase(Dataset):
         for file in self.files:
             with h5py.File(file, 'r') as f:
                 self.running_counts.append(
-                    self.running_counts[-1] + f["data"].shape[0])
+                    self.running_counts[-1] + f["input"].shape[0])
 
     def __len__(self):
         """Lengths of all datasets loaded."""
@@ -70,6 +75,7 @@ class DatasetTrain(DatasetBase):
 
     Args:
         files: list of data file paths.
+        layers: list of names of additional input layers to read.
 
     """
 
@@ -88,25 +94,36 @@ class DatasetTrain(DatasetBase):
     def _get_generator(self):
         """Generate example."""
         # Support 2+ datasets
-        hdrecs = []
+        # Assumption - all files have the same set of named fields
+        # All fields will be read
+        # List fields and create dictionary
+        hrecs = {'input': [], 'label_reg': [], 'label_cla': []}
+        if self.layers is not None:
+            for layer_key in self.layers:
+                hrecs[layer_key] = []
         for i, filename in enumerate(self.files):
+            # print('loading H5Py file %s' % filename)
             hf = h5py.File(filename, 'r')
-            hd = hf["data"]
-            hdrecs.append(hd)
+            # Read noisy data and labels
+            for key in hf.keys():
+                hrecs[key].append(hf[key])
         idx = yield
         while True:
             # Find correct dataset, given idx
             file_id, local_idx = self._get_file_id(idx)
-            assert file_id < len(hdrecs), "No file reference %d" % file_id
-            rec = hdrecs[file_id][local_idx]
-            if len(rec.shape) == 1:
-                # When no labels, return just the input data
-                idx = yield {'idx': idx, 'x': rec}
-            else:
-                # Return 4 items -- IDX (for saving/tracing),
-                # input data, upsampled data, peaks/classifications
-                idx = yield {'idx': idx, 'x': rec[:, 0], 'y_reg': rec[:, 1],
-                             'y_cla': rec[:, 2]}
+            assert file_id < len(
+                hrecs['input']), "No file reference %d" % file_id
+            rec = {'idx': idx}
+            rec['input'] = hrecs['input'][file_id][local_idx]
+            rec['label_reg'] = hrecs['label_reg'][file_id][local_idx]
+            rec['label_cla'] = hrecs['label_cla'][file_id][local_idx]
+            if self.layers is not None:
+                for layer_key in self.layers:
+                    rec['input'] = np.swapaxes(
+                        np.vstack((
+                            rec['input'],
+                            hrecs[layer_key][file_id][local_idx])), 0, 1)
+            yield rec
 
 
 class DatasetInfer(DatasetBase):
@@ -115,15 +132,17 @@ class DatasetInfer(DatasetBase):
     Not intended to be shuffled
 
     """
-    def __init__(self, files, prefetch_size=256):
+
+    def __init__(self, files, layers, prefetch_size=256):
         """Initialize class.
 
         Args:
             files: Files to infer on.
+            layers: list of names of additional input layers to read.
             prefetch_size: Number of samples to prefetch.
 
         """
-        super(DatasetInfer, self).__init__(files)
+        super(DatasetInfer, self).__init__(files, layers)
         self.fh_indices = {}
         for i in range(len(self.files)):
             self.fh_indices[i] = (0, 0)
@@ -150,7 +169,11 @@ class DatasetInfer(DatasetBase):
         hdrecs = []
         for i, filename in enumerate(self.files):
             hf = h5py.File(filename, 'r')
-            hd = hf["data"]
+            hd = hf["input"]
+            # Read additional layers
+            if self.layers is not None:
+                for layer_key in self.layers:
+                    hd = np.dstack((hd, hf[layer_key]))
             hdrecs.append(hd)
             sys.stdout.flush()
         idx = yield
@@ -161,76 +184,12 @@ class DatasetInfer(DatasetBase):
             if (local_idx < self.fh_indices[file_id][0]) or (
                     local_idx >= self.fh_indices[file_id][1]):
                 # Data is not pre loaded, so load new data
-                self.fh_indices[file_id] = (local_idx, local_idx +
-                                            self.prefetch_size)
-                self.fh_data[file_id] = hdrecs[file_id][local_idx:
-                                                        local_idx +
-                                                        self.prefetch_size]
+                self.fh_indices[file_id] = (
+                    local_idx, local_idx + self.prefetch_size)
+                self.fh_data[file_id] = hdrecs[file_id][
+                    local_idx: local_idx + self.prefetch_size]
                 sys.stdout.flush()
-            rec = self.fh_data[file_id][local_idx -
-                                        self.fh_indices[file_id][0]]
+            rec = self.fh_data[file_id][
+                local_idx - self.fh_indices[file_id][0]]
             sys.stdout.flush()
-            if len(rec.shape) == 1:
-                # When no labels, return just the input data
-                idx = yield {'idx': idx, 'x': rec}
-            else:
-                # Return 4 items -- IDX (for saving/tracing),
-                # input data, upsampled data, peaks/classifications
-                idx = yield {'idx': idx, 'x': rec[:, 0],
-                             'y_reg': rec[:, 1], 'y_cla': rec[:, 2]}
-
-"""
-# Is this even used?
-class DatasetEval(DatasetBase):
-
-    def __getitem__(self, idx):
-        for i in range(len(self.running_counts) - 1):
-            low = self.running_counts[i]
-            high = self.running_counts[i+1]
-            if idx >= low and idx < high:
-                with h5py.File(self.files[i]) as f:
-                    batch_key = self.batch_name_prefix + str(idx-low)
-                    batch = torch.from_numpy(np.array(f[batch_key]))
-                    x = batch[..., 0].type(torch.float32)
-                    y_reg = batch[..., 1].type(torch.float32)
-                    y_cla = batch[..., 2].type(torch.float32)
-                break
-
-        return self.batch_name_prefix + str(idx), x, y_reg, y_cla
-
-
-def custom_collate_train(batch):
-    '''
-        Assumes batch to be a sequence of tuples (x, y1, y2)
-    '''
-    elem = batch[0]
-    assert len(elem[0].shape) == 2
-    zipped = zip(*batch)
-    return [torch.cat(samples, 0) for samples in zipped]
-
-
-def custom_collate_infer(batch):
-    '''
-        Assumes batch to be a sequence of tensors
-    '''
-    if len(batch) != 1:
-        raise AttributeError("Inference must be done one batch at a time,
-        for now.")
-
-    key, tensor = batch[0]
-    assert len(tensor.shape) == 2
-    return (key, tensor.contiguous())
-
-
-def custom_collate_eval(batch):
-    '''
-        Assumes batch to be a sequence of tensors
-    '''
-    if len(batch) != 1:
-        raise AttributeError("Evaluation (with result dumping) must be done
-        one batch at a time, for now.")
-
-    key, x, y_reg, y_cla = batch[0]
-    assert len(x.shape) == 2
-    return (key, x.contiguous(), y_reg.contiguous(), y_cla.contiguous())
-"""
+            idx = yield {'idx': idx, 'input': rec}

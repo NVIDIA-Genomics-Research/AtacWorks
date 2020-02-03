@@ -178,8 +178,7 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
     dst_path = os.path.join(config_dir, "model_structure.yaml")
     save_config(dst_path, model_params)
     # TODO: LR schedule
-
-    train_dataset = DatasetTrain(args.train_files)
+    train_dataset = DatasetTrain(files=args.train_files, layers=args.layers)
     train_sampler = None
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(
@@ -192,7 +191,7 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
     )
 
     # TODO: need DatasetVal? Not for now
-    val_dataset = DatasetTrain(args.val_files)
+    val_dataset = DatasetTrain(files=args.val_files, layers=args.layers)
     val_sampler = None
     if args.distributed:
         val_sampler = torch.utils.data.distributed.DistributedSampler(
@@ -268,7 +267,7 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
 
     model, _ = get_model(args, gpu, rank)
 
-    infer_dataset = DatasetInfer(args.infer_files)
+    infer_dataset = DatasetInfer(files=args.infer_files, layers=args.layers)
     infer_sampler = None
 
     if args.distributed:

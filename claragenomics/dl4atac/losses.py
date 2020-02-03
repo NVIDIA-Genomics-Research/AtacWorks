@@ -144,7 +144,7 @@ class MultiLoss(object):
 
         Args:
             pred: Prediction values.
-            Label : Ground truth values.
+            label : Ground truth values.
 
         """
         if pred.shape != label.shape:
@@ -168,7 +168,7 @@ class MultiLoss(object):
 
         Args:
             pred: Prediction values.
-            Label : Ground truth values.
+            label : Ground truth values.
 
         """
         if not self.loss_types:

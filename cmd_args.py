@@ -90,20 +90,6 @@ def parse_args(root_dir):
     parser.add('--config', required=False,
                is_config_file=True, help='config file path')
 
-    # Learning args
-    parser.add('--clip_grad', required=True, type=float,
-               help='Grad clipping for bad/extreme batches')
-    parser.add('--lr', required=True, type=float,
-               help='learning rate')
-    parser.add('--epochs', required=True, type=int,
-               help='Number of epochs')
-    parser.add('--mse_weight', required=True, type=float,
-               help='relative weight of mse loss')
-    parser.add('--pearson_weight', required=True, type=float,
-               help='relative weight of pearson loss')
-    parser.add_argument('--poisson_weight', required=True, type=float,
-                        help='relative weight of poisson loss')
-# =============================================================================
     # experiment args
     parser.add('--label', required=True, type=str,
                help='label of the experiment; used for naming output folder')
@@ -118,6 +104,68 @@ def parse_args(root_dir):
     parser.add('--eval', action='store_true',
                help='evaluation: inference + result dumping +\
                        metrics evaluation')
+# =============================================================================
+    # training args
+    parser.add('--task', required=True,
+               choices=['regression', 'classification', 'both'],
+               help='Task can be regression or\
+                       classification or both. (default: %(default)s)')
+    parser.add('--train_files', required=True, type=str,
+               help='list of data files in the form of [file1, file2, ...];'
+               'or a single path to a folder of files')
+    parser.add('--print_freq', required=True, type=int,
+               help="Logging frequency")
+    parser.add('--bs', required=True, type=int,
+               help="batch_size")
+    parser.add('--num_workers', required=True, type=int,
+               help="number of workers for dataloader")
+    parser.add('--checkpoint_fname', required=True, type=str,
+               help="checkpoint filename to save the model")
+    parser.add('--save_freq', required=True, type=int,
+               help="model checkpoint saving frequency")
+# =============================================================================
+    # Dataset args
+    parser.add('--pad', required=True, type=type_or_none_fn(int),
+               help="Padding around intervals")
+    parser.add('--transform', required=True, type=str, choices=['log', 'None'],
+               help='transformation to apply to\
+                       coverage tracks before training')
+    parser.add('--layers', type=str,
+               help='Names of additional layers to read from h5 file as input. \
+               If multiple names, use format: "[name1, name2]". \
+               Layers will be concatenated to the input in the \
+               order supplied.')
+# =============================================================================
+    # Learning args
+    parser.add('--clip_grad', required=True, type=float,
+               help='Grad clipping for bad/extreme batches')
+    parser.add('--lr', required=True, type=float,
+               help='learning rate')
+    parser.add('--epochs', required=True, type=int,
+               help='Number of epochs')
+    parser.add('--mse_weight', required=True, type=float,
+               help='relative weight of mse loss')
+    parser.add('--pearson_weight', required=True, type=float,
+               help='relative weight of pearson loss')
+    parser.add_argument('--poisson_weight', required=True, type=float,
+                        help='relative weight of poisson loss')
+# =============================================================================
+    # validation args
+    parser.add('--val_files', required=True, type=str,
+               help='list of data files in the form of [file1, file2, ...];'
+               'or a single path to a folder of files')
+    parser.add('--eval_freq', required=True, type=int,
+               help="evaluation frequency")
+    parser.add('--threshold', required=True, type=float,
+               help="threshold for classification metrics")
+    parser.add_argument('--best_metric_choice', required=True,
+                        type=str,
+                        choices=['BCE', 'MSE', 'Recall',
+                                 'Specificity', 'CorrCoef', 'AUROC'],
+                        help="metric to be considered for best metric.\
+                                Choice is case sensitive.")
+# =============================================================================
+    # Inference args
     parser.add('--infer_files', required=True, type=str,
                help='list of data files in the form of [file1, file2, ...];'
                'or a single path to a folder of files')
@@ -146,48 +194,7 @@ def parse_args(root_dir):
                help='filename of the inference results')
     parser.add_argument('--deletebg', action='store_true',
                         help='delete output bedGraph file')
-
-    # training args
-    parser.add('--task', required=True,
-               choices=['regression', 'classification', 'both'],
-               help='Task can be regression or\
-                       classification or both. (default: %(default)s)')
-    parser.add('--train_files', required=True, type=str,
-               help='list of data files in the form of [file1, file2, ...];'
-               'or a single path to a folder of files')
-    parser.add('--print_freq', required=True, type=int,
-               help="Logging frequency")
-    parser.add('--bs', required=True, type=int,
-               help="batch_size")
-    parser.add('--num_workers', required=True, type=int,
-               help="number of workers for dataloader")
-    parser.add('--checkpoint_fname', required=True, type=str,
-               help="checkpoint filename to save the model")
-    parser.add('--save_freq', required=True, type=int,
-               help="model checkpoint saving frequency")
-
-    # Dataset args
-    parser.add('--pad', required=True, type=type_or_none_fn(int),
-               help="Padding around intervals")
-    parser.add('--transform', required=True, type=str, choices=['log', 'None'],
-               help='transformation to apply to\
-                       coverage tracks before training')
-
-    # validation args
-    parser.add('--val_files', required=True, type=str,
-               help='list of data files in the form of [file1, file2, ...];'
-               'or a single path to a folder of files')
-    parser.add('--eval_freq', required=True, type=int,
-               help="evaluation frequency")
-    parser.add('--threshold', required=True, type=float,
-               help="threshold for classification metrics")
-    parser.add_argument('--best_metric_choice', required=True,
-                        type=str,
-                        choices=['BCE', 'MSE', 'Recall',
-                                 'Specificity', 'CorrCoef', 'AUROC'],
-                        help="metric to be considered for best metric.\
-                                Choice is case sensitive.")
-
+# =============================================================================
     # dist-env args
     parser.add('--gpu', required=True, type=int,
                help='GPU id to use; preempted by --distributed\
@@ -199,7 +206,7 @@ def parse_args(root_dir):
                help='url used to set up distributed training')
     parser.add('--dist-backend', required=True, type=str,
                help='distributed backend')
-
+# =============================================================================
     # debug
     parser.add('--debug', action='store_true',
                help='Enable debug prints')

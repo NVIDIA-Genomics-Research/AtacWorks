@@ -16,6 +16,8 @@ from claragenomics.dl4atac.utils import myprint, progbar, equal_width_formatter
 import torch
 import torch.distributed as dist
 
+import numpy as np
+
 
 def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
           epoch, epochs, clip_grad, print_freq, distributed, world_size,
@@ -55,12 +57,15 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
 
     # Loop training data
     for i, batch in enumerate(train_loader):
-        x = batch['x']
-        y_reg = batch['y_reg']
-        y_cla = batch['y_cla']
+        x = batch['input']
+        y_reg = batch['label_reg']
+        y_cla = batch['label_cla']
 
         # move data and labels to GPU for forward pass
-        x = x.unsqueeze(1)  # (N, 1, L)
+        if len(x.shape) == 2:
+            x = x.unsqueeze(1)  # (N, 1, L)
+        else:
+            x = np.swapaxes(x, 1, 2)
         x = x.cuda(gpu, non_blocking=True)
 
         if task == 'regression':
@@ -137,9 +142,9 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
                         pre_bar_msg=epoch_formatter, post_bar_msg=post_bar_msg)
             print_time += time.time() - t
 
-    myprint(epoch_formatter +
-            " Time Taken: {:7.3f}s".format(time.time() - start),
-            color='yellow', rank=rank)
+    myprint(
+        epoch_formatter + " Time Taken: {:7.3f}s".format(time.time() - start),
+        color='yellow', rank=rank)
 
     # Time breakdown for the epoch...
     total_time = time.time() - start

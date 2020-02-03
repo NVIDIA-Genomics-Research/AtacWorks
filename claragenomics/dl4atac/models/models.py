@@ -161,10 +161,11 @@ class DenoisingUNet(nn.Module):
         """Forward.
 
         Args:
-            x: Input
+            input: Input data.
 
         Return:
-            x: Input.
+            out_reg: Regression output.
+            out_cla: Classification output
 
         """
         # for readability, keeping itermediate p1 ~ p4 and x5 ~ x9,
