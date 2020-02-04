@@ -1,3 +1,5 @@
+# Tutorial 2: Using a trained AtacWorks model to denoise ATAC-seq data and call peaks. 
+
 ## Introduction
 
 In this tutorial we use a pre-trained AtacWorks model to denoise and call peaks from low-coverage aggregate single-cell ATAC-seq data. We use the dsc-ATAC-seq dataset presented in (1), section (refer to page number, section). This dataset consists of single-cell ATAC-seq data from several types of human blood cells.
