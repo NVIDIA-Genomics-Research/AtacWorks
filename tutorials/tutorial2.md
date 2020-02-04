@@ -8,9 +8,9 @@ We selected 2400 NK cells from this dataset - this is our ‘clean’, high-cove
 
 ![subsampled_NK_cells](NK.2400.50.png)
 
-Compared to the 'clean' signal from 2400 cells, the aggregated ATAC-Seq profile of these 50 cells is noisy. The Pearson correlation between the 50-cell track and the 2400-cell track is only <insert correlation> on Chromosome 10. Because the signal is noisy, peak calls calculated by MACS2 on this data are also inaccurate; the AUPRC of peak calling from the noisy data is only <insert AUPRC> on Chromosome 10.
+Compared to the 'clean' signal from 2400 cells, the aggregated ATAC-seq profile of these 50 cells is noisy. Because the signal is noisy, peak calls calculated by MACS2 on this data (shown as red bars below the signal tracks) are also inaccurate. The AUPRC of peak calling by MACS2 on the noisy data is only 0.20.
 
-As reported in our paper, we trained an AtacWorks model to learn a mapping from 50-cell signal to 2400-cell signals and peak calls. In other words, given a noisy ATAC-seq signal from 50 cells, this model learned what the signal would look like - and where the peaks would be called - if we had sequenced 2400 cells. This model was trained on data from Monocytes and B cells, so it has not encountered data from NK cells. Likewise, Chromosome 10, which we will use for testing here, was also not used in training the model.
+As reported in our paper, we trained an AtacWorks model to learn a mapping from 50-cell signal to 2400-cell signals and peak calls. In other words, given a noisy ATAC-seq signal from 50 cells, this model learned what the signal would look like - and where the peaks would be called - if we had sequenced 2400 cells. This model was trained on data from Monocytes and B cells, so it has not encountered data from NK cells.
 
 If you want to train your own AtacWorks model instead of using the model reported in the paper, refer to Tutorial 1 (link).
 
@@ -41,9 +41,9 @@ aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/configs
 aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/test_data/noisy_data/dsc.1.NK.50.cutsites.smoothed.200.bw ./
 ```
 
-## Step 5: Download genomic intervals spanning chromosome 10
+## Step 5: Download genomic intervals for testing
 
-The model we downloaded takes the input ATAC-seq signal in genomic intervals spanning 50,000 bp. The genomic positions of the intervals to use are supplied to the model in BED format. 
+The model we downloaded takes the input ATAC-seq signal in genomic intervals spanning 50,000 bp. The genomic positions of the intervals to use are supplied to the model in BED format. In this example, we test the model on intervals that span all autosomes except for chromosome 10 and chromosome 20. See get_intervals.py (link) for help in creating intervals spanning the whole genome or a different set of chromosomes.
 ```
 aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/intervals/hg19.50000.genome_intervals.bed ./intervals/hg19.50000.genome_intervals.bed
 ```
@@ -63,7 +63,7 @@ python $atacworks/bw2h5.py \
 ```
 This creates a file `NK.50_cells.h5`, which contains the noisy ATAC-seq signal to be fed to the pre-trained model.
 
-## Step 7: Inference on chromosome 10 producing denoised track and peak calls - for fast, binary peak calls
+## Step 7: Inference on selected intervals, producing denoised track and binary peak calls
 
 ```
 python $atacworks/main.py --infer \
@@ -82,7 +82,7 @@ The inference results will be saved in the folder `output_latest`. This folder w
 
 `NK_inferred.track.bedGraph` and `NK_inferred.track.bw` contain the denoised ATAC-seq track. `NK_inferred.peaks.bedGraph` and `NK_inferred.peaks.bw` contain the positions in the genome that are designated as peaks (the model predicts that the probability of these positions being part of a peak is at least 0.5)
 
-## Step 8:Format peak calls
+## Step 8: Format peak calls
 
 Delete peaks that are shorter than 20 bp in leangth, and format peak calls in BED format with coverage statistics and summit calls:
 
@@ -122,7 +122,7 @@ python $atacworks/main.py --infer \
     --config configs/config_params.yaml \
     --config_mparams configs/model_structure.yaml
 ```
-The inference results will be saved in the folder `output_latest`. This folder will contain the same 4 files described in Step 7. However, `NK_inferred.peaks.bedGraph` and `NK_inferred.peaks.bw` will contain the probability of being part of a peak, for every position in the genome. The `NK_inferred.peaks.bedGraph` file produced by this command is much larger than the file produced in Step 7.
+The inference results will be saved in the folder `output_latest`. This folder will contain the same 4 files described in Step 7. However, `NK_inferred.peaks.bedGraph` and `NK_inferred.peaks.bw` will contain the probability of being part of a peak, for every position in the genome. This command is much slower, and the `NK_inferred.peaks.bedGraph` file produced by this command is much larger than the file produced in Step 7.
 
 The above command is useful in the following situations:
 1. To calculate AUPRC or AUROC metrics.
@@ -138,4 +138,3 @@ Where `0.5` is the probability threshold to call peaks. Note that the summit cal
 ## Appendix 3: Visualize results
 
 TBA
-
