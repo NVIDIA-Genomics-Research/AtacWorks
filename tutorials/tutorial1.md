@@ -109,7 +109,7 @@ python $atacworks/bw2h5.py \
 ```
 This produces a .h5 file (`Mono.50.2400.train.h5`) containing the training data for the model.
 
-##Step 5: Read the validation data and labels and save in .h5 format
+## Step 5: Read the validation data and labels and save in .h5 format
 
 Next we read and save the validation data for the model.
 
@@ -126,7 +126,7 @@ python $atacworks/bw2h5.py \
 This produces a .h5 file (`Mono.50.2400.val.h5`) containing the validation data for the model.
 
 
-##Step 6: Train and validate a model using the parameters in the given config files
+## Step 6: Train and validate a model using the parameters in the given config files
 
 We next train an AtacWorks model to learn a mapping from the noisy (50-cell) ATAC-seq signal to the clean (2400-cell) ATAC-seq signal and peak calls. The two .yaml files that we downloaded into the `configs` directory contain all the parameters that describe how to train the model. `configs/model_structure.yaml` contains parameters that control the architecture of the model and  `configs/config_params.yaml` contains parameters that control the process of training, such as the learning rate and batch size.
 
