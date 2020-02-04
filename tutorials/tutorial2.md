@@ -6,7 +6,7 @@ In this tutorial we use a pre-trained AtacWorks model to denoise and call peaks 
 
 We selected 2400 NK cells from this dataset - this is our ‘clean’, high-coverage dataset. We then randomly sampled 50 of these 2400 NK cells. Here's what the ATAC-seq signal from 50 cells and 2400 cells looks like, for a region on chromosome 10:
 
-<insert picture>
+![subsampled_NK_cells](tutorials/NK.2400.50.png)
 
 Compared to the 'clean' signal from 2400 cells, the aggregated ATAC-Seq profile of these 50 cells is noisy. The Pearson correlation between the 50-cell track and the 2400-cell track is only <insert correlation> on Chromosome 10. Because the signal is noisy, peak calls calculated by MACS2 on this data are also inaccurate; the AUPRC of peak calling from the noisy data is only <insert AUPRC> on Chromosome 10.
 
