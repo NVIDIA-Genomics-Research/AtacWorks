@@ -213,5 +213,5 @@ python $atacworks/main.py --train \
         --config_mparams configs/model_structure.yaml \
         --train_files train_h5 \
         --val_files val_h5 \
-        --epochs 5
+        --epochs 25
 ```
