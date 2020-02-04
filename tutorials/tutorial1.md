@@ -10,7 +10,7 @@ We selected 2400 Monocytes from this dataset - this is our ‘clean’, high-cov
 
 ![Monocytes subsampled signal](Mono.2400.50.png)
 
-Compared to the 'clean' signal from 2400 cells, the aggregated ATAC-Seq signal track from these 50 cells is noisy. The Pearson correlation between the 50-cell signal and the 2400-cell signal is only <insert correlation> on chromosome 10. Because the signal is noisy, peak calls calculated by MACS2 on this data are also inaccurate; the AUPRC of peak calling from the noisy data is only <insert AUPRC> on chromosome 10.
+Compared to the 'clean' signal from 2400 cells, the aggregated ATAC-Seq signal track from these 50 cells is noisy. The Pearson correlation between the 50-cell signal and the 2400-cell signal is only <insert correlation> on chromosome 10. Because the signal is noisy, peak calls calculated by MACS2 on this data are also inaccurate.
 
 We train an AtacWorks model to learn a mapping from the 50-cell ATAC-seq signals to the 2400-cell ATAC-seq signal and peak calls. In other words, given a noisy ATAC-seq signal from 50 cells, this model learns what the signal would look like - and where the peaks would be called - if we had sequenced 2400 cells.
 
