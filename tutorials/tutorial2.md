@@ -80,16 +80,16 @@ The inference results will be saved in the folder `output_latest`. This folder w
 
 `NK_inferred.track.bedGraph` and `NK_inferred.track.bw` contain the denoised ATAC-seq track. `NK_inferred.peaks.bedGraph` and `NK_inferred.peaks.bw` contain the positions in the genome that are designated as peaks (the model predicts that the probability of these positions being part of a peak is at least 0.5)
 
-## Step 8:
+## Step 8:Format peak calls
 
-Delete peaks that are shorter than 50 bp in leangth, and format peak calls in BED format with coverage statistics and summit calls:
+Delete peaks that are shorter than 20 bp in leangth, and format peak calls in BED format with coverage statistics and summit calls:
 
 ```
 python $atacworks/peaksummary.py \
     --peakbw output_latest/NK_inferred.peaks.bw \
     --trackbw output_latest/NK_inferred.track.bw \
     --prefix output_latest/NK_inferred.peak_calls \
-    --minlen 50
+    --minlen 20
 ```
 This produces a file `output_latest/NK_inferred.peak_calls.bed` with 8 columns:
 1. chromosome
@@ -112,7 +112,7 @@ To change any of the parameters for inference with the deep learning model, you 
 If you are using your own model instead of the one provided, edit `configs/config_params.yaml` to supply the path to your model under `weights_path`, in place of `model.pth.tar`.
 
 
-## ppendix 2: Output the peak probabilities in inference instead of peak calls
+## Appendix 2: Output the peak probabilities in inference instead of peak calls
 
 The model predicts the probability of every position on the genome being part of a peak. In the above command, we take a cutoff of 0.5, and output the positions of regions where the probability is greater than 0.5. To output the probability for every base in the genome without any cutoff, we use the following command:
 ```
