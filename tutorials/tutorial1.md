@@ -1,7 +1,11 @@
+# Tutorial 1: Training an AtacWorks model 
+
 ## Introduction
 
 In this tutorial we train an AtacWorks model to denoise the signal track and call peaks from aggregate single-cell ATAC-seq data derived from a small number of cells. We use the dsc-ATAC-seq dataset presented in (1), section (refer to page number, section). This dataset consists of single-cell ATAC-seq data from several types of human blood cells.
 
+Note that all the AtacWorks models described in reference (1) are available to download (link) and you may be able to use one of these instead of training a new model. To learn how to download and use an existing model, refer to Tutorial 2 (link).
+ 
 We selected 2400 Monocytes from this dataset - this is our ‘clean’, high-coverage dataset. We then randomly sampled 50 of these 2400 Monocytes. Here's what the ATAC-seq signal from 50 cells and 2400 cells looks like, for a region on chromosome 10:
 
 <insert picture>
