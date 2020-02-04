@@ -19,6 +19,7 @@ def read_intervals(bed_file, skip=0):
 
     Args:
         bed_file: Path to BED file
+        skip: Number of header lines to skip
 
     Returns:
         df: Pandas DataFrame containing intervals.
