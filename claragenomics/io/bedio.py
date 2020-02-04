@@ -42,6 +42,7 @@ def read_sizes(sizes_file, as_intervals=False):
 
     Returns:
         df: Pandas DataFrame
+
     """
     df = pd.read_csv(sizes_file, sep='\t', header=None, usecols=(0, 1),
                      names=['chrom', 'length'],
