@@ -69,7 +69,7 @@ We also need to download the 'configs' directory containing config files for thi
 aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/configs/ ./configs --recursive
 ```
 
-##Step 3: Convert clean peak file into bigWig format
+## Step 3: Convert clean peak file into bigWig format
 
 The clean peak calls (`dsc.Mono.2400.cutsites.smoothed.200.3.narrowPeak`) were produced by MACS2 and are in .narrowPeak format. We need to convert them to bigWig format for use. This also requires us to supply a chromosome sizes file describing the reference genome that we use. 
 
