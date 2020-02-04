@@ -1,4 +1,4 @@
-##Introduction
+## Introduction
 
 In this tutorial we train an AtacWorks model to denoise the signal track and call peaks from aggregate single-cell ATAC-seq data derived from a small number of cells. We use the dsc-ATAC-seq dataset presented in (1), section (refer to page number, section). This dataset consists of single-cell ATAC-seq data from several types of human blood cells.
 
@@ -10,14 +10,14 @@ Compared to the 'clean' signal from 2400 cells, the aggregated ATAC-Seq signal t
 
 We train an AtacWorks model to learn a mapping from the 50-cell ATAC-seq signals to the 2400-cell ATAC-seq signal and peak calls. In other words, given a noisy ATAC-seq signal from 50 cells, this model learns what the signal would look like - and where the peaks would be called - if we had sequenced 2400 cells.
 
-##Step 1: Set parameters
+## Step 1: Set parameters
 
 Replace 'path_to_atacworks' with the path to your cloned 'AtacWorks' github repository.
 ```
 atacworks=<path_to_atacworks>
 ```
 
-##Step 2: Download data
+## Step 2: Download data
 
 We will download from AWS all of the data needed for this experiment. (Note: the S3 bucket is not yet public. We can use wget for download once it is.)
 
@@ -92,7 +92,7 @@ INFO:2020-01-22 20:32:05,855:AtacWorks-peak2bw] Writing peaks to bigWig file dsc
 INFO:2020-01-22 20:32:06,042:AtacWorks-peak2bw] Done!
 ```
 
-##Step 4: Read the training data and labels and save in .h5 format
+## Step 4: Read the training data and labels and save in .h5 format
 
 We take the three bigWig files containing noisy ATAC-seq signal, the clean ATAC-seq signal, and the clean ATAC-seq peak calls. For these three files, we read the values in the specified intervals, and save these values in a format that can be read by our model. First, we read values for the intervals in the training set (`hg19.50000.training_intervals.bed`), spanning all autosomes except chr10 and chr20.
 
@@ -146,14 +146,14 @@ This model has learned a mapping from the 50-cell signal to the 2400-cell signal
 
 See Tutorial 2 for step-by-step instructions on how to apply this trained model to another dataset and evaluate its performance.
 
-##References
+## References
 (1) Lal, A., Chiang, Z.D., Yakovenko, N., Duarte, F.M., Israeli, J. and Buenrostro, J.D., 2019. AtacWorks: A deep convolutional neural network toolkit for epigenomics. BioRxiv, p.829481. (https://www.biorxiv.org/content/10.1101/829481v1)
 
-##Appendix 1: Customize the training command using config files
+## Appendix 1: Customize the training command using config files
 
 To change any of the parameters for the deep learning model, you can edit the parameters in `configs/config_params.yaml` or `configs/model_structure.yaml` and run the command in step 6 above. See the documentation in these files for an explanation of the parameters. <Note - we must include enough documentation in these files>
 
-##Appendix 2: Reproducing the model reported in the AtacWorks preprint (1)
+## Appendix 2: Reproducing the model reported in the AtacWorks preprint (1)
 
 In the paper (1), we report this experiment, with two differences:
 
