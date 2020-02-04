@@ -34,9 +34,11 @@ def read_intervals(bed_file, skip=0):
 
 def read_sizes(sizes_file, as_intervals=False):
     """Read chromosome sizes into a DataFrame.
+
     Args:
         sizes_file(str): Path to sizes file
         as_intervals(bool): Format the DataFrame as 0-indexed intervals
+
     Returns:
         df: Pandas DataFrame
     """
