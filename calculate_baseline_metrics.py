@@ -125,8 +125,9 @@ def parse_args():
                         help='Path to hdf5/bigWig file containing labels',
                         required=True)
     parser.add_argument('--test_file', type=str,
-                        help='Path to hdf5/bigWig file containing labels. Assumed \
-                                to be present in label_file by default.')
+                        help='Path to hdf5/bigWig file containing labels. If \
+                                not supplied, these are assumed to be present \
+                                in --label_file.')
     parser.add_argument('--task', type=str,
                         choices=('regression', 'classification'),
                         help='determines the metrics to be calculated')
@@ -135,9 +136,9 @@ def parse_args():
                         help='calculate separate regression metrics for \
                                 peaks and non-peaks.')
     parser.add_argument('--peak_file', type=str,
-                        help='Path to hdf5/bigWig file with peak labels. Assumed \
-                                to be present in label_file by default. \
-                                Use only with --sep_peaks.')
+                        help='Path to hdf5/bigWig file with peak labels. If \
+                                not supplied, these are assumed to be present \
+                                in --label_file. Use only with --sep_peaks.')
     parser.add_argument('--thresholds', type=str,
                         help='threshold or list of thresholds for \
                                 classification metrics. If supplying a list, \
