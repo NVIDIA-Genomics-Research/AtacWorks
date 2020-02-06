@@ -115,7 +115,8 @@ def parse_args():
                         Not used with --nolabel.')
     parser.add_argument('--nonzero', action='store_true',
                         help='Only save intervals with nonzero coverage. \
-                        Recommended when encoding training data.')
+                        Recommended when encoding training data, as intervals \
+                        with zero coverage do not help the model to learn.')
     parser.add_argument('--debug', action='store_true',
                         help='Enable debug prints')
     args = parser.parse_args()
