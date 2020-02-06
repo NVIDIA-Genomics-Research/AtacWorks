@@ -58,9 +58,9 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='Convert BED file or MACS2 narrowPeak file \
         to bigWig file')
-    parser.add_argument('input', type=str, required=True,
+    parser.add_argument('input', type=str,
                         help='Path to narrowPeak or BED file')
-    parser.add_argument('sizes', type=str, required=True,
+    parser.add_argument('sizes', type=str,
                         help='Path to chromosome sizes file. \
                         Only peaks in these chromosomes will \
                         be encoded in the output bigWig file.')
