@@ -69,8 +69,9 @@ def main():
     args = parse_args()
 
     # Read input files
-    _logger.info('Reading input files')
+    _logger.info('Reading input file')
     peaks = read_intervals(args.input, skip=args.skip)
+    _logger.info('Read ' + str(len(peaks)) + ' peaks.')
     sizes = read_sizes(args.sizes)
 
     # Add score of 1 for all peaks
