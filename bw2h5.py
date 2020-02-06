@@ -10,7 +10,7 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
-"""Read data from bigWig files in intervals and generate batch data for model.
+r"""Read data from bigWig files in intervals and generate batch data for model.
 
 Workflow:
     1. Reads a BED file containing genomic intervals
