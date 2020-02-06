@@ -87,7 +87,7 @@ def main():
     # Write bedGraph
     _logger.info('Writing peaks to bedGraph file')
     # Note: peaks will be subset to chromosomes in sizes file.
-    df_to_bedGraph(peaks_filtered, prefix + '.bedGraph', sizes)
+    df_to_bedGraph(peaks, prefix + '.bedGraph', sizes)
 
     # Write bigWig and delete bedGraph
     _logger.info('Writing peaks to bigWig file {}'.format(prefix + '.bw'))
