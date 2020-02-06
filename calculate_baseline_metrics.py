@@ -13,7 +13,7 @@
 """Takes noisy data and ground truth, returns metrics.
 
 Workflow:
-   1. Read labels from .h5 file
+   1. Read labels from .h5 or .bw file
    2. Read noisy data from .h5 or .bw file
    2. Calculate metrics
    3. If required, classification metrics at multiple thresholds.
@@ -122,31 +122,40 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='AtacWorks script to calculate metrics on batched data.')
     parser.add_argument('--label_file', type=str,
-                        help='Path to hdf5/bw file containing labels')
+                        help='Path to hdf5/bigWig file containing labels',
+                       required=True)
     parser.add_argument('--test_file', type=str,
-                        help='Path to hdf5/bw file containing labels. Assumed \
-                                to be present in label_file by default.')
-    parser.add_argument('--peak_file', type=str,
-                        help='Path to hdf5/bw file with peak labels. Assumed \
+                        help='Path to hdf5/bigWig file containing labels. Assumed \
                                 to be present in label_file by default.')
     parser.add_argument('--task', type=str,
                         choices=('regression', 'classification'),
-                        help='determines metrics')
+                        help='determines the metrics to be calculated')
     parser.add_argument('--ratio', type=float, help='subsampling ratio')
     parser.add_argument('--sep_peaks', action='store_true',
-                        help='separate regression metrics for\
-                                peaks and non-peaks')
+                        help='calculate separate regression metrics for\
+                                peaks and non-peaks.')
+    parser.add_argument('--peak_file', type=str,
+                        help='Path to hdf5/bigWig file with peak labels. Assumed \
+                                to be present in label_file by default. \
+                                Use only with --sep_peaks.)
     parser.add_argument('--thresholds', type=str,
                         help='threshold or list of thresholds for\
-                                classification metrics')
+                                classification metrics. If supplying a list, use the form: \
+                                "[threshold1, threshold2,...]"')
     parser.add_argument('--auc', action='store_true',
-                        help='calculate AUC metrics')
+                        help='calculate AUROC and AUPRC metrics')
     parser.add_argument('--intervals', type=str,
-                        help='Intervals to read bigWig files')
+                        help='Path to BED file containing genomic intervals. \
+                        Data for these intervals will be read from all bigWig files supplied.')
     parser.add_argument('--sizes', type=str,
-                        help='Chromosome sizes to read bigWig file')
+                        help='Path to chromosome sizes file. \
+                        If supplied, data for all chromosomes in \
+                        the sizes file will be read from all bigWig files. \
+                        Only used if --intervals is not supplied.')
     parser.add_argument('--pad', type=int,
-                        help='interval padding in label h5 file')
+                        help='Number of additional bases added as \
+                        padding to the intervals in the h5 file \
+                        containing labels. Not required if --label_file is a bigWig file.')
     args = parser.parse_args()
     return args
 
