@@ -22,6 +22,9 @@ Workflow:
 
 Output:
     bigWig file containing score of 1 at peak positions
+    
+Example:
+    python peak2bw.py --input peaks.narrowPeak --sizes example/reference/hg19.chrom.sizes --skip 1
 
 """
 
