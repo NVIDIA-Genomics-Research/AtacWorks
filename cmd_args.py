@@ -127,7 +127,9 @@ def parse_args(root_dir):
     # Dataset args
     parser.add('--pad', required=True, type=type_or_none_fn(int),
                help="Number of additional bases to add as padding \
-               on either side of each interval")
+               on either side of each interval. Use the same --pad \
+               value that was supplied to bw2h5.py when creating \
+               the h5 files for training and validation.")
     parser.add('--transform', required=True, type=str, choices=['log', 'None'],
                help='transformation to apply to\
                        coverage tracks before training')
