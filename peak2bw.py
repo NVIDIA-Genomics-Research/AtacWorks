@@ -64,6 +64,8 @@ def parse_args():
                         help='Path to chromosome sizes file. \
                         Only peaks in these chromosomes will \
                         be encoded in the output bigWig file.')
+    parser.add_argument('--out_dir', type=str, help='Directory \
+                        to write output file.', required=True)
     parser.add_argument('--prefix', type=str, help='Output file \
                         prefix. Output file name will be \
                         prefix.bw. If not supplied, the name \
@@ -99,12 +101,12 @@ def main():
     _logger.info('Adding score')
     peaks_filtered[3] = 1
 
-    # Set prefix for output files
+    # Set name for output file
     if args.prefix is None:
         # Output file gets name from input
-        prefix = args.input
+        prefix = args.out_dir + '/' + args.input
     else:
-        prefix = args.prefix
+        prefix = args.out_dir + '/' + args.prefix
 
     # Write bedGraph
     _logger.info('Writing peaks to bedGraph file')
