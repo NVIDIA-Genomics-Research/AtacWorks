@@ -24,7 +24,7 @@ Output:
     bigWig file containing score of 1 at peak positions
     
 Example:
-    python peak2bw.py --input peaks.narrowPeak --sizes example/reference/hg19.chrom.sizes --skip 1
+    python peak2bw.py peaks.narrowPeak example/reference/hg19.chrom.sizes --skip 1
 
 """
 
@@ -56,8 +56,8 @@ def parse_args():
     """
     parser = argparse.ArgumentParser(
         description='Convert BED file or MACS2 narrowPeak file to bigWig file')
-    parser.add_argument('--input', type=str, required=True, help='Path to narrowPeak or BED file')
-    parser.add_argument('--sizes', type=str, required=True,
+    parser.add_argument('input', type=str, required=True, help='Path to narrowPeak or BED file')
+    parser.add_argument('sizes', type=str, required=True,
                         help='Path to chromosome sizes file. Only peaks in these chromosomes will be encoded in the output bigWig file.')
     parser.add_argument('--prefix', type=str, help='Output file prefix. Output file name will be prefix.bw. If not supplied, the name of the input BED file will be used as the prefix.')
     parser.add_argument('--skip', type=int, default=0,
