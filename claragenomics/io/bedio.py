@@ -45,12 +45,13 @@ def read_sizes(sizes_file, as_intervals=False):
 
     """
     df = pd.read_csv(sizes_file, sep='\t', header=None, usecols=(0, 1),
-                     names=['chrom', 'end'],
-                     dtype={'chrom': str, 'end': int})
+                     names=['chrom', 'length'],
+                     dtype={'chrom': str, 'length': int})
     if as_intervals:
         # Formats the sizes file in the form of an intervals file,
         # with column names 'chrom', 'start' and 'end'
         # Used for compatibility with the output of 'read_intervals'.
         df['start'] = [0] * len(df)
-        df = df[['chrom', 'start', 'end']]
+        df = df[['chrom', 'start', 'length']]
+        df.rename(columns={"length": "end"}, inplace=True)
     return df
