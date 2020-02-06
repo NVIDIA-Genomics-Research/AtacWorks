@@ -157,8 +157,10 @@ def parse_args():
     parser.add_argument('--pad', type=int,
                         help='Number of additional bases added as \
                         padding to the intervals in the h5 file \
-                        containing labels. Not required if \
-                        --label_file is a bigWig file.')
+                        containing labels. Use the same --pad value \
+                        that was supplied to bw2h5.py when creating \
+                        --label_file. Not required if --label_file \
+                        is a bigWig file.')
     args = parser.parse_args()
     return args
 
