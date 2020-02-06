@@ -73,15 +73,9 @@ def main():
     peaks = read_intervals(args.input, skip=args.skip)
     sizes = read_sizes(args.sizes)
 
-    # Subset to peaks in sizes file
-    # TODO: Move this test into the df_to_bedGraph function
-    peaks_filtered = peaks[peaks['chrom'].isin(sizes['chrom'])].copy()
-    _logger.info('Retaining ' + str(len(peaks_filtered)) + ' of ' + str(len(
-        peaks)) + ' peaks in given chromosomes.')
-
     # Add score of 1 for all peaks
     _logger.info('Adding score')
-    peaks_filtered['score'] = 1
+    peaks['score'] = 1
 
     # Set prefix for output files
     if args.prefix is None:
@@ -92,7 +86,8 @@ def main():
 
     # Write bedGraph
     _logger.info('Writing peaks to bedGraph file')
-    df_to_bedGraph(peaks_filtered, prefix + '.bedGraph')
+    # Note: peaks will be subset to chromosomes in sizes file.
+    df_to_bedGraph(peaks_filtered, prefix + '.bedGraph', sizes)
 
     # Write bigWig and delete bedGraph
     _logger.info('Writing peaks to bigWig file {}'.format(prefix + '.bw'))
