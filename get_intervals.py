@@ -10,30 +10,27 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
-r"""Creates overlapping or non-overlapping intervals.
-
-    Tiles across the whole genome or given chromosomes.
+r"""Creates non-overlapping intervals tiling across the whole genome or given chromosomes.
 
 Workflow:
     1. Reads chromosome names and sizes for the genome
-    2. Produces intervals tiling across the genome
-    3. Optionally splits intervals into train, val, holdout
-    4. Optionally down-samples intervals without peaks in the training set
+    2. Produces intervals tiling across the genome or given chromosomes
+    3. Optionally splits intervals into train, val, holdout chromosomes
+    4. Optionally down-samples intervals without peaks in a given dataset
 
 Output:
-    BED file containg whole-genome intervals, OR
+    BED file containg intervals spanning all provided chromosomes, OR
     BED files containing training, validation and holdout intervals.
-    Validation and holdout intervals are set to non-overlapping.
 
 Examples:
-    Whole-genome intervals:
-        python get_intervals.py reference/hg19.auto.sizes 4000 ./ --wg
-    Train/val/holdout intervals
-        python get_intervals.py reference/hg19.auto.sizes 4000 ./ --val chr8 \
+    Whole-genome intervals of size 50 kb:
+        python get_intervals.py example/reference/hg19.chrom.sizes 50000 ./ --wg
+    Train/val/holdout intervals of size 50 kb
+        python get_intervals.py example/reference/hg19.auto.sizes 50000 ./ --val chr20 \
         --holdout chr10
-    Train/val/holdout intervals
+    Train/val/holdout intervals of size 50 kb
     (upsampling peaks to 1/2 of the final training set)
-        python get_intervals.py reference/hg19.auto.sizes 4000 ./ --val chr8 \
+        python get_intervals.py example/reference/hg19.auto.sizes 50000 ./ --val chr20 \
         --holdout chr10 \
         --peakfile HSC-1.merge.filtered.depth_1000000_peaks.bw \
         --nonpeak 1
@@ -46,6 +43,7 @@ import argparse
 import logging
 
 from claragenomics.io.bigwigio import check_bigwig_intervals_peak
+from claragenomics.io.bedio import read_sizes
 
 import pandas as pd
 
@@ -67,7 +65,7 @@ def get_tiling_intervals(sizes, intervalsize, shift=None):
     Tile from start to end of given chromosomes, shifting by given length.
 
     Args:
-        sizes: contains columns 'chrom' and 'size',
+        sizes: Pandas df containing columns 'chrom' and 'length',
             with name and length of required chromosomes
         intervalsize: length of intervals
         shift: distance between starts of successive intervals.
@@ -107,7 +105,7 @@ def parse_args():
 
     """
     parser = argparse.ArgumentParser(description='DenoiseNet interval script')
-    parser.add_argument('sizes_file', type=str,
+    parser.add_argument('sizes', type=str,
                         help='Path to chromosome sizes file')
     parser.add_argument('intervalsize', type=int, help='Interval size')
     parser.add_argument('prefix', type=str, help='Output file prefix')
@@ -119,11 +117,12 @@ def parse_args():
                         help='Produce one set of intervals for whole genome')
     parser.add_argument('--val', type=str, help='Chromosome for validation')
     parser.add_argument('--holdout', type=str, help='Chromosome to hold out')
-    parser.add_argument('--peakfile', type=str,
-                        help='Path to peak bigWig file')
     parser.add_argument('--nonpeak', type=int,
                         help='Ratio between number of non-peak\
                         intervals and peak intervals', default=1)
+    parser.add_argument('--peakfile', type=str,
+                        help='Path to bigWig file containing peaks. \
+                        Use when setting --nonpeak. Use peak2bw.py to create this bigWig file.')
     args = parser.parse_args()
     return args
 
@@ -133,14 +132,13 @@ def main():
     args = parse_args()
 
     # Read chromosome sizes
-    sizes = pd.read_csv(args.sizes_file, sep='\t', header=None)
-    sizes.columns = ['chrom', 'size']
+    sizes = read_sizes(args.sizes)
 
     # Generate intervals
     if args.wg:
 
-        # Generate whole-genome intervals
-        _logger.info("Generating whole-genome intervals")
+        # Generate intervals tiling across all chromosomes in the sizes file
+        _logger.info("Generating intervals tiling across all chromosomes in sizes file: " + args.sizes)
         intervals = get_tiling_intervals(sizes, args.intervalsize, args.shift)
 
         # Write to file
