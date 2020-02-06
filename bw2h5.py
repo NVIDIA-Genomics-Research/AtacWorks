@@ -17,21 +17,26 @@ Workflow:
     2. Takes as input a bigWig file containing noisy ATAC-Seq data
     3. Optionally, selects intervals with nonzero coverage in the noisy data
     4. Splits intervals into batches of given size
-    5. Writes each batch to an hdf5 file
-    6. Optionally, includes clean data and clean peaks
+    5. Reads noisy ATAC-seq data in these intervals from the bigWig file
+    6. Optionally, includes other layers of input in addition to the noisy ATAC-seq data
+    7. Writes each batch to an hdf5 file
+    8. Optionally, includes clean data (regression labels )and clean peaks (classification labels)
 
 Output:
-    h5 file containing data for training or testing DL model
+    .h5 file containing data for training or testing a DL model
 
 Examples:
     Training:
         python bw2h5.py --noisybw noisy.bw --intervals training_intervals.bed
-            --batch_size 120 --prefix training_data
+            --batch_size 2000 --prefix training_data
             --cleanbw clean.bw --cleanpeakbw clean.narrowPeak.bw --nonzero
-    Validation/Testing:
+    Validation:
         python bw2h5.py --noisybw noisy.bw --intervals validation_intervals.bed
-            --batch_size 120 --prefix validation_data
+            --batch_size 2000 --prefix validation_data
             --cleanbw clean.bw --cleanpeakbw clean.narrowPeak.bw
+    Inference:
+        python bw2h5.py --noisybw noisy.bw --intervals test_intervals.bed
+        --batch_size 2000 --prefix test_data --nolabel
 
 """
 # Import requirements
@@ -69,7 +74,7 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='Data processing for genome-wide denoising models.')
     parser.add_argument('--noisybw', type=str,
-                        help='Path to noisy bigwig file', required=True)
+                        help='Path to bigwig file containing noisy (low coverage/low quality) ATAC-seq signal', required=True)
     parser.add_argument('--layersbw', type=str,
                         help='Paths to bigWig files containing \
                             additional layers. If single file,  \
@@ -77,22 +82,24 @@ def parse_args():
                             If there are multiple files, use format: \
                             "[name1:file1, name2:file2,...]"')
     parser.add_argument('--intervals', type=str,
-                        help='Path to interval file', required=True)
+                        help='Path to BED file containing genomic intervals. \
+                        ATAC-seq data within these intervals will be read from the bigWig files. \
+                        See get_intervals.py for help generating such a BED file.', required=True)
     parser.add_argument('--batch_size', type=int,
-                        help='batch size', required=True)
+                        help='batch size; number of intervals to read from bigWig files at a time.', default=1000)
     parser.add_argument('--pad', type=int, help='padding around interval')
     parser.add_argument('--prefix', type=str,
-                        help='output file prefix', required=True)
+                        help='output file prefix. The output file will be saved with the name prefix.h5', required=True)
     parser.add_argument('--nolabel', action='store_true',
-                        help='only saving noisy data')
+                        help='only saving noisy ATAC-seq data')
     parser.add_argument('--cleanbw', type=str,
-                        help='Path to clean bigwig file.\
+                        help='Path to bigwig file containing clean (high-coverage/high-quality) ATAC-seq signal.\
                             Not used with --nolabel.')
     parser.add_argument('--cleanpeakbw', type=str,
-                        help='Path to clean peak bigwig file.\
-                            Not used with --nolabel.')
+                        help='Path to bigwig file containing peak calls from clean (high-coverage/high-quality) ATAC-seq signal.\
+                        Use peak2bw.py to generate this file. Not used with --nolabel.')
     parser.add_argument('--nonzero', action='store_true',
-                        help='subset to intervals with nonzero coverage')
+                        help='Only save intervals with nonzero coverage. Recommended when encoding training data.')
     parser.add_argument('--debug', action='store_true',
                         help='Enable debug prints')
     args = parser.parse_args()
