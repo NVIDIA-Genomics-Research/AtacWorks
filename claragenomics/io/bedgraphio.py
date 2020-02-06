@@ -98,12 +98,18 @@ def df_to_bedGraph(df, outfile, sizes):
         df : dataframe to be written.
         outfile : file name or object.
         sizes: dataframe containing chromosome sizes.
-        Subset output to these chromosomes.
 
     """
     if sizes is not None:
+        # Write only entries for the given chromosomes.
         num_drop = sum(~df['chrom'].isin(sizes['chrom']))
         print("Discarding " + str(num_drop) + " entries outside sizes file.")
         df = df[df['chrom'].isin(sizes['chrom'])]
+        # Check that no entries exceed chromosome lengths.
+        df_sizes = df.merge(sizes, on='chrom')
+        excess_entries = df_sizes[
+            df_sizes['end'] > df_sizes['length']]
+        assert len(excess_entries) == 0, \
+            "Entries exceed chromosome sizes ({})".format(excess_entries)
     assert len(df) > 0, "0 entries to write to bedGraph"
     df.to_csv(outfile, sep='\t', header=False, index=False)
