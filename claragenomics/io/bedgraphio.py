@@ -91,7 +91,7 @@ def intervals_to_bg(intervals_df):
     return bg
 
 
-def df_to_bedGraph(df, outfile, sizes):
+def df_to_bedGraph(df, outfile, sizes=None):
     """Write a dataframe in bedGraph format to a bedGraph file.
 
     Args:
