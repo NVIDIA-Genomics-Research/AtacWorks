@@ -11,15 +11,18 @@
 """Read peak bigWig file and produce BED file with scored peaks and summits.
 
 Workflow:
-    1. Read a bigWig file (produced by postprocess.py) containing peak labels
+    1. Read a bigWig file (produced by main.py) containing peak labels
     at each position
     2. Collapses peaks to BED format using bigWigToBedGraph
     3. For each peak, calculates the summit location, max score and
     average score
+
 Output:
     BED file containing scored peaks and summits
+
 Example:
     python peaksummary.py --peakbw peaks.bw --trackbw tracks.bw --prefix peaks
+
 """
 
 # Import requirements
@@ -28,6 +31,7 @@ import logging
 import subprocess
 
 from claragenomics.io.bigwigio import extract_bigwig_intervals
+from claragenomics.io.bedio import read_intervals
 
 import numpy as np
 
@@ -56,11 +60,16 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='Data processing for genome-wide denoising models.')
     parser.add_argument('--peakbw', type=str,
-                        help='Path to bigwig file with peak labels')
+                        help='Path to bigwig file with predicted peak labels,
+                        required=True')
     parser.add_argument('--trackbw', type=str,
-                        help='Path to bigwig file with coverage track')
-    parser.add_argument('--prefix', type=str, help='output file prefix')
-    parser.add_argument('--minlen', type=int, help='minimum peak length')
+                        help='Path to bigwig file with predicted coverage track',
+                        required=True')
+    parser.add_argument('--prefix', type=str, help='output file prefix. \
+                        Output file will be saved as prefix.bed',
+                        required=True')
+    parser.add_argument('--minlen', type=int, help='minimum peak length',
+                       default=20)
     args = parser.parse_args()
     return args
 
@@ -73,15 +82,14 @@ subprocess.call(['bigWigToBedGraph', args.peakbw, args.prefix + '.bedGraph'])
 
 # Read collapsed peaks
 _logger.info('Reading peaks')
-peaks = pd.read_csv(args.prefix + '.bedGraph', header=None,
-                    sep='\t', usecols=(0, 1, 2))
+peaks = read_intervals(args.prefix + '.bedGraph')
 peaks.columns = ['#chrom', 'start', 'end']
 
 # Add length of peaks
 _logger.info('Calculating peak statistics')
 peaks['len'] = peaks['end'] - peaks['start']
 
-# Extract scores in peaks
+# Extract scores in peaks                       
 peakscores = extract_bigwig_intervals(peaks, args.trackbw, stack=False)
 
 # Add mean score in peak
