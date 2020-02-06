@@ -35,8 +35,6 @@ from claragenomics.io.bedio import read_intervals
 
 import numpy as np
 
-import pandas as pd
-
 # Set up logging
 log_formatter = logging.Formatter(
     '%(levelname)s:%(asctime)s:%(name)s] %(message)s')
@@ -60,16 +58,17 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='Data processing for genome-wide denoising models.')
     parser.add_argument('--peakbw', type=str,
-                        help='Path to bigwig file with predicted peak labels,
-                        required=True')
+                        help='Path to bigwig file with predicted peak labels',
+                        required=True)
     parser.add_argument('--trackbw', type=str,
-                        help='Path to bigwig file with predicted coverage track',
-                        required=True')
-    parser.add_argument('--prefix', type=str, help='output file prefix. \
+                        help='Path to bigwig file with predicted \
+                        coverage track', required=True)
+    parser.add_argument('--prefix', type=str,
+                        help='output file prefix. \
                         Output file will be saved as prefix.bed',
-                        required=True')
+                        required=True)
     parser.add_argument('--minlen', type=int, help='minimum peak length',
-                       default=20)
+                        default=20)
     args = parser.parse_args()
     return args
 
@@ -89,7 +88,7 @@ peaks.columns = ['#chrom', 'start', 'end']
 _logger.info('Calculating peak statistics')
 peaks['len'] = peaks['end'] - peaks['start']
 
-# Extract scores in peaks                       
+# Extract scores in peaks
 peakscores = extract_bigwig_intervals(peaks, args.trackbw, stack=False)
 
 # Add mean score in peak

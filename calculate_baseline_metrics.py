@@ -123,7 +123,7 @@ def parse_args():
         description='AtacWorks script to calculate metrics on batched data.')
     parser.add_argument('--label_file', type=str,
                         help='Path to hdf5/bigWig file containing labels',
-                       required=True)
+                        required=True)
     parser.add_argument('--test_file', type=str,
                         help='Path to hdf5/bigWig file containing labels. Assumed \
                                 to be present in label_file by default.')
@@ -132,21 +132,22 @@ def parse_args():
                         help='determines the metrics to be calculated')
     parser.add_argument('--ratio', type=float, help='subsampling ratio')
     parser.add_argument('--sep_peaks', action='store_true',
-                        help='calculate separate regression metrics for\
+                        help='calculate separate regression metrics for \
                                 peaks and non-peaks.')
     parser.add_argument('--peak_file', type=str,
                         help='Path to hdf5/bigWig file with peak labels. Assumed \
                                 to be present in label_file by default. \
-                                Use only with --sep_peaks.)
+                                Use only with --sep_peaks.')
     parser.add_argument('--thresholds', type=str,
-                        help='threshold or list of thresholds for\
-                                classification metrics. If supplying a list, use the form: \
-                                "[threshold1, threshold2,...]"')
+                        help='threshold or list of thresholds for \
+                                classification metrics. If supplying a list, \
+                                use the form: "[threshold1, threshold2,...]"')
     parser.add_argument('--auc', action='store_true',
                         help='calculate AUROC and AUPRC metrics')
     parser.add_argument('--intervals', type=str,
                         help='Path to BED file containing genomic intervals. \
-                        Data for these intervals will be read from all bigWig files supplied.')
+                        Data for these intervals will be read from all \
+                        bigWig files supplied.')
     parser.add_argument('--sizes', type=str,
                         help='Path to chromosome sizes file. \
                         If supplied, data for all chromosomes in \
@@ -155,7 +156,8 @@ def parse_args():
     parser.add_argument('--pad', type=int,
                         help='Number of additional bases added as \
                         padding to the intervals in the h5 file \
-                        containing labels. Not required if --label_file is a bigWig file.')
+                        containing labels. Not required if \
+                        --label_file is a bigWig file.')
     args = parser.parse_args()
     return args
 

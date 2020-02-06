@@ -126,15 +126,16 @@ def parse_args(root_dir):
 # =============================================================================
     # Dataset args
     parser.add('--pad', required=True, type=type_or_none_fn(int),
-               help="Number of additional bases to add as padding on either side of each interval")
+               help="Number of additional bases to add as padding \
+               on either side of each interval")
     parser.add('--transform', required=True, type=str, choices=['log', 'None'],
                help='transformation to apply to\
                        coverage tracks before training')
     parser.add('--layers', type=str,
-               help='Names of additional layers to read from h5 file as input, \
-               in the form: "[name1, name2]". \
-               Layers will be concatenated to the noisy ATAC-seq signal in the \
-               order supplied.')
+               help='Names of additional layers to read from h5 file \
+               as input, in the form: "[name1, name2]". \
+               Layers will be concatenated to the noisy ATAC-seq signal \
+               in the order supplied.')
 # =============================================================================
     # Learning args
     parser.add('--clip_grad', required=True, type=float,
@@ -157,7 +158,8 @@ def parse_args(root_dir):
     parser.add('--eval_freq', required=True, type=int,
                help="evaluation frequency")
     parser.add('--threshold', required=True, type=float,
-               help="probability threshold above which to call peaks. Used for classification metrics")
+               help="probability threshold above which to call peaks. \
+               Used for classification metrics")
     parser.add_argument('--best_metric_choice', required=True,
                         type=str,
                         choices=['BCE', 'MSE', 'Recall',
@@ -174,14 +176,18 @@ def parse_args(root_dir):
                        intervals for inference')
     parser.add('--sizes_file', required=True, type=str,
                help='chromosome sizes file for the genome. \
-               Chromosome sizes files for hg19 and hg38 are given in the example/reference folder.')
+               Chromosome sizes files for hg19 and hg38 are \
+               given in the example/reference folder.')
     parser.add('--infer_threshold', required=True,
                type=type_or_none_fn(float),
-               help='threshold above which to call peaks from the predicted probability values.')
+               help='threshold above which to call peaks from the \
+               predicted probability values.')
     parser.add('--reg_rounding', required=True, type=int,
-               help='number of decimal digits to round values for regression outputs')
+               help='number of decimal digits to round values \
+               for regression outputs')
     parser.add('--cla_rounding', required=True, type=int,
-               help='number of decimal digits to round values for classification outputs')
+               help='number of decimal digits to round values \
+               for classification outputs')
     parser.add('--batches_per_worker', required=True, type=int,
                help='number of batches to run per worker\
                        during multiprocessing')
@@ -239,7 +245,7 @@ def parse_args(root_dir):
                      "--eval requires --val_files")
     check_dependence(args.eval, args.weights_path, parser,
                      "--eval requires --weights_path")
-        
+
     check_dependence(args.deletebg, args.gen_bigwig, parser,
                      "--deletebg requires --gen_bigwig")
 

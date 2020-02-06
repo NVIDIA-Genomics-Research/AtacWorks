@@ -10,7 +10,7 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
-r"""Creates non-overlapping intervals tiling across the whole genome or given chromosomes.
+r"""Creates intervals tiling across the whole genome or given chromosomes.
 
 Workflow:
     1. Reads chromosome names and sizes for the genome
@@ -24,14 +24,15 @@ Output:
 
 Examples:
     Whole-genome intervals of size 50 kb:
-        python get_intervals.py example/reference/hg19.chrom.sizes 50000 ./ --wg
+        python get_intervals.py example/reference/hg19.chrom.sizes \
+        50000 ./ --wg
     Train/val/holdout intervals of size 50 kb
-        python get_intervals.py example/reference/hg19.auto.sizes 50000 ./ --val chr20 \
-        --holdout chr10
+        python get_intervals.py example/reference/hg19.auto.sizes \
+        50000 ./ --val chr20 --holdout chr10
     Train/val/holdout intervals of size 50 kb
     (upsampling peaks to 1/2 of the final training set)
-        python get_intervals.py example/reference/hg19.auto.sizes 50000 ./ --val chr20 \
-        --holdout chr10 \
+        python get_intervals.py example/reference/hg19.auto.sizes \
+        50000 ./ --val chr20 --holdout chr10 \
         --peakfile HSC-1.merge.filtered.depth_1000000_peaks.bw \
         --nonpeak 1
 
@@ -122,7 +123,8 @@ def parse_args():
                         intervals and peak intervals', default=1)
     parser.add_argument('--peakfile', type=str,
                         help='Path to bigWig file containing peaks. \
-                        Use when setting --nonpeak. Use peak2bw.py to create this bigWig file.')
+                        Use when setting --nonpeak. Use peak2bw.py \
+                        to create this bigWig file.')
     args = parser.parse_args()
     return args
 
@@ -138,7 +140,8 @@ def main():
     if args.wg:
 
         # Generate intervals tiling across all chromosomes in the sizes file
-        _logger.info("Generating intervals tiling across all chromosomes in sizes file: " + args.sizes)
+        _logger.info("Generating intervals tiling across all chromosomes \
+            in sizes file: " + args.sizes)
         intervals = get_tiling_intervals(sizes, args.intervalsize, args.shift)
 
         # Write to file
