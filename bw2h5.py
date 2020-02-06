@@ -30,16 +30,17 @@ Output:
 Examples:
     Training:
         python bw2h5.py --noisybw noisy.bw --intervals training_intervals.bed \
-            --batch_size 2000 --prefix training_data \
+            --prefix training_data \
             --cleanbw clean.bw --cleanpeakbw clean.narrowPeak.bw --nonzero
     Validation:
         python bw2h5.py --noisybw noisy.bw \
             --intervals validation_intervals.bed \
-            --batch_size 2000 --prefix validation_data \
+            --prefix validation_data \
             --cleanbw clean.bw --cleanpeakbw clean.narrowPeak.bw
     Inference:
         python bw2h5.py --noisybw noisy.bw --intervals test_intervals.bed \
-        --batch_size 2000 --prefix test_data --nolabel
+        --prefix test_data \
+        --nolabel
 
 """
 # Import requirements
