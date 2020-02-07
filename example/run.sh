@@ -50,21 +50,26 @@ echo "Step 1: Convert peak files into bigWig format..."
 echo ""
 # Clean peaks
 python $root_dir/peak2bw.py \
-    $data_dir/HSC.80M.chr123.10mb.peaks.bed \
-    $ref_dir/hg19.auto.sizes \
-    --prefix=$out_dir/HSC.80M.chr123.10mb.peaks.bed
+    --input $data_dir/HSC.80M.chr123.10mb.peaks.bed \
+    --sizes $ref_dir/hg19.auto.sizes \
+    --out_home $out_dir \ 
+    --prefix HSC.80M.chr123.10mb.peaks.bed
 # Noisy peaks
 python $root_dir/peak2bw.py \
-    $data_dir/HSC.5M.chr123.10mb.peaks.bed \
-    $ref_dir/hg19.auto.sizes \
-    --prefix=$out_dir/HSC.5M.chr123.10mb.peaks.bed
+    --input $data_dir/HSC.5M.chr123.10mb.peaks.bed \
+    --sizes $ref_dir/hg19.auto.sizes \
+    --out_dir $out_dir \
+    --prefix HSC.5M.chr123.10mb.peaks.bed
 
 echo ""
 echo "Step 2: Split the given regions of the genome into train, val, and holdout/test intervals..."
 echo ""
 # Each set of intervals will cover the first 10 Mb of a different chromosome
 python $root_dir/get_intervals.py \
-    $data_dir/example.sizes 24000 $out_dir/example \
+    --sizes $data_dir/example.sizes \ 
+    --intervalsize 24000 \
+    --out_home $out_dir \
+    --prefix example \
     --val chr2 --holdout chr3
 
 echo ""
@@ -74,8 +79,8 @@ echo ""
 python $root_dir/bw2h5.py \
     --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
     --intervals $out_dir/example.training_intervals.bed \
-    --batch_size 4 \
-    --prefix $out_dir/train_data \
+    --out_home $out_dir \
+    --prefix train_data \
     --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
     --cleanpeakbw $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw \
     --nonzero
@@ -83,16 +88,16 @@ python $root_dir/bw2h5.py \
 python $root_dir/bw2h5.py \
     --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
     --intervals $out_dir/example.val_intervals.bed \
-    --batch_size 64 \
-    --prefix $out_dir/val_data \
+    --out_home $out_dir \
+    --prefix val_data \
     --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
     --cleanpeakbw $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw
 # Test data
 python $root_dir/bw2h5.py \
     --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
     --intervals $out_dir/example.holdout_intervals.bed \
-    --batch_size 64 \
-    --prefix $out_dir/test_data \
+    --out_home $out_dir \
+    --prefix test_data \
     --nolabel
 
 echo ""
@@ -101,7 +106,8 @@ echo ""
 python $root_dir/main.py --train \
     --train_files $out_dir/train_data.h5 \
     --val_files $out_dir/val_data.h5 \
-    --out_home $out_dir --label HSC.5M.model \
+    --out_home $out_dir \
+    --label HSC.5M.model \
     --checkpoint_fname checkpoint.pth.tar \
     --distributed
 
@@ -169,8 +175,8 @@ echo ""
 python $root_dir/peaksummary.py \
     --peakbw $out_dir/inference_latest/test_data_HSC.5M.output.peaks.bw \
     --trackbw $out_dir/inference_latest/test_data_HSC.5M.output.track.bw \
-    --prefix $out_dir/inference_latest/test_data_HSC.5M.output.summary \
-    --minlen 50
+    --out_home $out_dir/inference_latest \
+    --prefix test_data_HSC.5M.output.summary
 
 #######
 
@@ -232,8 +238,8 @@ echo ""
 python $root_dir/bw2h5.py \
     --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
     --intervals $out_dir/example.training_intervals.bed \
-    --batch_size 4 \
-    --prefix $out_dir/train_data_layers \
+    --out_home $out_dir \
+    --prefix train_data_layers \
     --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
     --cleanpeakbw $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw \
     --layersbw ctcf_for:$data_dir/ctcf_motifs_for.sorted.bg.bw \
@@ -242,8 +248,8 @@ python $root_dir/bw2h5.py \
 python $root_dir/bw2h5.py \
     --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
     --intervals $out_dir/example.val_intervals.bed \
-    --batch_size 64 \
-    --prefix $out_dir/val_data_layers \
+    --out_home $out_dir \
+    --prefix val_data_layers \
     --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
     --cleanpeakbw $out_dir/HSC.80M.chr123.10mb.peaks.bed.bw \
     --layersbw ctcf_for:$data_dir/ctcf_motifs_for.sorted.bg.bw
@@ -252,8 +258,8 @@ python $root_dir/bw2h5.py \
     --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
     --layersbw ctcf_for:$data_dir/ctcf_motifs_for.sorted.bg.bw \
     --intervals $out_dir/example.holdout_intervals.bed \
-    --batch_size 64 \
-    --prefix $out_dir/test_data_layers \
+    --out_home $out_dir \
+    --prefix test_data_layers \
     --nolabel
 
 #Train and validate model..."
