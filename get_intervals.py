@@ -25,14 +25,14 @@ Output:
 Examples:
     Whole-genome intervals of size 50 kb:
         python get_intervals.py --sizes example/reference/hg19.chrom.sizes \
-        --intervalsize 50000 --out_dir ./ --wg
+        --intervalsize 50000 --out_home ./ --wg
     Train/val/holdout intervals of size 50 kb
         python get_intervals.py --sizes example/reference/hg19.auto.sizes \
-        --intervalsize 50000 --out_dir ./ --val chr20 --holdout chr10
+        --intervalsize 50000 --out_home ./ --val chr20 --holdout chr10
     Train/val/holdout intervals of size 50 kb
     (upsampling peaks to 1/2 of the final training set)
         python get_intervals.py --sizes example/reference/hg19.auto.sizes \
-        --intervalsize 50000 --out_dir ./ --val chr20 --holdout chr10 \
+        --intervalsize 50000 --out_home ./ --val chr20 --holdout chr10 \
         --peakfile HSC-1.merge.filtered.depth_1000000_peaks.bw \
         --nonpeak 1
 
@@ -111,10 +111,10 @@ def parse_args():
                         required=True)
     parser.add_argument('--intervalsize', type=int, help='Interval size',
                         required=True)
-    parser.add_argument('--out_dir', type=str, help='Directory to save output file',
+    parser.add_argument('--out_home', type=str, help='Directory to save output file',
                         required=True)
-    parser.add_argument('prefix', type=str, help='Prefix to append to output file \
-                        names')
+    parser.add_argument('--prefix', type=str, help='Optional prefix to append to \
+                        output file names')
     parser.add_argument('--shift', type=int,
         help='Shift between training intervals.\
             If not given, intervals are non-overlapping')
@@ -150,9 +150,9 @@ def main():
 
         # Write to file
         if args.prefix is None:
-            out_file_path = args.out_dir + '/genome_intervals.bed'
+            out_file_path = args.out_home + '/genome_intervals.bed'
         else:
-            out_file_path = args.out_dir + '/' + args.prefix + '.genome_intervals.bed'
+            out_file_path = args.out_home + '/' + args.prefix + '.genome_intervals.bed'
         intervals.to_csv(out_file_path, sep='\t', index=False, header=False)
 
     else:
@@ -182,9 +182,9 @@ def main():
 
         # Write to file
         if args.prefix is None:
-            out_file_path = args.out_dir + '/training_intervals.bed'
+            out_file_path = args.out_home + '/training_intervals.bed'
         else:
-            out_file_path = args.out_dir + '/' + args.prefix + '.training_intervals.bed'
+            out_file_path = args.out_home + '/' + args.prefix + '.training_intervals.bed'
         train.to_csv(out_file_path, sep='\t', index=False, header=False)
 
         # Generate validation intervals - do not overlap
@@ -195,9 +195,9 @@ def main():
 
         # Write to file
         if args.prefix is None:
-            out_file_path = args.out_dir + '/val_intervals.bed'
+            out_file_path = args.out_home + '/val_intervals.bed'
         else:
-            out_file_path = args.out_dir + '/' + args.prefix + '.val_intervals.bed'
+            out_file_path = args.out_home + '/' + args.prefix + '.val_intervals.bed'
         val.to_csv(out_file_path, sep='\t', index=False, header=False)
 
         # Generate holdout intervals - do not overlap
@@ -209,9 +209,9 @@ def main():
 
             # Write to file
             if args.prefix is None:
-                out_file_path = args.out_dir + '/holdout_intervals.bed'
+                out_file_path = args.out_home + '/holdout_intervals.bed'
             else:
-                out_file_path = args.out_dir + '/' + args.prefix + '.holdout_intervals.bed'
+                out_file_path = args.out_home + '/' + args.prefix + '.holdout_intervals.bed'
             holdout.to_csv(out_file_path, sep='\t', index=False, header=False)
 
     _logger.info('Done!')
