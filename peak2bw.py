@@ -26,12 +26,13 @@ Output:
 Example:
     python peak2bw.py --input peaks.narrowPeak \
     --sizes example/reference/hg19.chrom.sizes \
-    --skip 1
+    --out_home ./ --skip 1
 
 """
 
 import argparse
 import logging
+import os
 
 from claragenomics.io.bedgraphio import df_to_bedGraph
 from claragenomics.io.bigwigio import bedgraph_to_bigwig
@@ -67,7 +68,7 @@ def parse_args():
                         Only peaks in these chromosomes will \
                         be encoded in the output bigWig file.',
                         required=True)
-    parser.add_argument('--out_dir', type=str, help='Directory \
+    parser.add_argument('--out_home', type=str, help='Directory \
                         to write output file.', required=True)
     parser.add_argument('--prefix', type=str, help='Output file \
                         prefix. Output file name will be \
@@ -87,6 +88,13 @@ def main():
     """Convert peak files to bigwig."""
     args = parse_args()
 
+    # Set name for output file
+    if args.prefix is None:
+        # Output file gets name from input
+        prefix = os.path.basename(args.input).split('.')[0]
+    out_bg_name = args.out_dir + '/' + prefix + '.bedGraph'
+    out_bw_name = args.out_dir + '/' + prefix + '.bw'
+
     # Read input files
     _logger.info('Reading input files')
     peaks = pd.read_csv(args.input, sep='\t', header=None,
@@ -104,20 +112,13 @@ def main():
     _logger.info('Adding score')
     peaks_filtered[3] = 1
 
-    # Set name for output file
-    if args.prefix is None:
-        # Output file gets name from input
-        prefix = args.out_dir + '/' + args.input
-    else:
-        prefix = args.out_dir + '/' + args.prefix
-
     # Write bedGraph
     _logger.info('Writing peaks to bedGraph file')
-    df_to_bedGraph(peaks_filtered, prefix + '.bedGraph')
+    df_to_bedGraph(peaks_filtered, out_bg_name)
 
     # Write bigWig and delete bedGraph
-    _logger.info('Writing peaks to bigWig file {}'.format(prefix + '.bw'))
-    bedgraph_to_bigwig(prefix + '.bedGraph', args.sizes, deletebg=True)
+    _logger.info('Writing peaks to bigWig file {}'.format(out_bw_name))
+    bedgraph_to_bigwig(out_bg_name, args.sizes, deletebg=True)
     _logger.info('Done!')
 
 
