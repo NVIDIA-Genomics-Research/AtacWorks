@@ -92,8 +92,8 @@ def main():
     if args.prefix is None:
         # Output file gets name from input
         prefix = os.path.basename(args.input).split('.')[0]
-    out_bg_name = args.out_dir + '/' + prefix + '.bedGraph'
-    out_bw_name = args.out_dir + '/' + prefix + '.bw'
+    out_bg_name = args.out_home + '/' + prefix + '.bedGraph'
+    out_bw_name = args.out_home + '/' + prefix + '.bw'
 
     # Read input files
     _logger.info('Reading input files')
