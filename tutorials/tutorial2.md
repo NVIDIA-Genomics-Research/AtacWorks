@@ -68,7 +68,7 @@ This creates a file `NK.50_cells.h5`, which contains the noisy ATAC-seq signal t
 ```
 python $atacworks/main.py --infer \
     --infer_files NK.50_cells.h5 \
-    --sizes $atacworks/example/reference/hg19.auto.sizes \
+    --sizes_file $atacworks/example/reference/hg19.auto.sizes \
     --config configs/config_params.yaml \
     --config_mparams configs/model_structure.yaml \
     --infer_threshold 0.5
