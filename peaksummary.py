@@ -21,7 +21,7 @@ Output:
     BED file containing scored peaks and summits
 
 Example:
-    python peaksummary.py --peakbw peaks.bw --trackbw tracks.bw --prefix peaks
+    python peaksummary.py --peakbw peaks.bw --trackbw tracks.bw --out_home ./ 
 
 """
 
@@ -45,8 +45,6 @@ _handler.setFormatter(log_formatter)
 _logger.setLevel(logging.INFO)
 _logger.addHandler(_handler)
 
-# TODO: add optional command to filter by length of peak?
-
 
 def parse_args():
     """Parse command line arguments.
@@ -63,7 +61,7 @@ def parse_args():
     parser.add_argument('--trackbw', type=str,
                         help='Path to bigwig file with predicted \
                         coverage track', required=True)
-    parser.add_argument('--out_dir', type=str,
+    parser.add_argument('--out_home', type=str,
                         help='directory to save output file.',
                         required=True)
     parser.add_argument('--prefix', type=str,
@@ -84,8 +82,8 @@ if args.prefix is None:
     prefix = 'summarized_peaks'
 else:
     prefix = args.prefix
-output_bed_path = args.out_dir + '\' + prefix + '.bed'
-output_bg_path = args.out_dir + '\' + prefix + '.bedGraph'
+output_bed_path = args.out_home + '\' + prefix + '.bed'
+output_bg_path = args.out_home + '\' + prefix + '.bedGraph'
 
 # Collapse peaks
 _logger.info('Writing peaks to bedGraph file {}'.format(output_bg_path))
@@ -121,6 +119,7 @@ if args.minlen is not None:
     peaks = peaks[peaks['len'] >= args.minlen]
     _logger.info("reduced number of peaks from {} to {}.".format(
         num_before_cut, len(peaks)))
+# TODO: we may also want to merge small peaks together
 
 # Write to BED
 _logger.info('Writing peaks to BED file {}'.format(out_bed_path))
