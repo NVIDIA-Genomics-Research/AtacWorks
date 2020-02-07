@@ -96,11 +96,11 @@ def parse_args():
                         required=True)
     parser.add_argument('--batch_size', type=int,
                         help='batch size; number of intervals to read from bigWig \
-                        files at a time. Unrelated to training/inference batch \
-                        size.', default=1000)
+                        files at a time. Unrelated to training/inference \
+                        batch size.', default=1000)
     parser.add_argument('--pad', type=int, help='Number of additional bases to \
-                        add as padding on either side of interval. Use the same \
-                        value for training, validation and test files.')
+                        add as padding on either side of interval. Use the \
+                        same value for training, validation and test files.')
     parser.add_argument('--out_home', type=str,
                         help='directory to save output file.', required=True)
     parser.add_argument('--prefix', type=str,

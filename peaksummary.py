@@ -21,7 +21,7 @@ Output:
     BED file containing scored peaks and summits
 
 Example:
-    python peaksummary.py --peakbw peaks.bw --trackbw tracks.bw --out_home ./ 
+    python peaksummary.py --peakbw peaks.bw --trackbw tracks.bw --out_home ./
 
 """
 
@@ -31,7 +31,7 @@ import logging
 import subprocess
 
 from claragenomics.io.bigwigio import extract_bigwig_intervals
-from claragenomics.io.bedio import read_intervals
+from claragenomics.io.bedio import read_intervals, df_to_bed
 
 import numpy as np
 
@@ -82,16 +82,16 @@ if args.prefix is None:
     prefix = 'summarized_peaks'
 else:
     prefix = args.prefix
-output_bed_path = args.out_home + '\' + prefix + '.bed'
-output_bg_path = args.out_home + '\' + prefix + '.bedGraph'
+out_bed_path = args.out_home + '/' + prefix + '.bed'
+out_bg_path = args.out_home + '/' + prefix + '.bedGraph'
 
 # Collapse peaks
-_logger.info('Writing peaks to bedGraph file {}'.format(output_bg_path))
-subprocess.call(['bigWigToBedGraph', args.peakbw, output_bg_path])
+_logger.info('Writing peaks to bedGraph file {}'.format(out_bg_path))
+subprocess.call(['bigWigToBedGraph', args.peakbw, out_bg_path])
 
 # Read collapsed peaks
 _logger.info('Reading peaks')
-peaks = read_intervals(output_bg_path)
+peaks = read_intervals(out_bg_path)
 peaks.columns = ['#chrom', 'start', 'end']
 
 # Add length of peaks
@@ -123,8 +123,8 @@ if args.minlen is not None:
 
 # Write to BED
 _logger.info('Writing peaks to BED file {}'.format(out_bed_path))
-peaks.to_csv(out_bed_path, sep='\t', index=None)
+df_to_bed(peaks, out_bed_path, header=True)
 
 # Delete bedGraph
 _logger.info('Deleting bedGraph file')
-subprocess.call(['rm', output_bg_path])
+subprocess.call(['rm', out_bg_path])

@@ -44,7 +44,7 @@ import argparse
 import logging
 
 from claragenomics.io.bigwigio import check_bigwig_intervals_peak
-from claragenomics.io.bedio import read_sizes
+from claragenomics.io.bedio import read_sizes, df_to_bed
 
 import pandas as pd
 
@@ -111,13 +111,13 @@ def parse_args():
                         required=True)
     parser.add_argument('--intervalsize', type=int, help='Interval size',
                         required=True)
-    parser.add_argument('--out_home', type=str, help='Directory to save output file',
-                        required=True)
+    parser.add_argument('--out_home', type=str, help='Directory to save \
+                        output file', required=True)
     parser.add_argument('--prefix', type=str, help='Optional prefix to append to \
                         output file names')
-    parser.add_argument('--shift', type=int,
-        help='Shift between training intervals.\
-            If not given, intervals are non-overlapping')
+    parser.add_argument('--shift', type=int, help='Shift between training \
+                        intervals. If not given, intervals are \
+                        non-overlapping')
     parser.add_argument('--wg', action='store_true',
                         help='Produce one set of intervals for whole genome')
     parser.add_argument('--val', type=str, help='Chromosome for validation')
@@ -150,10 +150,11 @@ def main():
 
         # Write to file
         if args.prefix is None:
-            out_file_path = args.out_home + '/genome_intervals.bed'
+            out_file_name = 'genome_intervals.bed'
         else:
-            out_file_path = args.out_home + '/' + args.prefix + '.genome_intervals.bed'
-        intervals.to_csv(out_file_path, sep='\t', index=False, header=False)
+            out_file_name = args.prefix + '.genome_intervals.bed'
+        out_file_path = args.out_home + '/' + out_file_name
+        df_to_bed(intervals, out_file_path)
 
     else:
 
@@ -182,10 +183,11 @@ def main():
 
         # Write to file
         if args.prefix is None:
-            out_file_path = args.out_home + '/training_intervals.bed'
+            out_file_name = 'training_intervals.bed'
         else:
-            out_file_path = args.out_home + '/' + args.prefix + '.training_intervals.bed'
-        train.to_csv(out_file_path, sep='\t', index=False, header=False)
+            out_file_name = args.prefix + '.training_intervals.bed'
+        out_file_path = args.out_home + '/' + out_file_name
+        df_to_bed(train, out_file_path)
 
         # Generate validation intervals - do not overlap
         _logger.info("Generating val intervals")
@@ -195,10 +197,11 @@ def main():
 
         # Write to file
         if args.prefix is None:
-            out_file_path = args.out_home + '/val_intervals.bed'
+            out_file_name = 'val_intervals.bed'
         else:
-            out_file_path = args.out_home + '/' + args.prefix + '.val_intervals.bed'
-        val.to_csv(out_file_path, sep='\t', index=False, header=False)
+            out_file_name = args.prefix + '.val_intervals.bed'
+        out_file_path = args.out_home + '/' + out_file_name
+        df_to_bed(val, out_file_path)
 
         # Generate holdout intervals - do not overlap
         if args.holdout is not None:
@@ -209,10 +212,11 @@ def main():
 
             # Write to file
             if args.prefix is None:
-                out_file_path = args.out_home + '/holdout_intervals.bed'
+                out_file_name = 'holdout_intervals.bed'
             else:
-                out_file_path = args.out_home + '/' + args.prefix + '.holdout_intervals.bed'
-            holdout.to_csv(out_file_path, sep='\t', index=False, header=False)
+                out_file_name = args.prefix + '.holdout_intervals.bed'
+            out_file_path = args.out_home + '/' + out_file_name
+            df_to_bed(holdout, out_file_path)
 
     _logger.info('Done!')
 
