@@ -29,7 +29,8 @@ Output:
 
 Examples:
     Training:
-        python bw2h5.py --noisybw noisy.bw --intervals training_intervals.bed \
+        python bw2h5.py --noisybw noisy.bw \
+            --intervals training_intervals.bed \
             --prefix training_data \
             --cleanbw clean.bw --cleanpeakbw clean.narrowPeak.bw --nonzero
     Validation:
@@ -39,8 +40,8 @@ Examples:
             --cleanbw clean.bw --cleanpeakbw clean.narrowPeak.bw
     Inference:
         python bw2h5.py --noisybw noisy.bw --intervals test_intervals.bed \
-        --prefix test_data \
-        --nolabel
+            --prefix test_data \
+            --nolabel
 
 """
 # Import requirements
@@ -160,7 +161,7 @@ batch_ends = batch_starts + args.batch_size
 batch_ends[-1] = len(intervals)
 
 # Get output hdf5 filename
-filename = args.out_dir + '/' + args.prefix + '.h5'
+output_file_path = args.out_dir + '/' + args.prefix + '.h5'
 
 # Write batches to hdf5 file
 _logger.info('Extracting data for each batch and writing to h5 file')
@@ -209,8 +210,8 @@ for i in range(batches_per_epoch):
 
     # Create dataset, or expand and append batch.
     if i == 0:
-        dict_to_h5(batch_data, h5file=filename, create_new=True)
+        dict_to_h5(batch_data, h5file=output_file_path, create_new=True)
     else:
-        dict_to_h5(batch_data, h5file=filename, create_new=False)
+        dict_to_h5(batch_data, h5file=output_file_path, create_new=False)
 
-_logger.info('Done! Saved to %s' % filename)
+_logger.info('Done! Saved to %s' % output_file_path)
