@@ -125,7 +125,9 @@ def parse_args():
                         help='Path to hdf5/bigWig file containing labels',
                         required=True)
     parser.add_argument('--test_file', type=str,
-                        help='Path to hdf5/bigWig file containing labels. If \
+                        help='Path to hdf5/bigWig file containing results to \
+                                evaluate; this could be a coverage track, \
+                                peak probabilities, or peak calls. If \
                                 not supplied, these are assumed to be present \
                                 in --label_file.')
     parser.add_argument('--task', type=str,
