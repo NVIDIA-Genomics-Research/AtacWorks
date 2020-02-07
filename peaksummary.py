@@ -79,13 +79,21 @@ def parse_args():
 
 args = parse_args()
 
+# Output file names
+if args.prefix is None:
+    prefix = 'summarized_peaks'
+else:
+    prefix = args.prefix
+output_bed_path = args.out_dir + '\' + prefix + '.bed'
+output_bg_path = args.out_dir + '\' + prefix + '.bedGraph'
+
 # Collapse peaks
-_logger.info('Writing peaks to bedGraph file {}.bedGraph'.format(args.prefix))
-subprocess.call(['bigWigToBedGraph', args.peakbw, args.prefix + '.bedGraph'])
+_logger.info('Writing peaks to bedGraph file {}'.format(output_bg_path))
+subprocess.call(['bigWigToBedGraph', args.peakbw, output_bg_path])
 
 # Read collapsed peaks
 _logger.info('Reading peaks')
-peaks = read_intervals(args.prefix + '.bedGraph')
+peaks = read_intervals(output_bg_path)
 peaks.columns = ['#chrom', 'start', 'end']
 
 # Add length of peaks
@@ -115,14 +123,9 @@ if args.minlen is not None:
         num_before_cut, len(peaks)))
 
 # Write to BED
-if args.prefix is None:
-    prefix = 'summarized_peaks'
-else:
-    prefix = args.prefix
-out_file_path = args.out_dir + '\' + prefix + '.bed'
-_logger.info('Writing peaks to BED file {}'.format(out_file_path))
-peaks.to_csv(args.prefix + '.bed', sep='\t', index=None)
+_logger.info('Writing peaks to BED file {}'.format(out_bed_path))
+peaks.to_csv(out_bed_path, sep='\t', index=None)
 
 # Delete bedGraph
 _logger.info('Deleting bedGraph file')
-subprocess.call(['rm', args.prefix + '.bedGraph'])
+subprocess.call(['rm', output_bg_path])
