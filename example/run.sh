@@ -52,14 +52,14 @@ echo ""
 python $root_dir/peak2bw.py \
     --input $data_dir/HSC.80M.chr123.10mb.peaks.bed \
     --sizes $ref_dir/hg19.auto.sizes \
-    --out_home $out_dir \ 
-    --prefix HSC.80M.chr123.10mb.peaks.bed
+    --out_home $out_dir \
+    --prefix HSC.80M.chr123.10mb.peaks
 # Noisy peaks
 python $root_dir/peak2bw.py \
     --input $data_dir/HSC.5M.chr123.10mb.peaks.bed \
     --sizes $ref_dir/hg19.auto.sizes \
     --out_dir $out_dir \
-    --prefix HSC.5M.chr123.10mb.peaks.bed
+    --prefix HSC.5M.chr123.10mb.peaks
 
 echo ""
 echo "Step 2: Split the given regions of the genome into train, val, and holdout/test intervals..."
