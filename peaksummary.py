@@ -63,10 +63,14 @@ def parse_args():
     parser.add_argument('--trackbw', type=str,
                         help='Path to bigwig file with predicted \
                         coverage track', required=True)
+    parser.add_argument('--out_dir', type=str,
+                        help='directory to save output file.',
+                        required=True)
     parser.add_argument('--prefix', type=str,
                         help='output file prefix. \
-                        Output file will be saved as prefix.bed',
-                        required=True)
+                        Output file will be saved as prefix.bed. \
+                        If not supplied, the output file will be \
+                        summarized_peaks.bed')
     parser.add_argument('--minlen', type=int, help='minimum peak length',
                         default=20)
     args = parser.parse_args()
@@ -111,7 +115,12 @@ if args.minlen is not None:
         num_before_cut, len(peaks)))
 
 # Write to BED
-_logger.info('Writing peaks to BED file {}.bed'.format(args.prefix))
+if args.prefix is None:
+    prefix = 'summarized_peaks'
+else:
+    prefix = args.prefix
+out_file_path = args.out_dir + '\' + prefix + '.bed'
+_logger.info('Writing peaks to BED file {}'.format(out_file_path))
 peaks.to_csv(args.prefix + '.bed', sep='\t', index=None)
 
 # Delete bedGraph
