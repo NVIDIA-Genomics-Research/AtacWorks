@@ -105,7 +105,7 @@ TBA: end-to-end command
 ```
 This command produces a directory (directory name) containing two files:
 1. (Track file name).bw: A bigWig file containing the denoised ATAC-seq track
-2. (Summarized peaks file name): A BED file containing the peaks called from the denoised ATAC-seq track.
+2. (Summarized peaks file name): A BED file containing the peaks called from the denoised ATAC-seq track. This BED file hs 8 columns. These are, in order: chromosome, peak start position, peak end position, peak length (bp), Mean coverage over peak, Maximum coverage in peak, Position of summit (relative to start), and Position of summit (absolute).
 
 #### Advanced usage: step-by-step denoising + peak calling using a trained AtacWorks model with subcommands
 See [Tutorial 2](tutorials/tutorial2.md) for an advanced workflow detailing the individual steps of data processing, encoding and prediction using a trained model, and how to modify the parameters used in these steps.
