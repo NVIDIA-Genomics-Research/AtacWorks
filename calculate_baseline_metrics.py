@@ -147,13 +147,17 @@ def parse_args():
                         help='calculate AUROC and AUPRC metrics')
     parser.add_argument('--intervals', type=str,
                         help='Path to BED file containing genomic intervals. \
-                        Data for these intervals will be read from all \
-                        bigWig files supplied.')
+                        Use to calculate metrics over specific regions in the \
+                        genome. If provided, data for these intervals will be \
+                        read from all bigWig files supplied.')
     parser.add_argument('--sizes', type=str,
                         help='Path to chromosome sizes file. \
-                        If supplied, data for all chromosomes in \
-                        the sizes file will be read from all bigWig files. \
-                        Only used if --intervals is not supplied.')
+                        Use in order to calculate metrics over \
+                        the full length of one or more chromosomes. \
+                        If supplied, data for the full length of all \
+                        chromosomes in the sizes file will be read \
+                        from all bigWig files supplied. Only used if \
+                        --intervals is not supplied.')
     parser.add_argument('--pad', type=int,
                         help='Number of additional bases added as \
                         padding to the intervals in the h5 file \
