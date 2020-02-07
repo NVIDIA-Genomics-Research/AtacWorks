@@ -97,7 +97,7 @@ All models described in [Lal & Chiang, et al. (2019)](https://www.biorxiv.org/co
 #### Input files
 
 To denoise and call peaks from low-coverage/low-quality ATAC-seq data, you need only one input file:
-1. A coverage track representing the number of sequencing reads mapped to each position on the genome in the low-coverage or low-quality dataset. This may be smoothed or processed in the same way as the files used for training the model. Format: [bigWig]
+1. A coverage track representing the number of sequencing reads mapped to each position on the genome in the low-coverage or low-quality dataset. This may be smoothed or processed in the same way as the files used for training the model. Format: [bigWig](https://genome.ucsc.edu/goldenPath/help/bigWig.html)
 
 #### Denoising + peak calling command
 ```
