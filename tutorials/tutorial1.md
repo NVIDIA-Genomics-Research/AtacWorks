@@ -2,15 +2,15 @@
 
 ## Introduction
 
-In this tutorial we train an AtacWorks model to denoise the signal track and call peaks from aggregate single-cell ATAC-seq data derived from a small number of cells. We use the dsc-ATAC-seq dataset presented in (1), section (refer to page number, section). This dataset consists of single-cell ATAC-seq data from several types of human blood cells.
+In this tutorial we train an AtacWorks model to denoise the signal track and call peaks from aggregate single-cell ATAC-seq data derived from a small number of cells. We use the dsc-ATAC-seq dataset presented in reference (1), section (once the text is final we will refer to page number, section). This dataset consists of single-cell ATAC-seq data from several types of human blood cells.
 
-Note that all the AtacWorks models described in reference (1) are available to download (link) and you may be able to use one of these instead of training a new model. To learn how to download and use an existing model, refer to Tutorial 2 (link).
+Note that all the AtacWorks models described in reference (1) are available to download (link) and you may be able to use one of these instead of training a new model. To learn how to download and use an existing model, refer to Tutorial 2 (https://github.com/clara-genomics/AtacWorks/tree/master/tutorials/tutorial2.md).
  
 We selected 2400 Monocytes from this dataset - this is our ‘clean’, high-coverage dataset. We then randomly sampled 50 of these 2400 Monocytes. Here's what the ATAC-seq signal from 50 cells and 2400 cells looks like, for a region on chromosome 10:
 
 ![Monocytes subsampled signal](Mono.2400.50.png)
 
-Compared to the 'clean' signal from 2400 cells, the aggregated ATAC-Seq signal track from these 50 cells is noisy. The Pearson correlation between the 50-cell signal and the 2400-cell signal is only <insert correlation> on chromosome 10. Because the signal is noisy, peak calls calculated by MACS2 on this data are also inaccurate.
+Compared to the 'clean' signal from 2400 cells, the aggregated ATAC-Seq signal track from these 50 cells is noisy. Because of noise in the signal, peak calls calculated by MACS2 on this data are also inaccurate.
 
 We train an AtacWorks model to learn a mapping from the 50-cell ATAC-seq signals to the 2400-cell ATAC-seq signal and peak calls. In other words, given a noisy ATAC-seq signal from 50 cells, this model learns what the signal would look like - and where the peaks would be called - if we had sequenced 2400 cells.
 
