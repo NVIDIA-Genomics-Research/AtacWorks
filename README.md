@@ -92,7 +92,7 @@ See [Tutorial 1](tutorials/tutorial1.md) for an advanced workflow detailing the 
 
 ### 2. Denoising and peak calling using a trained AtacWorks model
 
-All models described in reference (1) are available for download and use. A list of these models and download instructions can be found here: TBA.
+All models described in [Lal & Chiang, et al. (2019)](https://www.biorxiv.org/content/10.1101/829481) are available for download and use. A list of these models and download instructions can be found here: TBA.
 
 #### Input files
 
@@ -116,5 +116,8 @@ See [Tutorial 2](tutorials/tutorial2.md) for an advanced workflow detailing the 
 
 ## Citation
 
+Please cite AtacWorks as follows:
+
 Lal, A., Chiang, Z.D., Yakovenko, N., Duarte, F.M., Israeli, J. and Buenrostro, J.D., 2019. AtacWorks: A deep convolutional neural network toolkit for epigenomics. BioRxiv, p.829481.
-https://www.biorxiv.org/content/10.1101/829481
+
+Link: https://www.biorxiv.org/content/10.1101/829481
