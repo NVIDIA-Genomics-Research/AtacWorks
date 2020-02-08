@@ -40,6 +40,7 @@ _handler.setFormatter(log_formatter)
 _logger.setLevel(logging.INFO)
 _logger.addHandler(_handler)
 
+
 def type_or_none_fn(type):
     """Ensure provided arguments are not defined at the same time.
 
@@ -57,6 +58,7 @@ def type_or_none_fn(type):
         else:
             return type(val)
     return type_or_none
+
 
 def model_args_v1(root_dir):
     """Parse arguments relevant to model structure.
