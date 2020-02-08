@@ -2,7 +2,7 @@
 
 ## Introduction
 
-In this tutorial we use a pre-trained AtacWorks model to denoise and call peaks from low-coverage aggregate single-cell ATAC-seq data. We use the dsc-ATAC-seq dataset presented in (1), section (refer to page number, section). This dataset consists of single-cell ATAC-seq data from several types of human blood cells.
+In this tutorial we use a pre-trained AtacWorks model to denoise and call peaks from low-coverage aggregate single-cell ATAC-seq data. We use the dsc-ATAC-seq dataset presented in reference (1), section (when text is ready, add a reference to page number, section). This dataset consists of single-cell ATAC-seq data from several types of human blood cells.
 
 We selected 2400 NK cells from this dataset - this is our ‘clean’, high-coverage dataset. We then randomly sampled 50 of these 2400 NK cells. Here's what the ATAC-seq signal from 50 cells and 2400 cells looks like, for a region on chromosome 10:
 
@@ -68,7 +68,7 @@ This creates a file `NK.50_cells.h5`, which contains the noisy ATAC-seq signal t
 ```
 python $atacworks/main.py --infer \
     --infer_files NK.50_cells.h5 \
-    --sizes $atacworks/example/reference/hg19.auto.sizes \
+    --sizes_file $atacworks/example/reference/hg19.auto.sizes \
     --config configs/config_params.yaml \
     --config_mparams configs/model_structure.yaml \
     --infer_threshold 0.5
