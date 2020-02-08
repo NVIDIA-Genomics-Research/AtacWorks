@@ -120,4 +120,4 @@ Please cite AtacWorks as follows:
 
 Lal, A., Chiang, Z.D., Yakovenko, N., Duarte, F.M., Israeli, J. and Buenrostro, J.D., 2019. AtacWorks: A deep convolutional neural network toolkit for epigenomics. BioRxiv, p.829481.
 
-Link: https://www.biorxiv.org/content/10.1101/829481
+Link: https://www.biorxiv.org/content/10.1101/829481v1
