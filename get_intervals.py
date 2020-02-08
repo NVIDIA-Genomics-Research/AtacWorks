@@ -93,7 +93,7 @@ def get_tiling_intervals(sizes, intervalsize, shift=None):
 
     # Eliminate intervals that extend beyond chromosome size
     intervals = intervals.merge(sizes, on='chrom')
-    intervals = intervals[intervals['end'] < intervals['size']]
+    intervals = intervals[intervals['end'] < intervals['length']]
 
     return intervals.loc[:, ('chrom', 'start', 'end')]
 

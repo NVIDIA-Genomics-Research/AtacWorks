@@ -91,7 +91,7 @@ def main():
     # Set name for output file
     if args.prefix is None:
         # Output file gets name from input
-        prefix = os.path.basename(args.input).split('.')[0]
+        prefix = os.path.basename(args.input)
     else:
         prefix = args.prefix
     out_bg_name = args.out_home + '/' + prefix + '.bedGraph'
