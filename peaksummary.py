@@ -29,6 +29,7 @@ Example:
 import argparse
 import logging
 import subprocess
+import os
 
 from claragenomics.io.bigwigio import extract_bigwig_intervals
 from claragenomics.io.bedio import read_intervals, df_to_bed
@@ -82,8 +83,8 @@ if args.prefix is None:
     prefix = 'summarized_peaks'
 else:
     prefix = args.prefix
-out_bed_path = args.out_home + '/' + prefix + '.bed'
-out_bg_path = args.out_home + '/' + prefix + '.bedGraph'
+out_bed_path = os.path.join(args.out_home, prefix + '.bed')
+out_bg_path = os.path.join(args.out_home, prefix + '.bedGraph')
 
 # Collapse peaks
 _logger.info('Writing peaks to bedGraph file {}'.format(out_bg_path))
