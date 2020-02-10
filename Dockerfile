@@ -17,7 +17,8 @@ RUN apt update && apt install -y \
     rsync \
     git \
     python3-pip \
-    libz-dev
+    libz-dev \
+    hdf5-tools
 
 RUN ln -nsf /usr/bin/python3.6 /usr/bin/python
 
