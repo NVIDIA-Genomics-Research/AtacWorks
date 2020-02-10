@@ -54,7 +54,7 @@ def check_mutual_exclusive(
 
 
 def type_or_none_fn(type):
-    """Ensure provided arguments are not defined at the same time.
+    """Generate function to interpret a string as a specific type or None.
 
     Args:
         type: Data type to check for.
