@@ -30,8 +30,8 @@ import logging
 
 from claragenomics.io.bedgraphio import df_to_bedGraph
 from claragenomics.io.bigwigio import bedgraph_to_bigwig
+from claragenomics.io.bedio import read_intervals, read_sizes
 
-import pandas as pd
 
 # Set up logging
 log_formatter = logging.Formatter(
@@ -69,20 +69,14 @@ def main():
     args = parse_args()
 
     # Read input files
-    _logger.info('Reading input files')
-    peaks = pd.read_csv(args.input, sep='\t', header=None,
-                        usecols=[0, 1, 2], skiprows=args.skip)
-    sizes = pd.read_csv(args.sizes, sep='\t', header=None)
-
-    # Subset to peaks in sizes file
-    # TODO: Move this test into the df_to_bedGraph function
-    peaks_filtered = peaks[peaks[0].isin(sizes[0])].copy()
-    _logger.info('Retaining ' + str(len(peaks_filtered)) + ' of ' +
-                 str(len(peaks)) + ' peaks in given chromosomes.')
+    _logger.info('Reading input file')
+    peaks = read_intervals(args.input, skip=args.skip)
+    _logger.info('Read ' + str(len(peaks)) + ' peaks.')
+    sizes = read_sizes(args.sizes)
 
     # Add score of 1 for all peaks
     _logger.info('Adding score')
-    peaks_filtered[3] = 1
+    peaks['score'] = 1
 
     # Set prefix for output files
     if args.prefix is None:
@@ -93,11 +87,13 @@ def main():
 
     # Write bedGraph
     _logger.info('Writing peaks to bedGraph file')
-    df_to_bedGraph(peaks_filtered, prefix + '.bedGraph')
+    # Note: peaks will be subset to chromosomes in sizes file.
+    df_to_bedGraph(peaks, prefix + '.bedGraph', sizes)
 
     # Write bigWig and delete bedGraph
     _logger.info('Writing peaks to bigWig file {}'.format(prefix + '.bw'))
-    bedgraph_to_bigwig(prefix + '.bedGraph', args.sizes, deletebg=True)
+    bedgraph_to_bigwig(prefix + '.bedGraph', args.sizes,
+                       deletebg=True, sort=True)
     _logger.info('Done!')
 
 
