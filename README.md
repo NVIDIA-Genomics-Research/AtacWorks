@@ -60,6 +60,7 @@ git clone --recursive https://github.com/clara-genomics/AtacWorks.git
     rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bedGraphToBigWig <custom_path>
     rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bigWigToBedGraph <custom_path>
     export PATH="$PATH:<custom_path>"
+    sudo apt-get install hdf5-tools
     ```
 
 * Install pip dependencies
