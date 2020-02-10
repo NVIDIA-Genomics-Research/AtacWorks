@@ -48,6 +48,8 @@ from claragenomics.io.bedio import read_sizes, df_to_bed
 
 import pandas as pd
 
+import os
+
 
 # Set up logging
 log_formatter = logging.Formatter(
@@ -153,7 +155,7 @@ def main():
             out_file_name = 'genome_intervals.bed'
         else:
             out_file_name = args.prefix + '.genome_intervals.bed'
-        out_file_path = args.out_home + '/' + out_file_name
+        out_file_path = os.path.join(args.out_home, out_file_name)
         df_to_bed(intervals, out_file_path)
 
     else:
@@ -186,7 +188,7 @@ def main():
             out_file_name = 'training_intervals.bed'
         else:
             out_file_name = args.prefix + '.training_intervals.bed'
-        out_file_path = args.out_home + '/' + out_file_name
+        out_file_path = os.path.join(args.out_home, out_file_name)
         df_to_bed(train, out_file_path)
 
         # Generate validation intervals - do not overlap
@@ -200,7 +202,7 @@ def main():
             out_file_name = 'val_intervals.bed'
         else:
             out_file_name = args.prefix + '.val_intervals.bed'
-        out_file_path = args.out_home + '/' + out_file_name
+        out_file_path = os.path.join(args.out_home, out_file_name)
         df_to_bed(val, out_file_path)
 
         # Generate holdout intervals - do not overlap
@@ -215,7 +217,7 @@ def main():
                 out_file_name = 'holdout_intervals.bed'
             else:
                 out_file_name = args.prefix + '.holdout_intervals.bed'
-            out_file_path = args.out_home + '/' + out_file_name
+            out_file_path = os.path.join(args.out_home, out_file_name)
             df_to_bed(holdout, out_file_path)
 
     _logger.info('Done!')
