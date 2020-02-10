@@ -58,6 +58,8 @@ from claragenomics.io.h5io import dict_to_h5
 
 import numpy as np
 
+import os
+
 
 # Set up logging
 log_formatter = logging.Formatter(
@@ -162,7 +164,7 @@ batch_ends = batch_starts + args.batch_size
 batch_ends[-1] = len(intervals)
 
 # Get output hdf5 filename
-output_file_path = args.out_home + '/' + args.prefix + '.h5'
+output_file_path = os.path.join(args.out_home, args.prefix + '.h5')
 
 # Write batches to hdf5 file
 _logger.info('Extracting data for each batch and writing to h5 file')
