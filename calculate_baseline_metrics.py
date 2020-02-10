@@ -282,7 +282,7 @@ else:
     if args.auc is not None:
         _logger.info("Calculating AUC metrics")
         metrics = calculate_metrics([AUROC(), AUPRC()], x_peaks, y_peaks)
-        print("AUC metrics: " + " | ".join(
-            [str(metric) for metric in metrics]))
+        print("AUC metrics : " +
+              " | ".join([str(metric) for metric in metrics]))
 
 _logger.info('Done!')
