@@ -16,7 +16,8 @@ echo ""
 python $root_dir/peaksummary.py \
     --peakbw $out_dir/inference_latest/no_label_infer_results.h5.peaks.bw \
     --trackbw $out_dir/inference_latest/no_label_infer_results.h5.track.bw \
-    --prefix $out_dir/inference_latest/no_label.output.summary \
+    --out_dir $out_dir \
+    --prefix inference_latest/no_label.output.summary \
     --minlen 50
 
 echo ""
