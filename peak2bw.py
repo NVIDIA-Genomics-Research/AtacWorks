@@ -26,7 +26,7 @@ Output:
 Example:
     python peak2bw.py --input peaks.narrowPeak \
     --sizes example/reference/hg19.chrom.sizes \
-    --out_home ./ --skip 1
+    --out_dir ./ --skip 1
 
 """
 
@@ -68,7 +68,7 @@ def parse_args():
                         Only peaks in these chromosomes will \
                         be encoded in the output bigWig file.',
                         required=True)
-    parser.add_argument('--out_home', type=str, help='Directory \
+    parser.add_argument('--out_dir', type=str, help='Directory \
                         to write output file.', required=True)
     parser.add_argument('--prefix', type=str, help='Output file \
                         prefix. Output file name will be \
@@ -94,8 +94,8 @@ def main():
         prefix = os.path.basename(args.input)
     else:
         prefix = args.prefix
-    out_bg_name = os.path.join(args.out_home, prefix + '.bedGraph')
-    out_bw_name = os.path.join(args.out_home, prefix + '.bw')
+    out_bg_name = os.path.join(args.out_dir, prefix + '.bedGraph')
+    out_bw_name = os.path.join(args.out_dir, prefix + '.bw')
 
     # Read input files
     _logger.info('Reading input files')
