@@ -16,7 +16,7 @@ echo ""
 # Clean peaks
 python $root_dir/peak2bw.py \
     --input $data_dir/HSC.80M.chr123.10mb.peaks.bed \
-    --sizes $ref_dir/hg19.auto.sizes
+    --sizes $ref_dir/hg19.auto.sizes \
     --out_dir $out_dir
 # Noisy peaks
 python $root_dir/peak2bw.py \
