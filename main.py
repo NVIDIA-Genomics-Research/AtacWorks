@@ -346,6 +346,9 @@ def main():
 
         _logger.info('Distributing to %s GPUS' % str(ngpus_per_node))
 
+        config_dir = os.path.join(args.exp_dir, "configs")
+        if not os.path.exists(config_dir):
+            os.mkdir(config_dir)
         if args.distributed:
             args.world_size = ngpus_per_node
             mp.spawn(train_worker, nprocs=ngpus_per_node,
