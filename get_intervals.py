@@ -25,14 +25,14 @@ Output:
 Examples:
     Whole-genome intervals of size 50 kb:
         python get_intervals.py --sizes example/reference/hg19.chrom.sizes \
-        --intervalsize 50000 --out_home ./ --wg
+        --intervalsize 50000 --out_dir ./ --wg
     Train/val/holdout intervals of size 50 kb
         python get_intervals.py --sizes example/reference/hg19.auto.sizes \
-        --intervalsize 50000 --out_home ./ --val chr20 --holdout chr10
+        --intervalsize 50000 --out_dir ./ --val chr20 --holdout chr10
     Train/val/holdout intervals of size 50 kb
     (upsampling peaks to 1/2 of the final training set)
         python get_intervals.py --sizes example/reference/hg19.auto.sizes \
-        --intervalsize 50000 --out_home ./ --val chr20 --holdout chr10 \
+        --intervalsize 50000 --out_dir ./ --val chr20 --holdout chr10 \
         --peakfile HSC-1.merge.filtered.depth_1000000_peaks.bw \
         --nonpeak 1
 
@@ -113,7 +113,7 @@ def parse_args():
                         required=True)
     parser.add_argument('--intervalsize', type=int, help='Interval size',
                         required=True)
-    parser.add_argument('--out_home', type=str, help='Directory to save \
+    parser.add_argument('--out_dir', type=str, help='Directory to save \
                         output file', required=True)
     parser.add_argument('--prefix', type=str, help='Optional prefix to append to \
                         output file names')
@@ -155,7 +155,7 @@ def main():
             out_file_name = 'genome_intervals.bed'
         else:
             out_file_name = args.prefix + '.genome_intervals.bed'
-        out_file_path = os.path.join(args.out_home, out_file_name)
+        out_file_path = os.path.join(args.out_dir, out_file_name)
         df_to_bed(intervals, out_file_path)
 
     else:
@@ -188,7 +188,7 @@ def main():
             out_file_name = 'training_intervals.bed'
         else:
             out_file_name = args.prefix + '.training_intervals.bed'
-        out_file_path = os.path.join(args.out_home, out_file_name)
+        out_file_path = os.path.join(args.out_dir, out_file_name)
         df_to_bed(train, out_file_path)
 
         # Generate validation intervals - do not overlap
@@ -202,7 +202,7 @@ def main():
             out_file_name = 'val_intervals.bed'
         else:
             out_file_name = args.prefix + '.val_intervals.bed'
-        out_file_path = os.path.join(args.out_home, out_file_name)
+        out_file_path = os.path.join(args.out_dir, out_file_name)
         df_to_bed(val, out_file_path)
 
         # Generate holdout intervals - do not overlap
@@ -217,7 +217,7 @@ def main():
                 out_file_name = 'holdout_intervals.bed'
             else:
                 out_file_name = args.prefix + '.holdout_intervals.bed'
-            out_file_path = os.path.join(args.out_home, out_file_name)
+            out_file_path = os.path.join(args.out_dir, out_file_name)
             df_to_bed(holdout, out_file_path)
 
     _logger.info('Done!')
