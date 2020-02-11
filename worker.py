@@ -173,8 +173,6 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
     optimizer = Adam(model.parameters(), lr=args.lr)
 
     config_dir = os.path.join(args.exp_dir, "configs")
-    if not os.path.exists(config_dir):
-        os.mkdir(config_dir)
     dst_path = os.path.join(config_dir, "model_structure.yaml")
     save_config(dst_path, model_params)
     # TODO: LR schedule
