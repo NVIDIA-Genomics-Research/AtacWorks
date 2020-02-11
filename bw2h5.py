@@ -31,16 +31,16 @@ Examples:
     Training:
         python bw2h5.py --noisybw noisy.bw \
             --intervals training_intervals.bed \
-            --out_home ./ --prefix training_data \
+            --out_dir ./ --prefix training_data \
             --cleanbw clean.bw --cleanpeakbw clean.narrowPeak.bw --nonzero
     Validation:
         python bw2h5.py --noisybw noisy.bw \
             --intervals validation_intervals.bed \
-            --out_home ./ --prefix validation_data \
+            --out_dir ./ --prefix validation_data \
             --cleanbw clean.bw --cleanpeakbw clean.narrowPeak.bw
     Inference:
         python bw2h5.py --noisybw noisy.bw --intervals test_intervals.bed \
-            --out_home ./ --prefix test_data \
+            --out_dir ./ --prefix test_data \
             --nolabel
 
 """
@@ -104,7 +104,7 @@ def parse_args():
     parser.add_argument('--pad', type=int, help='Number of additional bases to \
                         add as padding on either side of interval. Use the \
                         same value for training, validation and test files.')
-    parser.add_argument('--out_home', type=str,
+    parser.add_argument('--out_dir', type=str,
                         help='directory to save output file.', required=True)
     parser.add_argument('--prefix', type=str,
                         help='output file prefix. The output file will be saved \
@@ -164,7 +164,7 @@ batch_ends = batch_starts + args.batch_size
 batch_ends[-1] = len(intervals)
 
 # Get output hdf5 filename
-output_file_path = os.path.join(args.out_home, args.prefix + '.h5')
+output_file_path = os.path.join(args.out_dir, args.prefix + '.h5')
 
 # Write batches to hdf5 file
 _logger.info('Extracting data for each batch and writing to h5 file')
