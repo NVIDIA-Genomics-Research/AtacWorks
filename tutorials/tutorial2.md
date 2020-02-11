@@ -2,7 +2,7 @@
 
 ## Introduction
 
-In this tutorial we use a pre-trained AtacWorks model to denoise and call peaks from low-coverage aggregate single-cell ATAC-seq data. We use the dsc-ATAC-seq dataset presented in reference (1), section (when text is ready, add a reference to page number, section). This dataset consists of single-cell ATAC-seq data from several types of human blood cells.
+In this tutorial we use a pre-trained AtacWorks model to denoise and call peaks from low-coverage aggregate single-cell ATAC-seq data. We use the dsc-ATAC-seq dataset presented in reference (1), section (when text is ready, add a reference to page number, section, table). This dataset consists of single-cell ATAC-seq data from several types of human blood cells.
 
 We selected 2400 NK cells from this dataset - this is our ‘clean’, high-coverage dataset. We then randomly sampled 50 of these 2400 NK cells. Here's what the ATAC-seq signal from 50 cells and 2400 cells looks like, for a region on chromosome 10:
 
@@ -12,7 +12,7 @@ Compared to the 'clean' signal from 2400 cells, the aggregated ATAC-seq profile 
 
 As reported in our paper, we trained an AtacWorks model to learn a mapping from 50-cell signal to 2400-cell signals and peak calls. In other words, given a noisy ATAC-seq signal from 50 cells, this model learned what the signal would look like - and where the peaks would be called - if we had sequenced 2400 cells. This model was trained on data from Monocytes and B cells, so it has not encountered data from NK cells.
 
-If you want to train your own AtacWorks model instead of using the model reported in the paper, refer to Tutorial 1 (link).
+If you want to train your own AtacWorks model instead of using the model reported in the paper, refer to [Tutorial 1](tutorial1.md).
 
 
 ## Step 1: Set parameters
@@ -41,12 +41,19 @@ aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/configs
 aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/test_data/noisy_data/dsc.1.NK.50.cutsites.smoothed.200.bw ./
 ```
 
-## Step 5: Download genomic intervals for testing
+## Step 5: Create genomic intervals to define regions for testing
 
-The model we downloaded takes the input ATAC-seq signal in genomic intervals spanning 50,000 bp. The genomic positions of the intervals to use are supplied to the model in BED format. In this example, we test the model on intervals that span all autosomes except for chromosome 10 and chromosome 20. See get_intervals.py (link) for help in creating intervals spanning the whole genome or a different set of chromosomes.
+The model we downloaded takes the input ATAC-seq signal in non-overlapping genomic intervals spanning 50,000 bp. To define the genomic regions for the model to read, we take the chromosomes on which we want to apply the model and split their lengths into 50,000-bp intervals, which we save in BED format. 
+In this example, we will apply the model to chromosomes 1-22. The reference genome we use is hg19. We use the prepared chromosome sizes file `hg19.auto.sizes`, which contains the sizes of chromosomes 1-22 in hg19.
 ```
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/intervals/hg19.50000.genome_intervals.bed ./intervals/hg19.50000.genome_intervals.bed
+python $atacworks/get_intervals.py \
+    --sizes $atacworks/example/reference/hg19.auto.sizes \
+    --intervalsize 50000 \
+    --out_dir intervals \
+    --prefix hg19.50000 \
+    --wg
 ```
+This produces a BED file (`intervals/hg19.50000.genome_intervals.bed`). 
 
 ## Step 6: Read test data over the selected intervals, and save in .h5 format
 
@@ -56,9 +63,9 @@ We supply to `bw2h5.py` the bigWig file containing the noisy ATAC-seq signal, an
 python $atacworks/bw2h5.py \
            --noisybw dsc.1.NK.50.cutsites.smoothed.200.bw \
            --intervals intervals/hg19.50000.genome_intervals.bed \
+           --out_dir ./ \
            --prefix NK.50_cells \
            --pad 5000 \
-           --batch_size 2000 \
            --nolabel
 ```
 This creates a file `NK.50_cells.h5`, which contains the noisy ATAC-seq signal to be fed to the pre-trained model.
