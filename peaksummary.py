@@ -21,7 +21,7 @@ Output:
     BED file containing scored peaks and summits
 
 Example:
-    python peaksummary.py --peakbw peaks.bw --trackbw tracks.bw --out_home ./
+    python peaksummary.py --peakbw peaks.bw --trackbw tracks.bw --out_dir ./
 
 """
 
@@ -62,7 +62,7 @@ def parse_args():
     parser.add_argument('--trackbw', type=str,
                         help='Path to bigwig file with predicted \
                         coverage track', required=True)
-    parser.add_argument('--out_home', type=str,
+    parser.add_argument('--out_dir', type=str,
                         help='directory to save output file.',
                         required=True)
     parser.add_argument('--prefix', type=str,
@@ -83,8 +83,8 @@ if args.prefix is None:
     prefix = 'summarized_peaks'
 else:
     prefix = args.prefix
-out_bed_path = os.path.join(args.out_home, prefix + '.bed')
-out_bg_path = os.path.join(args.out_home, prefix + '.bedGraph')
+out_bed_path = os.path.join(args.out_dir, prefix + '.bed')
+out_bg_path = os.path.join(args.out_dir, prefix + '.bedGraph')
 
 # Collapse peaks
 _logger.info('Writing peaks to bedGraph file {}'.format(out_bg_path))
