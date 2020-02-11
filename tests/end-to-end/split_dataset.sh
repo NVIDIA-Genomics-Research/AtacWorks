@@ -15,7 +15,10 @@ echo "Split the given regions of the genome into train, val, and holdout/test in
 echo ""
 # Each set of intervals will cover the first 10 Mb of a different chromosome
 python $root_dir/get_intervals.py \
-    $data_dir/example.sizes 24000 $out_dir/result \
+    --sizes $data_dir/example.sizes \
+    --intervalsize 24000 \
+    --out_dir $out_dir \
+    --prefix result \
     --val chr2 --holdout chr3
 
 
