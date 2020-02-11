@@ -17,8 +17,8 @@ echo ""
 python $root_dir/bw2h5.py \
     --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
     --intervals $out_dir/result.training_intervals.bed \
-    --batch_size 4 \
-    --prefix $out_dir/train_data \
+    --out_dir $out_dir \
+    --prefix train_data \
     --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
     --cleanpeakbw $out_dir/clean.peaks.bw \
     --nonzero
@@ -26,16 +26,16 @@ python $root_dir/bw2h5.py \
 python $root_dir/bw2h5.py \
     --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
     --intervals $out_dir/result.val_intervals.bed \
-    --batch_size 64 \
-    --prefix $out_dir/val_data \
+    --out_dir $out_dir \
+    --prefix val_data \
     --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
     --cleanpeakbw $out_dir/clean.peaks.bw
 # No label
 python $root_dir/bw2h5.py \
     --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
     --intervals $out_dir/result.holdout_intervals.bed \
-    --batch_size 64 \
-    --prefix $out_dir/no_label \
+    --out_dir $out_dir \
+    --prefix no_label \
     --nolabel
 
 echo ""
