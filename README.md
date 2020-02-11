@@ -12,7 +12,7 @@ AtacWorks models can be trained using one or more pairs of matching ATAC-Seq dat
 3. The genomic positions of peaks called on the high-quality dataset. These can be obtained by using MACS2 or any other peak caller.
 The model learns a mapping from (1) to both (2) and (3); in other words, from the noisy coverage track, it learns to predict both the clean coverage track, and the positions of peaks in the clean dataset. We also provide pretrained models that can be applied to a noisy dataset.
 
-Much more information and examples can be found in the AtacWorks preprint: https://www.biorxiv.org/content/10.1101/829481
+Much more information and examples can be found in the AtacWorks preprint: https://www.biorxiv.org/content/10.1101/829481v1
 
 ## Runtime
 
