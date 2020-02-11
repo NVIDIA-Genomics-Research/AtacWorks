@@ -95,7 +95,6 @@ def main():
     else:
         prefix = args.prefix
     out_bg_name = os.path.join(args.out_dir, prefix + '.bedGraph')
-    out_bw_name = os.path.join(args.out_dir, prefix + '.bw')
 
     # Read input files
     _logger.info('Reading input file')
