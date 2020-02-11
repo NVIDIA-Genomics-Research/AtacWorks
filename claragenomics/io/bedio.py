@@ -14,11 +14,12 @@
 import pandas as pd
 
 
-def read_intervals(bed_file):
-    """Function to read genomic intervals from a BED file into a DataFrame.
+def read_intervals(bed_file, skip=0):
+    """Read genomic intervals from a BED file into a DataFrame.
 
     Args:
-        bed_file(str): Path to BED file
+        bed_file: Path to BED file
+        skip: Number of header lines to skip
 
     Returns:
         df: Pandas DataFrame containing intervals.
@@ -27,26 +28,32 @@ def read_intervals(bed_file):
     df = pd.read_csv(bed_file, sep='\t', header=None,
                      names=['chrom', 'start', 'end'],
                      usecols=(0, 1, 2),
-                     dtype={'chrom': str, 'start': int, 'end': int})
+                     dtype={'chrom': str, 'start': int, 'end': int},
+                     skiprows=skip)
     return df
 
 
 def read_sizes(sizes_file, as_intervals=False):
-    """Function to read chromosome sizes into a DataFrame.
+    """Read chromosome sizes into a DataFrame.
 
     Args:
         sizes_file(str): Path to sizes file
         as_intervals(bool): Format the DataFrame as 0-indexed intervals
 
+    Returns:
+        df: Pandas DataFrame
+
     """
     df = pd.read_csv(sizes_file, sep='\t', header=None, usecols=(0, 1),
-                     dtype={0: str, 1: int})
+                     names=['chrom', 'length'],
+                     dtype={'chrom': str, 'length': int})
     if as_intervals:
-        df[2] = [0] * len(df)
-        df.rename(columns={0: 0, 2: 1, 1: 2}, inplace=True)
-        df.columns = ['chrom', 'start', 'end']
-    else:
-        df.columns = ['chrom', 'length']
+        # Formats the sizes file in the form of an intervals file,
+        # with column names 'chrom', 'start' and 'end'
+        # Used for compatibility with the output of 'read_intervals'.
+        df['start'] = [0] * len(df)
+        df = df[['chrom', 'start', 'length']]
+        df.rename(columns={"length": "end"}, inplace=True)
     return df
 
 
