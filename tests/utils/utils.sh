@@ -20,7 +20,7 @@ function check_status {
             echo "$2"
 	fi
         echo "Abort test!"
-	exit
+	exit $1
     else
 	echo "Success!"
     fi

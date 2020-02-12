@@ -55,3 +55,15 @@ def read_sizes(sizes_file, as_intervals=False):
         df = df[['chrom', 'start', 'length']]
         df.rename(columns={"length": "end"}, inplace=True)
     return df
+
+
+def df_to_bed(df, out_file_path, header=False):
+    """Write dataframe to BED file.
+
+    Args:
+        df: pandas DataFrame
+        out_file_path: path to output BED file
+        header: include column names as header
+
+    """
+    df.to_csv(out_file_path, sep='\t', index=False, header=header)

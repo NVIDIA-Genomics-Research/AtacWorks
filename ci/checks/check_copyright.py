@@ -126,7 +126,7 @@ def copyright_present(f):
 
     """
     with io.open(f, "r", encoding="utf-8") as fh:
-        return re.search('Copyright \(c\)', fh.read())
+        return re.search(r'Copyright \(c\)', fh.read())
 
 
 def parse_args():

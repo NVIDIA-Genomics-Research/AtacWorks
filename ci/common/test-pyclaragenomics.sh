@@ -37,7 +37,6 @@ pydocstyle --convention=google $PYCLARAGENOMICS_DIR
 # Run tests.
 if [ "${TEST_ON_GPU}" == '1' ]; then
     ./tests/end-to-end/run.sh
-    ./tests/run_v0.1.sh
     python -m pytest tests/
 else
     echo "No CPU tests."

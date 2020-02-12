@@ -15,14 +15,17 @@ echo "Convert peak files into bigWig format..."
 echo ""
 # Clean peaks
 python $root_dir/peak2bw.py \
-    $data_dir/HSC.80M.chr123.10mb.peaks.bed \
-    $ref_dir/hg19.auto.sizes \
-    --prefix=$out_dir/clean.peaks
+    --input $data_dir/HSC.80M.chr123.10mb.peaks.bed \
+    --sizes $ref_dir/hg19.auto.sizes \
+    --out_dir $out_dir \
+    --prefix clean.peaks
 # Noisy peaks
 python $root_dir/peak2bw.py \
-    $data_dir/HSC.5M.chr123.10mb.peaks.bed \
-    $ref_dir/hg19.auto.sizes \
-    --prefix=$out_dir/noisy.peaks
+    --input $data_dir/HSC.5M.chr123.10mb.peaks.bed \
+    --sizes $ref_dir/hg19.auto.sizes \
+    --out_dir $out_dir \
+    --prefix noisy.peaks
+
 echo ""
 echo "Verifying output against expected results"
 python $utils_dir/verify_diff.py --result_path $out_dir/clean.peaks.bw \

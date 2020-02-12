@@ -26,5 +26,5 @@ scipy==1.3.2
 configargparse==0.15.2
 
 # Testing packages
-flake8==2.1.0
-pydocstyle==4.0.1
+flake8==3.7.8
+pydocstyle==5.0.1

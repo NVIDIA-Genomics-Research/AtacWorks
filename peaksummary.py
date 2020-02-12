@@ -11,27 +11,30 @@
 """Read peak bigWig file and produce BED file with scored peaks and summits.
 
 Workflow:
-    1. Read a bigWig file (produced by postprocess.py) containing peak labels
+    1. Read a bigWig file (produced by main.py) containing peak labels
     at each position
     2. Collapses peaks to BED format using bigWigToBedGraph
     3. For each peak, calculates the summit location, max score and
     average score
+
 Output:
     BED file containing scored peaks and summits
+
 Example:
-    python peaksummary.py --peakbw peaks.bw --trackbw tracks.bw --prefix peaks
+    python peaksummary.py --peakbw peaks.bw --trackbw tracks.bw --out_dir ./
+
 """
 
 # Import requirements
 import argparse
 import logging
+import os
 import subprocess
 
+from claragenomics.io.bedio import df_to_bed, read_intervals
 from claragenomics.io.bigwigio import extract_bigwig_intervals
 
 import numpy as np
-
-import pandas as pd
 
 # Set up logging
 log_formatter = logging.Formatter(
@@ -42,8 +45,6 @@ _handler.setLevel(logging.INFO)
 _handler.setFormatter(log_formatter)
 _logger.setLevel(logging.INFO)
 _logger.addHandler(_handler)
-
-# TODO: add optional command to filter by length of peak?
 
 
 def parse_args():
@@ -56,25 +57,42 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='Data processing for genome-wide denoising models.')
     parser.add_argument('--peakbw', type=str,
-                        help='Path to bigwig file with peak labels')
+                        help='Path to bigwig file with predicted peak labels',
+                        required=True)
     parser.add_argument('--trackbw', type=str,
-                        help='Path to bigwig file with coverage track')
-    parser.add_argument('--prefix', type=str, help='output file prefix')
-    parser.add_argument('--minlen', type=int, help='minimum peak length')
+                        help='Path to bigwig file with predicted \
+                        coverage track', required=True)
+    parser.add_argument('--out_dir', type=str,
+                        help='directory to save output file.',
+                        required=True)
+    parser.add_argument('--prefix', type=str,
+                        help='output file prefix. \
+                        Output file will be saved as prefix.bed. \
+                        If not supplied, the output file will be \
+                        summarized_peaks.bed')
+    parser.add_argument('--minlen', type=int, help='minimum peak length',
+                        default=20)
     args = parser.parse_args()
     return args
 
 
 args = parse_args()
 
+# Output file names
+if args.prefix is None:
+    prefix = 'summarized_peaks'
+else:
+    prefix = args.prefix
+out_bed_path = os.path.join(args.out_dir, prefix + '.bed')
+out_bg_path = os.path.join(args.out_dir, prefix + '.bedGraph')
+
 # Collapse peaks
-_logger.info('Writing peaks to bedGraph file {}.bedGraph'.format(args.prefix))
-subprocess.call(['bigWigToBedGraph', args.peakbw, args.prefix + '.bedGraph'])
+_logger.info('Writing peaks to bedGraph file {}'.format(out_bg_path))
+subprocess.call(['bigWigToBedGraph', args.peakbw, out_bg_path])
 
 # Read collapsed peaks
 _logger.info('Reading peaks')
-peaks = pd.read_csv(args.prefix + '.bedGraph', header=None,
-                    sep='\t', usecols=(0, 1, 2))
+peaks = read_intervals(out_bg_path)
 peaks.columns = ['#chrom', 'start', 'end']
 
 # Add length of peaks
@@ -102,11 +120,12 @@ if args.minlen is not None:
     peaks = peaks[peaks['len'] >= args.minlen]
     _logger.info("reduced number of peaks from {} to {}.".format(
         num_before_cut, len(peaks)))
+# TODO: we may also want to merge small peaks together
 
 # Write to BED
-_logger.info('Writing peaks to BED file {}.bed'.format(args.prefix))
-peaks.to_csv(args.prefix + '.bed', sep='\t', index=None)
+_logger.info('Writing peaks to BED file {}'.format(out_bed_path))
+df_to_bed(peaks, out_bed_path, header=True)
 
 # Delete bedGraph
 _logger.info('Deleting bedGraph file')
-subprocess.call(['rm', args.prefix + '.bedGraph'])
+subprocess.call(['rm', out_bg_path])
