@@ -40,15 +40,13 @@ Examples:
 
 # Import requirements
 import argparse
-
 import logging
+import os
 
+from claragenomics.io.bedio import df_to_bed, read_sizes
 from claragenomics.io.bigwigio import check_bigwig_intervals_peak
-from claragenomics.io.bedio import read_sizes, df_to_bed
 
 import pandas as pd
-
-import os
 
 
 # Set up logging
@@ -115,7 +113,8 @@ def parse_args():
                         required=True)
     parser.add_argument('--out_dir', type=str, help='Directory to save \
                         output file', required=True)
-    parser.add_argument('--prefix', type=str, help='Optional prefix to append to \
+    parser.add_argument('--prefix', type=str, help='Optional prefix to '
+                                                   'append to \
                         output file names')
     parser.add_argument('--shift', type=int, help='Shift between training \
                         intervals. If not given, intervals are \

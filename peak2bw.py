@@ -35,9 +35,8 @@ import logging
 import os
 
 from claragenomics.io.bedgraphio import df_to_bedGraph
-from claragenomics.io.bigwigio import bedgraph_to_bigwig
 from claragenomics.io.bedio import read_intervals, read_sizes
-
+from claragenomics.io.bigwigio import bedgraph_to_bigwig
 
 # Set up logging
 log_formatter = logging.Formatter(

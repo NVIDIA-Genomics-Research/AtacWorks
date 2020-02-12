@@ -28,11 +28,11 @@ Example:
 # Import requirements
 import argparse
 import logging
-import subprocess
 import os
+import subprocess
 
+from claragenomics.io.bedio import df_to_bed, read_intervals
 from claragenomics.io.bigwigio import extract_bigwig_intervals
-from claragenomics.io.bedio import read_intervals, df_to_bed
 
 import numpy as np
 

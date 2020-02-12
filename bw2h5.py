@@ -47,8 +47,8 @@ Examples:
 # Import requirements
 
 import argparse
-
 import logging
+import os
 
 from claragenomics.dl4atac.utils import gather_key_files_from_cmdline
 from claragenomics.io.bedio import read_intervals
@@ -57,8 +57,6 @@ from claragenomics.io.bigwigio import (check_bigwig_intervals_nonzero,
 from claragenomics.io.h5io import dict_to_h5
 
 import numpy as np
-
-import os
 
 
 # Set up logging
@@ -98,16 +96,19 @@ def parse_args():
                         help generating such a BED file.',
                         required=True)
     parser.add_argument('--batch_size', type=int,
-                        help='batch size; number of intervals to read from bigWig \
+                        help='batch size; number of intervals to read from '
+                             'bigWig \
                         files at a time. Unrelated to training/inference \
                         batch size.', default=1000)
-    parser.add_argument('--pad', type=int, help='Number of additional bases to \
+    parser.add_argument('--pad', type=int, help='Number of additional bases '
+                                                'to \
                         add as padding on either side of interval. Use the \
                         same value for training, validation and test files.')
     parser.add_argument('--out_dir', type=str,
                         help='directory to save output file.', required=True)
     parser.add_argument('--prefix', type=str,
-                        help='output file prefix. The output file will be saved \
+                        help='output file prefix. The output file will be '
+                             'saved \
                         with the name prefix.h5', required=True)
     parser.add_argument('--nolabel', action='store_true',
                         help='only saving noisy ATAC-seq data')
@@ -196,7 +197,6 @@ for i in range(batches_per_epoch):
 
     # Add labels
     if not args.nolabel:
-
         # Read clean data: regression labels
         batch_data['label_reg'] = extract_bigwig_intervals(
             batch_intervals, args.cleanbw, pad=args.pad
