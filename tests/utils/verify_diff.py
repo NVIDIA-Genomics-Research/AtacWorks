@@ -20,7 +20,7 @@ import subprocess
 import sys
 import torch
 
-VERIFY_DIFF_EPS = 0.0001
+VERIFY_DIFF_EPS = 0.001
 
 
 def parse_args():
@@ -132,6 +132,7 @@ def verify_text(result_path, expected_path):
         for key, value in result_dict.items():
             diff = abs(value - expected_dict[key])
             if diff > VERIFY_DIFF_EPS:
+                print(value, expected_dict[key])
                 err_msg = "Metrics for " + key + " differ more than " + str(
                     VERIFY_DIFF_EPS) + " between result and expected metrics!"
                 raise ValueError(err_msg)
