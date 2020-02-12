@@ -13,9 +13,11 @@
 
 import argparse
 
+import h5py
+import numpy as np
+
 import subprocess
 import sys
-
 import torch
 
 VERIFY_DIFF_EPS = 0.0001
@@ -55,8 +57,9 @@ def verify_torch(result_path, expected_path):
                                 map_location="cuda:" + str(rank))
     val = 0
     for key, _ in result_model['state_dict'].items():
-        val = val + torch.sum((result_model['state_dict'][key] -
-                               expected_model['state_dict'][key]) ** 2).item()
+        val = val + torch.sum(
+            (result_model['state_dict'][key] - expected_model[
+                'state_dict'][key]) ** 2).item()
 
     if (val > VERIFY_DIFF_EPS):
         raise ValueError("Models not identical!")
@@ -142,12 +145,31 @@ def verify_h5(result_path, expected_path):
         expected_path: Path to expected result file.
 
     """
-    cmd = "h5diff " + result_path + " " + expected_path
-    ret = subprocess.call(cmd, shell=True)
-    err_msg = result_path + " and " + expected_path +\
-        " are not identical!"
-    if ret != 0:
-        raise ValueError(err_msg)
+    result_keys = []
+    result_data = {}
+    expected_keys = []
+    expected_data = {}
+
+    with h5py.File(result_path, 'r') as result:
+        result_keys = set(list(result.keys()))
+        for key in result_keys:
+            result_data[key] = np.array(result[key]).flatten()
+
+    with h5py.File(expected_path, 'r') as expected:
+        expected_keys = set(list(expected.keys()))
+        for key in expected_keys:
+            expected_data[key] = np.array(expected[key]).flatten()
+
+    if expected_keys != result_keys:
+        msg = expected_path + " and " + result_path + " are not identical!"
+        raise ValueError(msg)
+
+    for key in expected_keys:
+        result_array = result_data[key]
+        expected_array = expected_data[key]
+        if not np.array_equal(result_array, expected_array):
+            msg = expected_path + " and " + result_path + " are not identical!"
+            raise ValueError(msg)
 
 
 def verify_general_diff(result_path, expected_path):
@@ -160,8 +182,7 @@ def verify_general_diff(result_path, expected_path):
     """
     cmd = "diff " + result_path + " " + expected_path
     ret = subprocess.call(cmd, shell=True)
-    err_msg = result_path + " and " + expected_path +\
-        " are not identical!"
+    err_msg = result_path + " and " + expected_path + " are not identical!"
     if ret != 0:
         raise ValueError(err_msg)
 
