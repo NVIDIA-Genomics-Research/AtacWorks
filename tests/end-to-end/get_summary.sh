@@ -25,4 +25,4 @@ echo "Verifying output model against expected model"
 python $utils_dir/verify_diff.py --result_path $out_dir/inference_latest/no_label.output.summary.bed \
 	                        --expected_path $expected_results_dir/inference_latest/no_label.output.summary.bed \
 		                --format "general_diff"
-check_status $?
+check_status $? "Summary bed files do not match!"

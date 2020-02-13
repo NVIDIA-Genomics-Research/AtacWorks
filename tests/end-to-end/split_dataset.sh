@@ -27,14 +27,14 @@ echo "Verifying output against expected results"
 python $utils_dir/verify_diff.py --result_path $out_dir/result.holdout_intervals.bed \
 	              --expected_path $expected_results_dir/result.holdout_intervals.bed \
 		      --format "general_diff"
-check_status $?
+check_status $? "holdout interval bed files do not match!"
 
 python $utils_dir/verify_diff.py --result_path $out_dir/result.val_intervals.bed \
 	              --expected_path $expected_results_dir/result.val_intervals.bed \
 		      --format "general_diff"
-check_status $?
+check_status $? "val interval bed files do not match!"
 
 python $utils_dir/verify_diff.py --result_path $out_dir/result.training_intervals.bed \
 	              --expected_path $expected_results_dir/result.training_intervals.bed \
 		      --format "general_diff"
-check_status $?
+check_status $? "training interval bed files do not match!"

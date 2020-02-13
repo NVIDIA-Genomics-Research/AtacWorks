@@ -31,9 +31,9 @@ echo "Verifying output against expected results"
 python $utils_dir/verify_diff.py --result_path $out_dir/clean.peaks.bw \
                       --expected_path $expected_results_dir/clean.peaks.bw \
 		      --format "general_diff"
-check_status $?
+check_status $? "clean data bigwig files do not match!"
 
 python $utils_dir/verify_diff.py --result_path $out_dir/noisy.peaks.bw \
 	           --expected_path $expected_results_dir/noisy.peaks.bw \
 		   --format "general_diff"
-check_status $?
+check_status $? "Noisy data bigwig files do not match!"

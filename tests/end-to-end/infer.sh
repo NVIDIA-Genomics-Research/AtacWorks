@@ -32,10 +32,10 @@ echo "Verifying output result against expected result."
 python $utils_dir/verify_diff.py --result_path $out_dir/inference_latest/no_label_infer_results.h5.peaks.bedGraph \
     --expected_path $expected_results_dir/inference_latest/no_label_infer_results.h5.peaks.bedGraph \
     --format "general_diff"
-check_status $?
+check_status $? "Inferred peak bedGraph files do not match!"
 echo ""
 echo "Verifying output result against expected result."
 python $utils_dir/verify_diff.py --result_path $out_dir/inference_latest/no_label_infer_results.h5.track.bedGraph \
     --expected_path $expected_results_dir/inference_latest/no_label_infer_results.h5.track.bedGraph \
     --format "general_diff"
-check_status $?
+check_status $? "Inferred track bedGraph files do not match!"
