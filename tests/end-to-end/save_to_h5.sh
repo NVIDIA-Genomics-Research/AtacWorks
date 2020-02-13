@@ -43,14 +43,14 @@ echo "Verifying output against expected results"
 python $utils_dir/verify_diff.py --result_path $out_dir/train_data.h5 \
 	              --expected_path $expected_results_dir/train_data.h5 \
 		      --format "h5"
-check_status $?
+check_status $? "Train data h5 do not match!"
 
 python $utils_dir/verify_diff.py --result_path $out_dir/val_data.h5 \
 	              --expected_path $expected_results_dir/val_data.h5 \
 		      --format "h5"
-check_status $?
+check_status $? "Val data h5 do not match!"
 
 python $utils_dir/verify_diff.py --result_path $out_dir/no_label.h5 \
 	              --expected_path $expected_results_dir/no_label.h5 \
 		      --format "h5"
-check_status $?
+check_status $? "Test data h5 do not match!"
