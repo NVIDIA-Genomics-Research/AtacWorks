@@ -34,6 +34,13 @@ source ci/common/prep-init-env.sh ${WORKSPACE}
 # SDK style check
 ################################################################################
 
+logger "Run Python formatting check..."
+python -m pip install -r ./ci/checks/python-style-requirements.txt
+
 # Run copyright header check
 logger "Run Copyright header check..."
 ./ci/checks/check_copyright.py
+
+# Run linting and documentation tests.
+flake8 --ignore=E901 $HOME
+pydocstyle --convention=google $HOME

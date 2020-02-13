@@ -21,7 +21,6 @@ import tempfile
 # python imports
 import warnings
 
-
 # module imports
 from claragenomics.dl4atac.utils import (Timers, assert_device_available,
                                          gather_files_from_cmdline,
@@ -271,7 +270,7 @@ def writer(infer, intervals_file, exp_dir, result_fname,
             # Get last file in temp directory which has all the data
             files = glob.glob(os.path.join(temp_dir, str(channel), "*"))
             # Only one file should be left after the combiner stage
-            assert(len(files) == 1)
+            assert (len(files) == 1)
             # move final files out of tmp folder
             shutil.move(files[0], outfiles[channel])
 
@@ -303,7 +302,8 @@ def combiner(f1, f2):
 
 def main():
     """Main."""
-    root_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+    root_dir = os.path.abspath(
+        os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), ".."))
     args = parse_args(root_dir)
     # Set log level
     if args.debug:
