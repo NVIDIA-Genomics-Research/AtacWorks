@@ -12,13 +12,15 @@
 """Test different output files against expected files."""
 
 import argparse
-
-import h5py
-import numpy as np
-
 import subprocess
 import sys
+
+import h5py
+
+import numpy as np
+
 import torch
+
 
 VERIFY_DIFF_EPS = 0.001
 
