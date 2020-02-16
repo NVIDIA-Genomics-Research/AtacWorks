@@ -40,5 +40,5 @@ source ci/common/prep-init-env.sh ${WORKSPACE}
 
 cd ${WORKSPACE}
 if [ "${TEST_PYCLARAGENOMICSANALYSIS}" == '1' ]; then
-    source ci/common/test-pyclaragenomics.sh $WORKSPACE
+    source ci/common/test-atacworks.sh $WORKSPACE
 fi
