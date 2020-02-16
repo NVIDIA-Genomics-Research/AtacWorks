@@ -120,8 +120,8 @@ class DatasetTrain(DatasetBase):
             if self.layers is not None:
                 for layer_key in self.layers:
                     rec['input'] = np.vstack((
-                            rec['input'],
-                            hrecs[layer_key][file_id][local_idx]))
+                        rec['input'],
+                        hrecs[layer_key][file_id][local_idx]))
                 rec['input'] = np.swapaxes(rec['input'], 0, 1)
             yield rec
 
