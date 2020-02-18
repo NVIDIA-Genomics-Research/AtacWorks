@@ -12,12 +12,12 @@
 import time
 import torch
 import numpy as np
-from claragenomics.dl4atac.utils import myprint, gather_tensor
+from claragenomics.dl4atac.utils import myprint, gather_tensor, progbar
 
 
 def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg,
              metrics_cla, world_size, distributed, pad, transform,
-             best_metric=None, res_queue=None):
+             print_freq, best_metric=None, res_queue=None):
     """Evaluate given data and calculate metrics.
 
     Args:
@@ -30,11 +30,12 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg,
         metrics_cla : Classification metrics objects
         world_size: number of gpus used for evaluation
         distributed: distributed
+        pad: padding around intervals
+        transform: transformation to apply to coverage track
+        print_freq: logging frequency
         best_metric: metric object for comparison
         res_queue: network predictions will be put in the
         queue for result dumping
-        pad: padding around intervals
-        transform: transformation to apply to coverage track
 
     """
     model.eval()
@@ -47,7 +48,8 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg,
     pred_cla_list = []
 
     ###################################################################
-    print('Eval for %d batches' % len(val_loader))
+    num_batches = len(val_loader)
+    print('Eval for %d batches' % num_batches)
     with torch.no_grad():
         for i, batch in enumerate(val_loader):
             # idxes = batch['idx']
@@ -112,6 +114,10 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg,
             else:
                 y_reg_list.append(y_reg.detach())
                 pred_reg_list.append(pred.cpu().detach())
+
+            if rank == 0 and i % print_freq == 0:
+                progbar(curr=i, total=num_batches, progbar_len=20,
+                        pre_bar_msg="Inference", post_bar_msg="")
 
         ###################################################################
         # on each device, concat result tensors together for later gathering
