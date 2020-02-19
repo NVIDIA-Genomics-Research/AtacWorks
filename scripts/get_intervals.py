@@ -10,31 +10,29 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
-r"""Creates overlapping or non-overlapping intervals.
-
-    Tiles across the whole genome or given chromosomes.
+r"""Creates intervals tiling across the whole genome or given chromosomes.
 
 Workflow:
     1. Reads chromosome names and sizes for the genome
-    2. Produces intervals tiling across the genome
-    3. Optionally splits intervals into train, val, holdout
-    4. Optionally down-samples intervals without peaks in the training set
+    2. Produces intervals tiling across the genome or given chromosomes
+    3. Optionally splits intervals into train, val, holdout chromosomes
+    4. Optionally down-samples intervals without peaks in a given dataset
 
 Output:
-    BED file containg whole-genome intervals, OR
+    BED file containg intervals spanning all provided chromosomes, OR
     BED files containing training, validation and holdout intervals.
-    Validation and holdout intervals are set to non-overlapping.
 
 Examples:
-    Whole-genome intervals:
-        python get_intervals.py reference/hg19.auto.sizes 4000 ./ --wg
-    Train/val/holdout intervals
-        python get_intervals.py reference/hg19.auto.sizes 4000 ./ --val chr8 \
-        --holdout chr10
-    Train/val/holdout intervals
+    Whole-genome intervals of size 50 kb:
+        python get_intervals.py --sizes example/reference/hg19.chrom.sizes \
+        --intervalsize 50000 --out_dir ./ --wg
+    Train/val/holdout intervals of size 50 kb
+        python get_intervals.py --sizes example/reference/hg19.auto.sizes \
+        --intervalsize 50000 --out_dir ./ --val chr20 --holdout chr10
+    Train/val/holdout intervals of size 50 kb
     (upsampling peaks to 1/2 of the final training set)
-        python get_intervals.py reference/hg19.auto.sizes 4000 ./ --val chr8 \
-        --holdout chr10 \
+        python get_intervals.py --sizes example/reference/hg19.auto.sizes \
+        --intervalsize 50000 --out_dir ./ --val chr20 --holdout chr10 \
         --peakfile HSC-1.merge.filtered.depth_1000000_peaks.bw \
         --nonpeak 1
 
@@ -42,9 +40,10 @@ Examples:
 
 # Import requirements
 import argparse
-
 import logging
+import os
 
+from claragenomics.io.bedio import df_to_bed, read_sizes
 from claragenomics.io.bigwigio import check_bigwig_intervals_peak
 
 import pandas as pd
@@ -67,7 +66,7 @@ def get_tiling_intervals(sizes, intervalsize, shift=None):
     Tile from start to end of given chromosomes, shifting by given length.
 
     Args:
-        sizes: contains columns 'chrom' and 'size',
+        sizes: Pandas df containing columns 'chrom' and 'length',
             with name and length of required chromosomes
         intervalsize: length of intervals
         shift: distance between starts of successive intervals.
@@ -94,7 +93,7 @@ def get_tiling_intervals(sizes, intervalsize, shift=None):
 
     # Eliminate intervals that extend beyond chromosome size
     intervals = intervals.merge(sizes, on='chrom')
-    intervals = intervals[intervals['end'] < intervals['size']]
+    intervals = intervals[intervals['end'] < intervals['length']]
 
     return intervals.loc[:, ('chrom', 'start', 'end')]
 
@@ -106,24 +105,31 @@ def parse_args():
         parsed argument object.
 
     """
-    parser = argparse.ArgumentParser(description='DenoiseNet interval script')
-    parser.add_argument('sizes_file', type=str,
-                        help='Path to chromosome sizes file')
-    parser.add_argument('intervalsize', type=int, help='Interval size')
-    parser.add_argument('prefix', type=str, help='Output file prefix')
-    parser.add_argument(
-        '--shift', type=int,
-        help='Shift between training intervals.\
-            If not given, intervals are non-overlapping')
+    parser = argparse.ArgumentParser(description='AtacWorks interval script')
+    parser.add_argument('--sizes', type=str,
+                        help='Path to chromosome sizes file',
+                        required=True)
+    parser.add_argument('--intervalsize', type=int, help='Interval size',
+                        required=True)
+    parser.add_argument('--out_dir', type=str, help='Directory to save \
+                        output file', required=True)
+    parser.add_argument('--prefix', type=str, help='Optional prefix to '
+                                                   'append to \
+                        output file names')
+    parser.add_argument('--shift', type=int, help='Shift between training \
+                        intervals. If not given, intervals are \
+                        non-overlapping')
     parser.add_argument('--wg', action='store_true',
                         help='Produce one set of intervals for whole genome')
     parser.add_argument('--val', type=str, help='Chromosome for validation')
     parser.add_argument('--holdout', type=str, help='Chromosome to hold out')
-    parser.add_argument('--peakfile', type=str,
-                        help='Path to peak bigWig file')
     parser.add_argument('--nonpeak', type=int,
                         help='Ratio between number of non-peak\
                         intervals and peak intervals', default=1)
+    parser.add_argument('--peakfile', type=str,
+                        help='Path to bigWig file containing peaks. \
+                        Use when setting --nonpeak. Use peak2bw.py \
+                        to create this bigWig file.')
     args = parser.parse_args()
     return args
 
@@ -133,19 +139,23 @@ def main():
     args = parse_args()
 
     # Read chromosome sizes
-    sizes = pd.read_csv(args.sizes_file, sep='\t', header=None)
-    sizes.columns = ['chrom', 'size']
+    sizes = read_sizes(args.sizes)
 
     # Generate intervals
     if args.wg:
 
-        # Generate whole-genome intervals
-        _logger.info("Generating whole-genome intervals")
+        # Generate intervals tiling across all chromosomes in the sizes file
+        _logger.info("Generating intervals tiling across all chromosomes \
+            in sizes file: " + args.sizes)
         intervals = get_tiling_intervals(sizes, args.intervalsize, args.shift)
 
         # Write to file
-        intervals.to_csv(args.prefix + '.genome_intervals.bed',
-                         sep='\t', index=False, header=False)
+        if args.prefix is None:
+            out_file_name = 'genome_intervals.bed'
+        else:
+            out_file_name = args.prefix + '.genome_intervals.bed'
+        out_file_path = os.path.join(args.out_dir, out_file_name)
+        df_to_bed(intervals, out_file_path)
 
     else:
 
@@ -158,7 +168,6 @@ def main():
             train_sizes, args.intervalsize, args.shift)
 
         # Optional - Set fraction of training intervals to contain peaks
-        # TODO: up-sample these intervals in pytorch instead?
         if args.peakfile is not None:
             _logger.info('Finding intervals with peaks')
             train['peak'] = check_bigwig_intervals_peak(train, args.peakfile)
@@ -174,8 +183,12 @@ def main():
                 len(train_peaks), len(train_nonpeaks)))
 
         # Write to file
-        train.to_csv(args.prefix + '.training_intervals.bed',
-                     sep='\t', index=False, header=False)
+        if args.prefix is None:
+            out_file_name = 'training_intervals.bed'
+        else:
+            out_file_name = args.prefix + '.training_intervals.bed'
+        out_file_path = os.path.join(args.out_dir, out_file_name)
+        df_to_bed(train, out_file_path)
 
         # Generate validation intervals - do not overlap
         _logger.info("Generating val intervals")
@@ -184,8 +197,12 @@ def main():
             val_sizes, args.intervalsize)
 
         # Write to file
-        val.to_csv(args.prefix + '.val_intervals.bed',
-                   sep='\t', index=False, header=False)
+        if args.prefix is None:
+            out_file_name = 'val_intervals.bed'
+        else:
+            out_file_name = args.prefix + '.val_intervals.bed'
+        out_file_path = os.path.join(args.out_dir, out_file_name)
+        df_to_bed(val, out_file_path)
 
         # Generate holdout intervals - do not overlap
         if args.holdout is not None:
@@ -195,8 +212,12 @@ def main():
                 holdout_sizes, args.intervalsize)
 
             # Write to file
-            holdout.to_csv(args.prefix + '.holdout_intervals.bed',
-                           sep='\t', index=False, header=False)
+            if args.prefix is None:
+                out_file_name = 'holdout_intervals.bed'
+            else:
+                out_file_name = args.prefix + '.holdout_intervals.bed'
+            out_file_path = os.path.join(args.out_dir, out_file_name)
+            df_to_bed(holdout, out_file_path)
 
     _logger.info('Done!')
 

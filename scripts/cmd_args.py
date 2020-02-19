@@ -94,7 +94,7 @@ def parse_args(root_dir):
     parser.add('--label', required=True, type=str,
                help='label of the experiment; used for naming output folder')
     parser.add('--out_home', required=True, type=str,
-               help='parent directory for the experiment folder')
+               help='parent directory in which to create the output folder')
     parser.add('--train', action='store_true',
                help='training; preempt --infer')
     parser.add('--infer', action='store_true',
@@ -111,8 +111,8 @@ def parse_args(root_dir):
                help='Task can be regression or\
                        classification or both. (default: %(default)s)')
     parser.add('--train_files', required=True, type=str,
-               help='list of data files in the form of [file1, file2, ...];'
-               'or a single path to a folder of files')
+               help='list of data files in the form of "[file1, file2, ...]";'
+               'or a single path to a file or folder of files')
     parser.add('--print_freq', required=True, type=int,
                help="Logging frequency")
     parser.add('--bs', required=True, type=int,
@@ -126,15 +126,18 @@ def parse_args(root_dir):
 # =============================================================================
     # Dataset args
     parser.add('--pad', required=True, type=type_or_none_fn(int),
-               help="Padding around intervals")
+               help="Number of additional bases to add as padding \
+               on either side of each interval. Use the same --pad \
+               value that was supplied to bw2h5.py when creating \
+               the h5 files for training and validation.")
     parser.add('--transform', required=True, type=str, choices=['log', 'None'],
                help='transformation to apply to\
                        coverage tracks before training')
     parser.add('--layers', type=str,
-               help='Names of additional layers to read from h5 file as input.\
-               If multiple names, use format: "[name1, name2]". \
-               Layers will be concatenated to the input in the \
-               order supplied.')
+               help='Names of additional layers to read from h5 file \
+               as input, in the form: "[name1, name2]". \
+               Layers will be concatenated to the noisy ATAC-seq signal \
+               in the order supplied.')
 # =============================================================================
     # Learning args
     parser.add('--clip_grad', required=True, type=float,
@@ -146,7 +149,7 @@ def parse_args(root_dir):
     parser.add('--mse_weight', required=True, type=float,
                help='relative weight of mse loss')
     parser.add('--pearson_weight', required=True, type=float,
-               help='relative weight of pearson loss')
+               help='relative weight of pearson correlation loss')
     parser.add_argument('--poisson_weight', required=True, type=float,
                         help='relative weight of poisson loss')
 # =============================================================================
@@ -157,30 +160,36 @@ def parse_args(root_dir):
     parser.add('--eval_freq', required=True, type=int,
                help="evaluation frequency")
     parser.add('--threshold', required=True, type=float,
-               help="threshold for classification metrics")
+               help="probability threshold above which to call peaks. \
+               Used for classification metrics")
     parser.add_argument('--best_metric_choice', required=True,
                         type=str,
                         choices=['BCE', 'MSE', 'Recall',
                                  'Specificity', 'CorrCoef', 'AUROC'],
-                        help="metric to be considered for best metric.\
+                        help="metric to select the best model.\
                                 Choice is case sensitive.")
 # =============================================================================
     # Inference args
     parser.add('--infer_files', required=True, type=str,
-               help='list of data files in the form of [file1, file2, ...];'
-               'or a single path to a folder of files')
+               help='list of data files in the form of "[file1, file2, ...]";'
+               'or a single path to a file or folder of files')
     parser.add('--intervals_file', required=True, type=str,
-               help='bed file containing the chr and\
-                       interval values for inference')
+               help='bed file containing the genomic\
+                       intervals for inference')
     parser.add('--sizes_file', required=True, type=str,
-               help='bed file containing the chr and max size values')
+               help='chromosome sizes file for the genome. \
+               Chromosome sizes files for hg19 and hg38 are \
+               given in the example/reference folder.')
     parser.add('--infer_threshold', required=True,
                type=type_or_none_fn(float),
-               help='threshold the output peaks to this value')
+               help='threshold above which to call peaks from the \
+               predicted probability values.')
     parser.add('--reg_rounding', required=True, type=int,
-               help='rounding values for regression outputs')
+               help='number of decimal digits to round values \
+               for regression outputs')
     parser.add('--cla_rounding', required=True, type=int,
-               help='rounding values for classification outputs')
+               help='number of decimal digits to round values \
+               for classification outputs')
     parser.add('--batches_per_worker', required=True, type=int,
                help='number of batches to run per worker\
                        during multiprocessing')
@@ -191,7 +200,7 @@ def parse_args(root_dir):
                help="checkpoint path to load the model from for\
                inference or resume training")
     parser.add('--result_fname', required=True, type=str,
-               help='filename of the inference results')
+               help='prefix for the inference result files.')
     parser.add_argument('--deletebg', action='store_true',
                         help='delete output bedGraph file')
 # =============================================================================
@@ -238,5 +247,8 @@ def parse_args(root_dir):
                      "--eval requires --val_files")
     check_dependence(args.eval, args.weights_path, parser,
                      "--eval requires --weights_path")
+
+    check_dependence(args.deletebg, args.gen_bigwig, parser,
+                     "--deletebg requires --gen_bigwig")
 
     return args

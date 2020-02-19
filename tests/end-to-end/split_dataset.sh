@@ -15,7 +15,10 @@ echo "Split the given regions of the genome into train, val, and holdout/test in
 echo ""
 # Each set of intervals will cover the first 10 Mb of a different chromosome
 python $root_dir/get_intervals.py \
-    $data_dir/example.sizes 24000 $out_dir/result \
+    --sizes $data_dir/example.sizes \
+    --intervalsize 24000 \
+    --out_dir $out_dir \
+    --prefix result \
     --val chr2 --holdout chr3
 
 
@@ -24,14 +27,14 @@ echo "Verifying output against expected results"
 python $utils_dir/verify_diff.py --result_path $out_dir/result.holdout_intervals.bed \
 	              --expected_path $expected_results_dir/result.holdout_intervals.bed \
 		      --format "general_diff"
-check_status $?
+check_status $? "holdout interval bed files do not match!"
 
 python $utils_dir/verify_diff.py --result_path $out_dir/result.val_intervals.bed \
 	              --expected_path $expected_results_dir/result.val_intervals.bed \
 		      --format "general_diff"
-check_status $?
+check_status $? "val interval bed files do not match!"
 
 python $utils_dir/verify_diff.py --result_path $out_dir/result.training_intervals.bed \
 	              --expected_path $expected_results_dir/result.training_intervals.bed \
 		      --format "general_diff"
-check_status $?
+check_status $? "training interval bed files do not match!"

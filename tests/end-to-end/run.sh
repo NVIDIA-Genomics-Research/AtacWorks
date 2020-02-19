@@ -9,19 +9,22 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
+
+set -e
+
 echo ""
 echo "Initialize environment..."
 echo ""
 export test_dir=$(readlink -f $(dirname "$0"))
 export test_root_dir=$(readlink -f "$test_dir/..")
-export root_dir=$(readlink -f "$test_root_dir/..")
+export root_dir=$(readlink -f "$test_root_dir/../scripts")
 export data_dir="$test_root_dir/data/end-to-end"
 export ref_dir="$test_root_dir/reference/end-to-end"
 export out_dir="$test_root_dir/result/end-to-end"
 export expected_results_dir="$test_root_dir/expected_results/end-to-end"
 export utils_dir="$test_root_dir/utils"
 export saved_model_dir="$test_root_dir/data/end-to-end/pretrained_models"
-export config_dir="$root_dir/configs"
+export config_dir="$root_dir/../configs"
 
 # Switch to root directory before running script.
 cd $root_dir

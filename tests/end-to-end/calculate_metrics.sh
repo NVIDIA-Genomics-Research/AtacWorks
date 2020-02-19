@@ -24,7 +24,7 @@ echo ""
 echo "Verifying output model against expected model"
 python $utils_dir/verify_diff.py --result_path $out_dir/regression_metrics_log \
     --expected_path $expected_results_dir/regression_metrics_log --format text
-check_status $?
+check_status $? "Regression metrics do not match!"
 
 echo ""
 echo "Calculate metrics for peak classification after inference..."
@@ -40,4 +40,4 @@ echo ""
 echo "Verifying output model against expected model"
 python $utils_dir/verify_diff.py --result_path $out_dir/classification_metrics_log \
     --expected_path $expected_results_dir/classification_metrics_log --format text
-check_status $?
+check_status $? "Classification metrics do not match!"

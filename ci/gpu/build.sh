@@ -38,4 +38,4 @@ source ci/common/prep-init-env.sh ${WORKSPACE}
 ################################################################################
 
 cd ${WORKSPACE}
-source ci/common/test-pyclaragenomics.sh $WORKSPACE/
+source ci/common/test-atacworks.sh $WORKSPACE/

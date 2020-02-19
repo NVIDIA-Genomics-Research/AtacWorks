@@ -51,6 +51,11 @@ git clone --recursive https://github.com/clara-genomics/AtacWorks.git
     pip install -r requirements-base.txt && pip install -r requirements-macs2.txt
     ```
 
+* Install atacworks
+
+    ```
+    pip install .
+    ```
 Note: The above non-standard installation is necessary to ensure the requirements for macs2 are installed
 before macs2 itself.
 

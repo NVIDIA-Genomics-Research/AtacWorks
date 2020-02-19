@@ -133,7 +133,8 @@ def build_model(rank, interval_size, resume,
 
     """
     # Read model parameters
-    root_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+    root_dir = os.path.abspath(
+        os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), ".."))
     model_args, extra = model_args_v1(root_dir)
 
     myprint("Building model: {} ...".format(
