@@ -10,12 +10,12 @@
 
 
 #Learning args
-clip_grad: 0 
-lr: 0.0001 
-epochs: 5
-mse_weight: 0.001 
+lr: 0.0002 
+epochs: 25
+mse_weight: 0.0005
 pearson_weight: 1
 poisson_weight: 0
+clip_grad: 0
 # Experiment args
 label: 'AtacWorks'
 out_home: './Cache'
@@ -23,6 +23,20 @@ train: False
 infer: False
 resume: False
 eval: False
+# Training args
+task: 'both'
+train_files: "None"
+print_freq: 10
+bs: 64
+num_workers: 4
+checkpoint_fname: "None"
+save_freq: 1
+# validation args
+val_files: "None"
+eval_freq: 1
+threshold: 0.5
+best_metric_choice: "AUROC"
+# Inference args
 infer_files: "None"
 intervals_file: "None"
 sizes_file: "None"
@@ -32,24 +46,11 @@ cla_rounding: 3
 batches_per_worker: 16
 gen_bigwig: False
 weights_path: "None"
-result_fname: 'infer_results.h5'
+result_fname: 'infer_results'
 deletebg: False
-# Training args
-task: 'both'
-train_files: "None"
-print_freq: 10
-bs: 8
-num_workers: 4
-checkpoint_fname: "None"
-save_freq: 1
 # Dataset args
-pad: "None"
+pad: 5000
 transform: "None"
-# validation args
-val_files: "None"
-eval_freq: 1
-threshold: 0.5
-best_metric_choice: "AUROC"
 # dist-env args
 gpu: 0
 distributed: False
