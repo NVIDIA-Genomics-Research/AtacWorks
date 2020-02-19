@@ -34,9 +34,9 @@ data_dir="$example_dir/data"
 ref_dir="$example_dir/reference"
 out_dir="$example_dir/result"
 
-root_dir=$(readlink -f "$example_dir/..")
-saved_model_dir="$root_dir/data/pretrained_models"
-config_dir="$root_dir/configs"
+root_dir=$(readlink -f "$example_dir/../scripts")
+saved_model_dir="$root_dir/../data/pretrained_models"
+config_dir="$root_dir/../configs"
 # Switch to root directory before running script.
 cd $root_dir
 
@@ -172,7 +172,7 @@ echo ""
 python $root_dir/peaksummary.py \
     --peakbw $out_dir/inference_latest/test_data_HSC.5M.output.peaks.bw \
     --trackbw $out_dir/inference_latest/test_data_HSC.5M.output.track.bw \
-    --out_home $out_dir/inference_latest \
+    --out_dir $out_dir/inference_latest \
     --prefix test_data_HSC.5M.output.summary
 
 #######
@@ -263,7 +263,7 @@ python $root_dir/bw2h5.py \
 python $root_dir/main.py --train \
     --train_files $out_dir/train_data_layers.h5 \
     --val_files $out_dir/val_data_layers.h5 \
-    --out_dir $out_dir --label HSC.5M.model.layers \
+    --out_home $out_dir --label HSC.5M.model.layers \
     --layers ctcf_for \
     --in_channels 2 \
     --checkpoint_fname checkpoint.pth.tar \
