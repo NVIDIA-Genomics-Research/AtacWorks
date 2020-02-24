@@ -27,21 +27,21 @@ We will download from AWS all of the data needed for this experiment. (Note: the
 
 ### Noisy ATAC-seq signal from 50 Monocytes
 ```
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/train_data/noisy_data/dsc.1.Mono.50.cutsites.smoothed.200.bw ./
+aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/train_data/noisy_data/dsc.1.Mono.50.cutsites.smoothed.200.bw ./
  ```
 ### Clean ATAC-seq signal from 2400 Monocytes
 ```
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/train_data/clean_data/dsc.Mono.2400.cutsites.smoothed.200.bw ./
+aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/train_data/clean_data/dsc.Mono.2400.cutsites.smoothed.200.bw ./
  ```
 ### Clean ATAC-seq peaks from 2400 Monocytes
 ```
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/train_data/clean_data/dsc.Mono.2400.cutsites.smoothed.200.3.narrowPeak ./
+aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/train_data/clean_data/dsc.Mono.2400.cutsites.smoothed.200.3.narrowPeak ./
 ```
 
 ### Config files
 We also need to download the 'configs' directory containing config files for this experiment. The config files describe the parameters of the experiment, including the structure of the deep learning model.
 ```
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/configs/ ./configs --recursive
+aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/configs/ ./configs --recursive
 ```
 
 ## Step 3: Convert clean peak file into bigWig format

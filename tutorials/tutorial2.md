@@ -25,20 +25,20 @@ atacworks=<path to atacworks>
 
 Download a pre-trained deep learning model (model.pth.tar) trained with dsc-ATAC-seq data from Monocytes and B cells. This model was reported and used in the AtacWorks paper (1).
 ```
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/models/model.pth.tar ./models/model.pth.tar
+aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/models/model.pth.tar ./models/model.pth.tar
 ```
 
 ## Step 3: Download config files
 
 We also need to download the 'configs' directory containing config files for this experiment. The config files describe the parameters of the experiment, including the structure of the deep learning model.
 ```
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/configs/ ./configs --recursive
+aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/configs/ ./configs --recursive
 ```
 
 ## Step 4: Download the test dsc-ATAC-seq signal from 50 NK cells (~ 1M reads), in bigWig format
 
 ```
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/test_data/noisy_data/dsc.1.NK.50.cutsites.smoothed.200.bw ./
+aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/test_data/noisy_data/dsc.1.NK.50.cutsites.smoothed.200.bw ./
 ```
 
 ## Step 5: Create genomic intervals to define regions for testing
