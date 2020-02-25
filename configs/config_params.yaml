@@ -10,50 +10,51 @@
 
 
 #Learning args
-lr: 0.0002 
-epochs: 25
-mse_weight: 0.0005
-pearson_weight: 1
-poisson_weight: 0
-clip_grad: 0
+lr: 0.0002                            # Learning rate
+epochs: 25                            # Number of epochs to train
+mse_weight: 0.0005                    # Weight for MSE loss function
+pearson_weight: 1                     # Weight for (1-Pearson correlation) loss function
+poisson_weight: 0                     # Weight for Poisson loss function
+clip_grad: 0                          # Gradient clipping
 # Experiment args
-label: 'AtacWorks'
-out_home: './Cache'
-train: False
-infer: False
-resume: False
-eval: False
+train: False                          # Run training
+infer: False                          # Run inference
+resume: False                         # Resume training
+eval: False                           # Run evaluation
+# Output args
+label: output                         # Output folder prefix
+out_home: './'                        # Directory in which to save output folder
 # Training args
-task: 'both'
-train_files: "None"
-print_freq: 10
-bs: 64
-num_workers: 4
-checkpoint_fname: "None"
-save_freq: 1
+task: 'both'                          # Task of the model (one of 'regression', 'classification' or 'both'. Currently Resnet models can only perform 'both'.)
+train_files: "None"                   # h5 file (or folder containing multiple h5 files) with training data
+print_freq: 20                        # Print updates every N batches
+bs: 64                                # Batch size
+num_workers: 4                        # Number of workers
+checkpoint_fname: "None"              # Name with which to save models
+save_freq: 1                          # Save models after every N epochs
 # validation args
-val_files: "None"
-eval_freq: 1
-threshold: 0.5
-best_metric_choice: "AUROC"
+val_files: "None"                     # h5 file (or folder containing multiple h5 files) with val data
+eval_freq: 1                          # Evaluate validation set performance after every N epochs
+threshold: 0.5                        # Probability threshold above which to call peak. For calculation of recall and specificity on the validation set.
+best_metric_choice: "AUROC"           # Metric to select the best saved model
 # Inference args
-infer_files: "None"
-intervals_file: "None"
-sizes_file: "None"
-infer_threshold: "None"
-reg_rounding: 0
-cla_rounding: 3
-batches_per_worker: 16
-gen_bigwig: False
-weights_path: "None"
-result_fname: 'infer_results'
-deletebg: False
+infer_files: "None"                   # h5 file (or folder containing multiple h5 files) with test data
+intervals_file: "None"                # BED file containing genomic intervals for inference
+sizes_file: "None"                    # Chromosome sizes file for inference
+infer_threshold: 0.5                  # Probability threshold above which to call peak for inference.
+reg_rounding: 0                       # Number of digits to round predicted coverage track
+cla_rounding: 3                       # Number of digits to round predicted peak probabilities
+batches_per_worker: 16                # Number of batches per worker
+weights_path: "None"                  # Path to saved model file to use for inference
+result_fname: 'infer_results'         # prefix for inference output files
+gen_bigwig: True                      # Convert output bedGraph file to bigWig
+deletebg: True                        # Delete the bedGraoh files after writing
 # Dataset args
-pad: 5000
-transform: "None"
+pad: 5000                             # Number of extra bases to pad on either side of each interval
+transform: "None"                     # Transformation to apply to coverage track before deep learning. "None" or "log".
 # dist-env args
-gpu: 0
-distributed: False
+gpu: 0                                # Which GPU to use
+distributed: False                    # If True, use all available GPUs
 dist-url: 'tcp://127.0.0.1:4321'
 dist-backend: 'gloo'
 debug: False

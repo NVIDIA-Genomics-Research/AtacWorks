@@ -11,16 +11,16 @@
 
 # Define model parameters
 
-model: resnet            # model type unet, resnet, linear, logistic, fc2, fc3
+model: resnet            # model type (one of unet, resnet, linear, logistic)
 bn: False                # batch normalization
 nblocks: 5               # number of regression blocks in resnet
 dil: 8                   # dilation for regression blocks in resnet
-width: 50                # kernel size for regression blocks in resnet
+width: 51                # kernel size for regression blocks in resnet
 nfilt: 15                # number of filters for regression blocks in resnet 
 nblocks_cla: 2           # number of classification blocks for resnet
-dil_cla: 10              # dilation for classification blocks in resnet
-width_cla: 50            # kernel size for classification blocks in resnet
+dil_cla: 8               # dilation for classification blocks in resnet
+width_cla: 51            # kernel size for classification blocks in resnet
 nfilt_cla: 15            # number of filters for classification blocks in resnet
-field: 1000              # receptive field for linear/logistic regression
-in_channels: 1           # number of tracks for noisy data
+field: None              # receptive field, only defined for linear/logistic regression
+in_channels: 1           # number of input tracks for noisy data
 afunc: relu              # Activation function.

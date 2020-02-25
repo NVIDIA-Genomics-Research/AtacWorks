@@ -51,7 +51,7 @@ The clean peak calls (`dsc.Mono.2400.cutsites.smoothed.200.3.narrowPeak`) were p
 Chromosome sizes files for the hg19 and hg38 human reference genomes are supplied with AtacWorks in the folder `AtacWorks/example/reference`. Here, we are using hg19.
 
 ```
-python $atacworks/peak2bw.py \
+python $atacworks/scripts/peak2bw.py \
     --input dsc.Mono.2400.cutsites.smoothed.200.3.narrowPeak \
     --sizes $atacworks/example/reference/hg19.chrom.sizes \
     --out_dir ./ \
@@ -71,6 +71,8 @@ INFO:2020-01-22 20:32:05,855:AtacWorks-peak2bw] Writing peaks to bigWig file dsc
 INFO:2020-01-22 20:32:06,042:AtacWorks-peak2bw] Done!
 ```
 
+For more information type `python $atacworks/scripts/peak2bw.py --help`
+
 ## Step 4: Create genomic intervals to define regions for training and validation
 
 We need to define which regions of the genome will be used to train and test the model. We want to train models on some portion of the genome ('training set') and evaluate their performance on a separate portion ('validation set'). We will choose the model that performs best on the validation set as the best model. Later, we will evaluate the performance of this best model on a third portion of the genome ('holdout set').
@@ -78,7 +80,7 @@ We need to define which regions of the genome will be used to train and test the
 We provide a chromosome sizes file 'hg19.auto.sizes' that contains sizes for all the autosomes of the hg19 reference genome. We split off chromosome 20 to use as the validation set, and chromosome 10 to use as the holdout set, and use the remaining autosomes as the training set. Since a whole chromosome is too long to feed into the model at once, we split each of these chromosomes into 50,000-bp long intervals.
 
 ```
-python $atacworks/get_intervals.py \
+python $atacworks/scripts/get_intervals.py \
      --sizes $atacworks/example/reference/hg19.auto.sizes \
      --intervalsize 50000 \
      --out_dir ./ \
@@ -100,13 +102,14 @@ chr1  350000  400000
 chr1  400000  450000
 chr1  450000  500000
 ```
+For more information type `python $atacworks/scripts/get_intervals.py --help`
 
 ## Step 5: Read the training data and labels and save in .h5 format
 
 We take the three bigWig files containing noisy ATAC-seq signal, the clean ATAC-seq signal, and the clean ATAC-seq peak calls. For these three files, we read the values in the regions defined by tge training intervals, and save these values in a format that can be read by our model. First, we read values for the intervals in the training set (`training_intervals.bed`), spanning all autosomes except chr10 and chr20.
 
 ```
-python $atacworks/bw2h5.py \
+python $atacworks/scripts/bw2h5.py \
            --noisybw dsc.1.Mono.50.cutsites.smoothed.200.bw \
            --cleanbw dsc.Mono.2400.cutsites.smoothed.200.bw \
            --cleanpeakbw dsc.Mono.2400.cutsites.smoothed.200.3.narrowPeak.bw \
@@ -114,25 +117,26 @@ python $atacworks/bw2h5.py \
            --out_dir ./ \
            --prefix Mono.50.2400.train \
            --pad 5000 \
-           --batch_size 2000 \
            --nonzero
 ```
-This produces a .h5 file in the current directory (`Mono.50.2400.train.h5`) containing the training data for the model.
+This produces a .h5 file in the current directory (`Mono.50.2400.train.h5`) containing the training data for the model. The `--nonzero` flag ignores intervals that contain zero coverage. We use this flag for training data as these intervals do not help the model to learn.
+
+For more information type `python $atacworks/scripts/bw2h5.py --help`
+
 
 ## Step 6: Read the validation data and labels and save in .h5 format
 
 Next we read and save the validation data for the model.
 
 ```
-python $atacworks/bw2h5.py \
+python $atacworks/scripts/bw2h5.py \
            --noisybw dsc.1.Mono.50.cutsites.smoothed.200.bw \
            --cleanbw dsc.Mono.2400.cutsites.smoothed.200.bw \
            --cleanpeakbw dsc.Mono.2400.cutsites.smoothed.200.3.narrowPeak.bw \
            --intervals val_intervals.bed \
            --out_dir ./ \
            --prefix Mono.50.2400.val \
-           --pad 5000 \
-           --batch_size 2000
+           --pad 5000
 ```
 This produces a .h5 file in the current directory (`Mono.50.2400.val.h5`) containing the validation data for the model.
 
@@ -144,7 +148,7 @@ We next train an AtacWorks model to learn a mapping from the noisy (50-cell) ATA
 To train the model, we supply the training and validation datasets as well as the two config files.
 
 ```
-python $atacworks/main.py --train \
+python $atacworks/scripts/main.py --train \
         --config configs/config_params.yaml \
         --config_mparams configs/model_structure.yaml \
         --train_files Mono.50.2400.train.h5 \
@@ -157,18 +161,16 @@ This model has learned a mapping from the 50-cell signal to the 2400-cell signal
 
 See [Tutorial 2](tutorial2.md) for step-by-step instructions on how to apply this trained model to another dataset.
 
+To change any of the parameters for the deep learning model, you can edit the appropriate parameters in `configs/config_params.yaml` or `configs/model_structure.yaml` and run the command in step 7 above. See the documentation in these files for an explanation of the parameters.
+
 ## References
 (1) Lal, A., Chiang, Z.D., Yakovenko, N., Duarte, F.M., Israeli, J. and Buenrostro, J.D., 2019. AtacWorks: A deep convolutional neural network toolkit for epigenomics. BioRxiv, p.829481. (https://www.biorxiv.org/content/10.1101/829481v1)
 
-## Appendix 1: Customize the training command using config files
-
-To change any of the parameters for the deep learning model, you can edit the parameters in `configs/config_params.yaml` or `configs/model_structure.yaml` and run the command in step 7 above. See the documentation in these files for an explanation of the parameters. <Note - we must include enough documentation in these files>
-
-## Appendix 2: Reproducing the model reported in the AtacWorks preprint (1)
+## Appendix 1: Reproducing the model reported in the AtacWorks preprint (1)
 
 In the paper (1) (refer to section), we report this experiment, with two differences:
 
-1. The model is trained on a larger dataset.
+1. The model is trained on more data.
 2. The model is trained for 25 epochs instead of 5.
 
 To download the exact model used in the paper, see Tutorial 2.
@@ -176,8 +178,8 @@ To download the exact model used in the paper, see Tutorial 2.
 In order to train the same model reported in the paper, follow the following steps. 
 - Download all the training and validation data
 ```
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/train_data/noisy_data/ ./train_data/noisy_data/ --recursive
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/train_data/clean_data/ ./train_data/clean_data/ --recursive
+aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/train_data/noisy_data/ ./train_data/noisy_data/ --recursive
+aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/train_data/clean_data/ ./train_data/clean_data/ --recursive
 ```
 - Encode all the training data and save in the `train_h5` directory.
 ```
@@ -186,7 +188,7 @@ cell_types = (CD19 Mono)
 samples=(1 2 3 4 5)
 for cell_type in ${cell_types[*]}; do
     for sample in ${samples[*]}; do
-        python $atacworks/bw2h5.py \
+        python $atacworks/scripts/bw2h5.py \
            --noisybw train_data/noisy_data/dsc.$sample.${cell_type}.50.cutsites.smoothed.200.bw \
            --cleanbw train_data/clean_data/dsc.${cell_type}.2400.cutsites.smoothed.200.bw \
            --cleanpeakbw train_data/clean_data/dsc.${cell_type}.2400.cutsites.smoothed.200.3.narrowPeak.bw \
@@ -194,7 +196,6 @@ for cell_type in ${cell_types[*]}; do
            --out_dir train_h5 \
            --prefix ${cell_type}.$sample.50.2400.train \
            --pad 5000 \
-           --batch_size 2000 \
            --nonzero
     done
 done
@@ -204,20 +205,19 @@ done
 mkdir val_h5
 cell_types = (CD19 Mono)
 for cell_type in ${cell_types[*]}; do
-    python $atacworks/bw2h5.py \
+    python $atacworks/scripts/bw2h5.py \
            --noisybw train_data/noisy_data/dsc.1.${cell_type}.50.cutsites.smoothed.200.bw \
            --cleanbw train_data/clean_data/dsc.${cell_type}.2400.cutsites.smoothed.200.bw \
            --cleanpeakbw train_data/clean_data/dsc.${cell_type}.2400.cutsites.smoothed.200.3.narrowPeak.bw \
            --intervals intervals/hg19.50000.val_intervals.bed \
            --out_dir train_h5 \
            --prefix ${cell_type}.50.2400.val \
-           --pad 5000 \
-           --batch_size 2000
+           --pad 5000
 done
 ```
 - Train using all of the training and validation data, for 25 epochs. Here, we supply the directories `train_h5` and `val_h5`, and the model uses all the files within these directories for training and validation respectively.
 ```
-python $atacworks/main.py --train \
+python $atacworks/scripts/main.py --train \
         --config configs/config_params.yaml \
         --config_mparams configs/model_structure.yaml \
         --train_files train_h5 \

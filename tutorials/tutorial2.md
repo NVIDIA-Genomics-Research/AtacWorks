@@ -46,21 +46,23 @@ aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cell
 The model we downloaded takes the input ATAC-seq signal in non-overlapping genomic intervals spanning 50,000 bp. To define the genomic regions for the model to read, we take the chromosomes on which we want to apply the model and split their lengths into 50,000-bp intervals, which we save in BED format. 
 In this example, we will apply the model to chromosomes 1-22. The reference genome we use is hg19. We use the prepared chromosome sizes file `hg19.auto.sizes`, which contains the sizes of chromosomes 1-22 in hg19.
 ```
-python $atacworks/get_intervals.py \
+python $atacworks/scripts/get_intervals.py \
     --sizes $atacworks/example/reference/hg19.auto.sizes \
     --intervalsize 50000 \
     --out_dir intervals \
     --prefix hg19.50000 \
     --wg
 ```
-This produces a BED file (`intervals/hg19.50000.genome_intervals.bed`). 
+This produces a BED file (`intervals/hg19.50000.genome_intervals.bed`).
+
+For more information type `python $atacworks/scripts/get_intervals.py --help`
 
 ## Step 6: Read test data over the selected intervals, and save in .h5 format
 
 We supply to `bw2h5.py` the bigWig file containing the noisy ATAC-seq signal, and the BED file containing the intervals on which to apply the model. This script reads the ATAC-seq signal within each supplied interval and saves it to a .h5 file.
 
 ```
-python $atacworks/bw2h5.py \
+python $atacworks/scripts/bw2h5.py \
            --noisybw dsc.1.NK.50.cutsites.smoothed.200.bw \
            --intervals intervals/hg19.50000.genome_intervals.bed \
            --out_dir ./ \
@@ -70,10 +72,12 @@ python $atacworks/bw2h5.py \
 ```
 This creates a file `NK.50_cells.h5`, which contains the noisy ATAC-seq signal to be fed to the pre-trained model.
 
+For more information type `python $atacworks/scripts/bw2h5.py --help`
+
 ## Step 7: Inference on selected intervals, producing denoised track and binary peak calls
 
 ```
-python $atacworks/main.py --infer \
+python $atacworks/scripts/main.py --infer \
     --infer_files NK.50_cells.h5 \
     --sizes_file $atacworks/example/reference/hg19.auto.sizes \
     --config configs/config_params.yaml \
@@ -89,12 +93,16 @@ The inference results will be saved in the folder `output_latest`. This folder w
 
 `NK_inferred.track.bedGraph` and `NK_inferred.track.bw` contain the denoised ATAC-seq track. `NK_inferred.peaks.bedGraph` and `NK_inferred.peaks.bw` contain the positions in the genome that are designated as peaks (the model predicts that the probability of these positions being part of a peak is at least 0.5)
 
+To change any of the parameters for inference with the deep learning model, you can edit the parameters in `configs/config_params.yaml` or `configs/model_structure.yaml` and run the commands in step 7-8 above. See the documentation in these files for an explanation of the parameters. 
+
+If you are using your own model instead of the one provided, edit `configs/config_params.yaml` to supply the path to your model under `weights_path`, in place of `model.pth.tar`.
+
 ## Step 8: Format peak calls
 
 Delete peaks that are shorter than 20 bp in leangth, and format peak calls in BED format with coverage statistics and summit calls:
 
 ```
-python $atacworks/peaksummary.py \
+python $atacworks/scripts/peaksummary.py \
     --peakbw output_latest/NK_inferred.peaks.bw \
     --trackbw output_latest/NK_inferred.track.bw \
     --prefix output_latest/NK_inferred.peak_calls \
@@ -110,18 +118,14 @@ This produces a file `output_latest/NK_inferred.peak_calls.bed` with 8 columns:
 7. Position of summit (relative to start)
 8. Position of summit (absolute)
 
+For more information type `python $atacworks/scripts/peaksummary.py --help`
+
+
 ## References
 (1) Lal, A., Chiang, Z.D., Yakovenko, N., Duarte, F.M., Israeli, J. and Buenrostro, J.D., 2019. AtacWorks: A deep convolutional neural network toolkit for epigenomics. BioRxiv, p.829481. (https://www.biorxiv.org/content/10.1101/829481v1)
 
 
-## Appendix 1: Customize the inference command using config files
-
-To change any of the parameters for inference with the deep learning model, you can edit the parameters in `configs/config_params.yaml` or `configs/model_structure.yaml` and run the commands in step 7-8 above. See the documentation in these files for an explanation of the parameters. 
-
-If you are using your own model instead of the one provided, edit `configs/config_params.yaml` to supply the path to your model under `weights_path`, in place of `model.pth.tar`.
-
-
-## Appendix 2: Output the peak probabilities in inference instead of peak calls
+## Appendix 1: Output the peak probabilities in inference instead of peak calls
 
 The model predicts the probability of every position on the genome being part of a peak. In the above command, we take a cutoff of 0.5, and output the positions of regions where the probability is greater than 0.5. To output the probability for every base in the genome without any cutoff, we use the following command:
 ```
@@ -142,6 +146,6 @@ macs2 bdgpeakcall -i output_latest/inferred.peaks.bedGraph -o output_latest/infe
 ```
 Where `0.5` is the probability threshold to call peaks. Note that the summit calls and peak sizes generated by this procedure will be slightly different from those produced by steps 7-8.
 
-## Appendix 3: Visualize results
+## Appendix 2: Visualize results
 
 TBA
