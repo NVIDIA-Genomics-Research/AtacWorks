@@ -344,17 +344,17 @@ def main():
         # https://github.com/facebookincubator/gloo/issues/209
         args.distributed = False if ngpus_per_node == 1 else args.distributed
 
-        _logger.info('Distributing to %s GPUS' % str(ngpus_per_node))
-
         config_dir = os.path.join(args.exp_dir, "configs")
         if not os.path.exists(config_dir):
             os.mkdir(config_dir)
         if args.distributed:
+            _logger.info('Distributing to %s GPUS' % str(ngpus_per_node))
             args.world_size = ngpus_per_node
             mp.spawn(train_worker, nprocs=ngpus_per_node,
                      args=(ngpus_per_node, args), join=True)
         else:
             assert_device_available(args.gpu)
+            _logger.info('Running on GPU: %s' % str(args.gpu))
             args.world_size = 1
             train_worker(args.gpu, ngpus_per_node, args, timers=Timers)
 
