@@ -1,0 +1,42 @@
+#
+# Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
+#
+# NVIDIA CORPORATION and its licensors retain all intellectual property
+# and proprietary rights in and to this software, related documentation
+# and any modifications thereto.  Any use, reproduction, disclosure or
+# distribution of this software and related documentation without an express
+# license agreement from NVIDIA CORPORATION is strictly prohibited.
+#
+
+
+# Experiment args
+label: 'AtacWorks'
+out_home: './Cache'
+task: 'both'
+print_freq: 10
+bs: 8
+num_workers: 4
+pad: "None"
+transform: "None"
+weights_path: "None"
+gpu: 0
+distributed: False
+dist-url: 'tcp://127.0.0.1:4321'
+dist-backend: 'gloo'
+debug: False
+
+# Train args
+files_train: "./example/result"
+checkpoint_fname: "None"
+save_freq: 1
+#Learning args
+clip_grad: 0 
+lr: 0.0001 
+epochs: 5
+mse_weight: 0.001 
+pearson_weight: 1
+poisson_weight: 0
+val_files: "None"
+eval_freq: 1
+threshold: 0.5
+best_metric_choice: "AUROC"

@@ -13,11 +13,13 @@ source $utils_dir/utils.sh
 echo ""
 echo "Train "
 echo ""
-python $root_dir/main.py --train \
-    --train_files $out_dir/train_data.h5 \
+python $root_dir/main.py train\
+    --out_home $out_dir \
+    --label model \
+    --distributed \
+    --files_train $out_dir/train_data.h5 \
     --val_files $out_dir/val_data.h5 \
-    --out_home $out_dir --label model \
     --checkpoint_fname checkpoint.pth.tar \
-    --distributed --epochs 1
+    --epochs 1
 # Training is not deterministic, so we are not comparing results.
 check_status $? "Training run not succesful!"
