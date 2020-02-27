@@ -205,7 +205,7 @@ def add_inference_options(parser):
     parser.add('--sizes_file', required=True, type=str,
                help='chromosome sizes file for the genome. \
                        Chromosome sizes files for hg19 and hg38 are \
-                       given in the example/reference folder.')
+                       given in the data/reference folder.')
     parser.add('--infer_threshold', required=True,
                type=type_or_none_fn(float),
                help='threshold above which to call peaks from the \

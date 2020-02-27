@@ -24,14 +24,14 @@ Output:
 
 Examples:
     Whole-genome intervals of size 50 kb:
-        python get_intervals.py --sizes example/reference/hg19.chrom.sizes \
+        python get_intervals.py --sizes data/reference/hg19.chrom.sizes \
         --intervalsize 50000 --out_dir ./ --wg
     Train/val/holdout intervals of size 50 kb
-        python get_intervals.py --sizes example/reference/hg19.auto.sizes \
+        python get_intervals.py --sizes data/reference/hg19.auto.sizes \
         --intervalsize 50000 --out_dir ./ --val chr20 --holdout chr10
     Train/val/holdout intervals of size 50 kb
     (upsampling peaks to 1/2 of the final training set)
-        python get_intervals.py --sizes example/reference/hg19.auto.sizes \
+        python get_intervals.py --sizes data/reference/hg19.auto.sizes \
         --intervalsize 50000 --out_dir ./ --val chr20 --holdout chr10 \
         --peakfile HSC-1.merge.filtered.depth_1000000_peaks.bw \
         --nonpeak 1

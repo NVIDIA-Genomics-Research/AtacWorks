@@ -25,7 +25,7 @@ Output:
 
 Example:
     python peak2bw.py --input peaks.narrowPeak \
-    --sizes example/reference/hg19.chrom.sizes \
+    --sizes data/reference/hg19.chrom.sizes \
     --out_dir ./ --skip 1
 
 """
