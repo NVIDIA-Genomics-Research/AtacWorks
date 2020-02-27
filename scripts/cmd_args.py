@@ -108,7 +108,7 @@ def add_common_options(parser):
     parser.add('--transform', required=True, type=str, choices=['log', 'None'],
                help='transformation to apply to\
                            coverage tracks before training')
-    parser.add('--layers', type=str,
+    parser.add('--layers', required=True, type=type_or_none_fn(str),
                help='Names of additional layers to read from h5 file \
                    as input, in the form: "[name1, name2]". \
                    Layers will be concatenated to the noisy ATAC-seq signal \
