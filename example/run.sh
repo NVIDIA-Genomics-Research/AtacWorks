@@ -100,13 +100,13 @@ python $root_dir/bw2h5.py \
 echo ""
 echo "Step 4: Train and validate model..."
 echo ""
-python $root_dir/main.py --train \
-    --train_files $out_dir/train_data.h5 \
-    --val_files $out_dir/val_data.h5 \
+python $root_dir/main.py train \
     --out_home $out_dir \
     --label HSC.5M.model \
+    --distributed \
+    --files_train $out_dir/train_data.h5 \
+    --val_files $out_dir/val_data.h5 \
     --checkpoint_fname checkpoint.pth.tar \
-    --distributed
 
 echo ""
 echo "Step 5: Calculate baseline metrics on the test set..."
@@ -134,15 +134,17 @@ echo ""
 # Feature alert: usage of --config_mparams. 
 ##This option allows you to specify a custom model config file.
 
-python $root_dir/main.py --infer \
-    --infer_files $out_dir/test_data.h5 \
+python $root_dir/main.py infer \
+    --out_home $out_dir --label inference \
+    --weights_path $out_dir/HSC.5M.model_latest/model_best.pth.tar \
+    --num_workers 0 \
+    --files $out_dir/test_data.h5 \
     --intervals_file $out_dir/example.holdout_intervals.bed \
     --sizes_file $ref_dir/hg19.auto.sizes \
     --infer_threshold 0.5 \
-    --weights_path $out_dir/HSC.5M.model_latest/model_best.pth.tar \
-    --out_home $out_dir --label inference --config_mparams $config_dir/model_structure.yaml \
     --result_fname HSC.5M.output \
-    --num_workers 0 --gen_bigwig
+    --config_mparams $config_dir/model_structure.yaml \
+    --gen_bigwig
 
 echo ""
 echo "Step 7a: Calculate metrics for track coverage after inference..."
@@ -181,14 +183,15 @@ echo ""
 echo "An alternative method to call peaks (for advanced usage)..."
 echo ""
 # Note: change  --weights_path to the path for your saved model!
-python $root_dir/main.py --infer \
-    --infer_files $out_dir/test_data.h5 \
+python $root_dir/main.py infer \
+    --out_home $out_dir --label inference \
+    --weights_path $out_dir/HSC.5M.model_latest/model_best.pth.tar \
+    --num_workers 0 \
+    --files $out_dir/test_data.h5 \
     --intervals_file $out_dir/example.holdout_intervals.bed \
     --sizes_file $ref_dir/hg19.auto.sizes \
-    --weights_path $out_dir/HSC.5M.model_latest/model_best.pth.tar \
-    --out_home $out_dir --label inference \
     --result_fname HSC.5M.output.probs \
-    --num_workers 0 --gen_bigwig
+    --gen_bigwig
 
 macs2 bdgpeakcall -i $out_dir/inference_latest/test_data_HSC.5M.output.probs.peaks.bedGraph -o $out_dir/inference_latest/test_data_HSC.5M.output.peaks.narrowPeak -c 0.5
 
@@ -198,14 +201,15 @@ echo ""
 echo "Alternatively, run inference using a pretrained model on the test dataset..."
 echo ""
 # Inference output track
-python $root_dir/main.py --infer \
-    --infer_files $out_dir/test_data.h5 \
+python $root_dir/main.py infer \
+    --out_home $out_dir --label inference.pretrained \
+    --weights_path $saved_model_dir/bulk_blood_data/5000000.7cell.resnet.5.2.15.8.50.0803.pth.tar \
+    --num_workers 0 \
+    --files $out_dir/test_data.h5 \
     --intervals_file $out_dir/example.holdout_intervals.bed \
     --sizes_file $ref_dir/hg19.auto.sizes \
-    --weights_path $saved_model_dir/bulk_blood_data/5000000.7cell.resnet.5.2.15.8.50.0803.pth.tar \
-    --out_home $out_dir --label inference.pretrained \
     --result_fname HSC.5M.output.pretrained \
-    --num_workers 0 --gen_bigwig
+    --gen_bigwig
 
 echo ""
 echo "Calculate metrics after inference..."
@@ -260,25 +264,26 @@ python $root_dir/bw2h5.py \
     --nolabel
 
 #Train and validate model..."
-python $root_dir/main.py --train \
-    --train_files $out_dir/train_data_layers.h5 \
-    --val_files $out_dir/val_data_layers.h5 \
+python $root_dir/main.py train \
     --out_home $out_dir --label HSC.5M.model.layers \
     --layers ctcf_for \
+    --gpu 0 \
+    --files_train $out_dir/train_data_layers.h5 \
+    --val_files $out_dir/val_data_layers.h5 \
     --in_channels 2 \
     --checkpoint_fname checkpoint.pth.tar \
-    --gpu 0
 
 # Inference
-python $root_dir/main.py --infer \
-    --infer_files $out_dir/test_data_layers.h5 \
+python $root_dir/main.py infer \
+    --out_home $out_dir --label inference \
+    --weights_path $out_dir/HSC.5M.model.layers_latest/model_best.pth.tar \
+    --layers ctcf_for \
+    --num_workers 0 \
+    --files $out_dir/test_data_layers.h5 \
     --intervals_file $out_dir/example.holdout_intervals.bed \
     --sizes_file $ref_dir/hg19.auto.sizes \
     --infer_threshold 0.5 \
-    --weights_path $out_dir/HSC.5M.model.layers_latest/model_best.pth.tar \
-    --out_dir $out_dir --label inference \
     --config_mparams $config_dir/model_structure.yaml \
     --result_fname HSC.5M.layers.output \
-    --layers ctcf_for \
     --in_channels 2 \
-    --num_workers 0 --gen_bigwig
+    --gen_bigwig

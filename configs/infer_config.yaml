@@ -1,0 +1,42 @@
+#
+# Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
+#
+# NVIDIA CORPORATION and its licensors retain all intellectual property
+# and proprietary rights in and to this software, related documentation
+# and any modifications thereto.  Any use, reproduction, disclosure or
+# distribution of this software and related documentation without an express
+# license agreement from NVIDIA CORPORATION is strictly prohibited.
+#
+
+# Experiment args
+label: 'inference_output'
+out_home: './'
+task: 'both'
+print_freq: 10
+bs: 8
+num_workers: 4
+pad: "None"
+transform: "None"
+weights_path: "None"
+gpu: 0
+distributed: False
+
+dist-url: 'tcp://127.0.0.1:4321'
+dist-backend: 'gloo'
+debug: False
+
+#Infer args
+files: "None"
+intervals_file: "None"
+sizes_file: "None"
+infer_threshold: "None"
+reg_rounding: 0
+cla_rounding: 3
+batches_per_worker: 16
+gen_bigwig: False
+result_fname: 'infer_results.h5'
+deletebg: False
+
+# Eval args (Needs all the above args as well)
+threshold: 0.5
+best_metric_choice: "AUROC"

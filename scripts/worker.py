@@ -144,10 +144,12 @@ def get_model(args, gpu, rank):
                                 world_size=args.world_size, rank=rank)
 
     # Why is model & optimizer built in spawned function?
+    resume = (args.weights_path is not None)
     model, model_params = build_model(rank=rank,
                                       interval_size=args.interval_size,
-                                      resume=args.resume,
-                                      infer=args.infer, evaluate=args.eval,
+                                      resume=resume,
+                                      infer=args.mode == "infer",
+                                      evaluate=args.mode == "eval",
                                       weights_path=args.weights_path,
                                       gpu=gpu, distributed=args.distributed)
     return model, model_params
@@ -176,7 +178,7 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
     dst_path = os.path.join(config_dir, "model_structure.yaml")
     save_config(dst_path, model_params)
     # TODO: LR schedule
-    train_dataset = DatasetTrain(files=args.train_files, layers=args.layers)
+    train_dataset = DatasetTrain(files=args.files_train, layers=args.layers)
     train_sampler = None
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(
@@ -230,7 +232,7 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
                      metrics_reg=metrics_reg, metrics_cla=metrics_cla,
                      world_size=args.world_size, distributed=args.distributed,
                      best_metric=best_metric, pad=args.pad,
-                     transform=args.transform)
+                     print_freq=args.print_freq, transform=args.transform)
 
             if rank == 0:
                 new_best = best_metric.better_than(current_best)
@@ -265,7 +267,7 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
 
     model, _ = get_model(args, gpu, rank)
 
-    infer_dataset = DatasetInfer(files=args.infer_files, layers=args.layers)
+    infer_dataset = DatasetInfer(files=args.files, layers=args.layers)
     infer_sampler = None
 
     if args.distributed:
@@ -298,7 +300,7 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
 
     model, _ = get_model(args, gpu, rank)
 
-    eval_dataset = DatasetTrain(args.val_files)
+    eval_dataset = DatasetTrain(args.files, layers=args.layers)
     eval_sampler = None
 
     if args.distributed:
@@ -318,4 +320,5 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
              metrics_cla=metrics_cla,
              world_size=args.world_size, distributed=args.distributed,
              best_metric=best_metric, res_queue=res_queue,
-             pad=args.pad, transform=args.transform)
+             pad=args.pad, transform=args.transform,
+             print_freq=args.print_freq)

@@ -16,7 +16,7 @@ echo ""
 python $root_dir/calculate_baseline_metrics.py \
     --label_file $data_dir/HSC.80M.chr123.10mb.coverage.bw \
     --task regression \
-    --test_file $out_dir/inference_latest/no_label_infer_results.h5.track.bw \
+    --test_file $out_dir/inference_latest/no_label_infer.track.bw \
     --intervals $out_dir/result.holdout_intervals.bed \
     --sep_peaks --peak_file $out_dir/clean.peaks.bw >& $out_dir/regression_metrics_log
 
@@ -32,7 +32,7 @@ echo ""
 python $root_dir/calculate_baseline_metrics.py \
     --label_file $out_dir/clean.peaks.bw \
     --task classification \
-    --test_file $out_dir/inference_latest/no_label_infer_results.h5.peaks.bw \
+    --test_file $out_dir/inference_latest/no_label_infer.peaks.bw \
     --intervals $out_dir/result.holdout_intervals.bed \
     --thresholds 0.5 >& $out_dir/classification_metrics_log
 

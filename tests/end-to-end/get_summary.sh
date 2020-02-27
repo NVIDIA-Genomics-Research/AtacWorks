@@ -14,8 +14,8 @@ echo ""
 echo "Summarize peak statistics..."
 echo ""
 python $root_dir/peaksummary.py \
-    --peakbw $out_dir/inference_latest/no_label_infer_results.h5.peaks.bw \
-    --trackbw $out_dir/inference_latest/no_label_infer_results.h5.track.bw \
+    --peakbw $out_dir/inference_latest/no_label_infer.peaks.bw \
+    --trackbw $out_dir/inference_latest/no_label_infer.track.bw \
     --out_dir $out_dir/inference_latest \
     --prefix no_label.output.summary \
     --minlen 50
