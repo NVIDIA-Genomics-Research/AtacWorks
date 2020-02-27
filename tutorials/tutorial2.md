@@ -77,23 +77,25 @@ For more information type `python $atacworks/scripts/bw2h5.py --help`
 ## Step 7: Inference on selected intervals, producing denoised track and binary peak calls
 
 ```
-python $atacworks/scripts/main.py --infer \
+python $atacworks/scripts/main.py infer \
     --infer_files NK.50_cells.h5 \
     --sizes_file $atacworks/example/reference/hg19.auto.sizes \
-    --config configs/config_params.yaml \
+    --config configs/infer_config.yaml \
     --config_mparams configs/model_structure.yaml \
     --infer_threshold 0.5
 ```
 
 The inference results will be saved in the folder `output_latest`. This folder will contain four files: 
 1. `NK_inferred.track.bedGraph` 
-1. `NK_inferred.track.bw` 
+2. `NK_inferred.track.bw` 
 3. `NK_inferred.peaks.bedGraph`. 
 4. `NK_inferred.peaks.bw`
 
 `NK_inferred.track.bedGraph` and `NK_inferred.track.bw` contain the denoised ATAC-seq track. `NK_inferred.peaks.bedGraph` and `NK_inferred.peaks.bw` contain the positions in the genome that are designated as peaks (the model predicts that the probability of these positions being part of a peak is at least 0.5)
 
-To change any of the parameters for inference with the deep learning model, you can edit the parameters in `configs/config_params.yaml` or `configs/model_structure.yaml` and run the commands in step 7-8 above. See the documentation in these files for an explanation of the parameters. 
+To change any of the parameters for inference with the deep learning model, you can edit the parameters in `configs/config_params.yaml` or `configs/model_structure.yaml` and run the commands in step 7-8 above. 
+
+Type `python $atacworks/scripts/main.py infer --help` for an explanation of the parameters.
 
 If you are using your own model instead of the one provided, edit `configs/config_params.yaml` to supply the path to your model under `weights_path`, in place of `model.pth.tar`.
 

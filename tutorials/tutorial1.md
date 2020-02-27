@@ -16,7 +16,7 @@ We train an AtacWorks model to learn a mapping from the 50-cell ATAC-seq signals
 
 ## Step 1: Set parameters
 
-Replace 'path_to_atacworks' with the path to your cloned 'AtacWorks' github repository.
+Replace 'path_to_atacworks' with the path to your cloned and set up 'AtacWorks' github repository.
 ```
 atacworks=<path_to_atacworks>
 ```
@@ -148,12 +148,11 @@ We next train an AtacWorks model to learn a mapping from the noisy (50-cell) ATA
 To train the model, we supply the training and validation datasets as well as the two config files.
 
 ```
-python $atacworks/scripts/main.py --train \
-        --config configs/config_params.yaml \
+python $atacworks/scripts/main.py train \
+        --config configs/train_config.yaml \
         --config_mparams configs/model_structure.yaml \
         --train_files Mono.50.2400.train.h5 \
         --val_files Mono.50.2400.val.h5 \
-        --epochs 5
 ```
 This command trains a deep learning model using the supplied clean and noisy ATAC-seq data, for 5 epochs (5 full passes through the dataset). At the end of every epoch, the current state of the model is saved in the directory `output_latest`, and the performance of the current model is measured on the validation set. At the end, out of the 5 saved models, the one with the best performance on the validation set is saved as `output_latest/model_best.pth.tar`
 
@@ -161,19 +160,18 @@ This model has learned a mapping from the 50-cell signal to the 2400-cell signal
 
 See [Tutorial 2](tutorial2.md) for step-by-step instructions on how to apply this trained model to another dataset.
 
-To change any of the parameters for the deep learning model, you can edit the appropriate parameters in `configs/config_params.yaml` or `configs/model_structure.yaml` and run the command in step 7 above. See the documentation in these files for an explanation of the parameters.
+To change any of the parameters for the deep learning model, you can edit the appropriate parameters in `configs/config_params.yaml` or `configs/model_structure.yaml` and run the command in step 7 above. 
+
+Type `python $atacworks/scripts/main.py train --help` for an explanation of the parameters.
 
 ## References
 (1) Lal, A., Chiang, Z.D., Yakovenko, N., Duarte, F.M., Israeli, J. and Buenrostro, J.D., 2019. AtacWorks: A deep convolutional neural network toolkit for epigenomics. BioRxiv, p.829481. (https://www.biorxiv.org/content/10.1101/829481v1)
 
 ## Appendix 1: Reproducing the model reported in the AtacWorks preprint (1)
 
-In the paper (1) (refer to section), we report this experiment, with two differences:
+In the paper (1) (refer to section), we report this experiment, although the model we use there is trained on more data.
 
-1. The model is trained on more data.
-2. The model is trained for 25 epochs instead of 5.
-
-To download the exact model used in the paper, see Tutorial 2.
+To download the exact model used in the paper, see [Tutorial 2](tutorial2.md).
 
 In order to train the same model reported in the paper, follow the following steps. 
 - Download all the training and validation data
@@ -215,12 +213,11 @@ for cell_type in ${cell_types[*]}; do
            --pad 5000
 done
 ```
-- Train using all of the training and validation data, for 25 epochs. Here, we supply the directories `train_h5` and `val_h5`, and the model uses all the files within these directories for training and validation respectively.
+- Train using all of the training and validation data. Here, we supply the directories `train_h5` and `val_h5`, and the model uses all the files within these directories for training and validation respectively.
 ```
-python $atacworks/scripts/main.py --train \
-        --config configs/config_params.yaml \
+python $atacworks/scripts/main.py train \
+        --config configs/train_config.yaml \
         --config_mparams configs/model_structure.yaml \
         --train_files train_h5 \
         --val_files val_h5 \
-        --epochs 25
 ```

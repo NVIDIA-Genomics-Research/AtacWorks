@@ -10,14 +10,12 @@
 
 
 # Experiment args
-label: 'AtacWorks'
-out_home: './Cache'
+label: 'trained_models'
+out_home: './'
 task: 'both'
-print_freq: 10
-bs: 8
+print_freq: 50
+bs: 64
 num_workers: 4
-pad: "None"
-transform: "None"
 weights_path: "None"
 gpu: 0
 distributed: False
@@ -25,18 +23,25 @@ dist-url: 'tcp://127.0.0.1:4321'
 dist-backend: 'gloo'
 debug: False
 
+# Data processing args
+pad: 5000
+transform: "None"
+
 # Train args
-files_train: "./example/result"
+files_train: "None"
 checkpoint_fname: "None"
 save_freq: 1
+
 #Learning args
 clip_grad: 0 
-lr: 0.0001 
-epochs: 5
-mse_weight: 0.001 
+lr: 0.0002 
+epochs: 25
+mse_weight: 0.0005 
 pearson_weight: 1
 poisson_weight: 0
+
+# Validation args
 val_files: "None"
 eval_freq: 1
-threshold: 0.5
 best_metric_choice: "AUROC"
+threshold: 0.5

@@ -82,9 +82,9 @@ then
 fi
 
 # Check config files
-config_file=$(ls $CONFIGS_FOLDER/* | grep "$CONFIGS_FOLDER/config_params.yaml")
+config_file=$(ls $CONFIGS_FOLDER/* | grep "$CONFIGS_FOLDER/train_config.yaml")
 model_structure=$(ls $CONFIGS_FOLDER/* | grep -o "$CONFIGS_FOLDER/model_structure.yaml")
-if [ "$config_file" != "$CONFIGS_FOLDER/config_params.yaml" ] || [ "$model_structure" != "$CONFIGS_FOLDER/model_structure.yaml" ]
+if [ "$config_file" != "$CONFIGS_FOLDER/train_config.yaml" ] || [ "$model_structure" != "$CONFIGS_FOLDER/model_structure.yaml" ]
 then
     echo "config_params.yaml and model_structure.yaml files expected inside $CONFIGS_FOLDER!"
     echo "See help. Note that file names are case sensitive."
@@ -102,18 +102,39 @@ clean_peaks_prefix=$(basename $CLEAN_PEAKS)
 
 # peak2bw
 echo "Convert clean peak file into bigWig format"
-python $script_dir/peak2bw.py --input $CLEAN_PEAKS --sizes $SIZES_FILE --out_dir $OUT_DIR --skip 1
+python $script_dir/peak2bw.py --input $CLEAN_PEAKS \
+    --sizes $SIZES_FILE \
+    --out_dir $OUT_DIR \
+    --skip 1
 
 # get_intervals
 echo "Generate train/val/test intervals"
-python $script_dir/get_intervals.py --sizes $SIZES_FILE --intervalsize 50000 --out_dir $OUT_DIR --val $VAL_CHR --holdout $HOLDOUT_CHR
+python $script_dir/get_intervals.py --sizes $SIZES_FILE \
+    --intervalsize 50000 \
+    --out_dir $OUT_DIR \
+    --val $VAL_CHR --holdout $HOLDOUT_CHR
 
 # Training h5
 echo "Save the training data and labels into .h5 format"
-python $script_dir/bw2h5.py --noisybw $NOISY_DATA_BW --cleanbw $CLEAN_DATA_BW --cleanpeakbw $OUT_DIR/$clean_peaks_prefix.bw --intervals $OUT_DIR/training_intervals.bed --out_dir $OUT_DIR --prefix train --pad 5000 --nonzero
+python $script_dir/bw2h5.py --noisybw $NOISY_DATA_BW \
+    --cleanbw $CLEAN_DATA_BW \
+    --cleanpeakbw $OUT_DIR/$clean_peaks_prefix.bw \
+    --intervals $OUT_DIR/training_intervals.bed \
+    --out_dir $OUT_DIR --prefix train \
+    --pad 5000 --nonzero
 
 echo "Save the validation data and labels into .h5 format"
-python $script_dir/bw2h5.py --noisybw $NOISY_DATA_BW --cleanbw $CLEAN_DATA_BW --cleanpeakbw $OUT_DIR/$clean_peaks_prefix.bw --intervals $OUT_DIR/val_intervals.bed --out_dir $OUT_DIR --prefix val --pad 5000
+python $script_dir/bw2h5.py --noisybw $NOISY_DATA_BW \
+    --cleanbw $CLEAN_DATA_BW \
+    --cleanpeakbw $OUT_DIR/$clean_peaks_prefix.bw \
+    --intervals $OUT_DIR/val_intervals.bed \
+    --out_dir $OUT_DIR --prefix val \
+    --pad 5000
 
 echo "Train and validate a model using model parameters saved in the config files"
-python $script_dir/main.py --train --config $config_file --config_mparams $model_structure --train_files $OUT_DIR/train.h5 --val_files $OUT_DIR/val.h5 --out_home $OUT_DIR
+python $script_dir/main.py train \
+    --config $config_file \
+    --config_mparams $model_structure \
+    --train_files $OUT_DIR/train.h5 \
+    --val_files $OUT_DIR/val.h5 \
+    --out_home $OUT_DIR

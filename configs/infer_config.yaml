@@ -12,30 +12,32 @@
 label: 'inference_output'
 out_home: './'
 task: 'both'
-print_freq: 10
-bs: 8
+print_freq: 50
+bs: 512
 num_workers: 4
-pad: "None"
-transform: "None"
 weights_path: "None"
 gpu: 0
 distributed: False
-
 dist-url: 'tcp://127.0.0.1:4321'
 dist-backend: 'gloo'
 debug: False
+
+# Data processing args
+pad: 5000
+transform: "None"
+layers: "None"
 
 #Infer args
 files: "None"
 intervals_file: "None"
 sizes_file: "None"
-infer_threshold: "None"
+infer_threshold: 0.5
 reg_rounding: 0
 cla_rounding: 3
 batches_per_worker: 16
-gen_bigwig: False
-result_fname: 'infer_results.h5'
-deletebg: False
+gen_bigwig: True
+result_fname: inferred
+deletebg: True
 
 # Eval args (Needs all the above args as well)
 threshold: 0.5

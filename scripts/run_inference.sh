@@ -63,9 +63,9 @@ fi
 
 # Check config files
 echo "Configs folder: $CONFIGS_FOLDER"
-config_file=$(ls $CONFIGS_FOLDER/* | grep "$CONFIGS_FOLDER/config_params.yaml")
+config_file=$(ls $CONFIGS_FOLDER/* | grep "$CONFIGS_FOLDER/infer_config.yaml")
 model_structure=$(ls $CONFIGS_FOLDER/* | grep -o "$CONFIGS_FOLDER/model_structure.yaml")
-if [ "$config_file" != "$CONFIGS_FOLDER/config_params.yaml" ] || [ "$model_structure" != "$CONFIGS_FOLDER/model_structure.yaml" ]
+if [ "$config_file" != "$CONFIGS_FOLDER/infer_config.yaml" ] || [ "$model_structure" != "$CONFIGS_FOLDER/model_structure.yaml" ]
 then
     echo "config_params.yaml and model_structure.yaml files expected inside $CONFIGS_FOLDER!"
     echo "See help. Note that file names are case sensitive."
@@ -76,15 +76,24 @@ fi
 
 # get_intervals
 echo "Make test intervals"
-python $script_dir/get_intervals.py --sizes $SIZES_FILE --intervalsize 50000 --out_dir $OUT_DIR --wg
+python $script_dir/get_intervals.py --sizes $SIZES_FILE \
+    --intervalsize 50000 --out_dir $OUT_DIR --wg
 
 #bw2h5
 echo "Read test data over selected intervals and save into .h5 format"
-python $script_dir/bw2h5.py --noisybw $TEST_DATA_BW --intervals $OUT_DIR/genome_intervals.bed --out_dir $OUT_DIR --prefix test_data --pad 5000 --nolabel
+python $script_dir/bw2h5.py --noisybw $TEST_DATA_BW \
+    --intervals $OUT_DIR/genome_intervals.bed \
+    --out_dir $OUT_DIR --prefix test_data \
+    --pad 5000 --nolabel
 
 #inference
 echo "Inference on selected intervals, producing denoised track and binary peak calls"
-python $script_dir/main.py --infer --infer_files $OUT_DIR/test_data.h5 --weights_path $MODEL_FILE --sizes_file $SIZES_FILE --intervals_file $OUT_DIR/genome_intervals.bed --config $config_file --config_mparams $model_structure
+python $script_dir/main.py infer \
+    --infer_files $OUT_DIR/test_data.h5 \
+    --weights_path $MODEL_FILE \
+    --sizes_file $SIZES_FILE \
+    --intervals_file $OUT_DIR/genome_intervals.bed \
+    --config $config_file --config_mparams $model_structure
 
 #peaksummary
 # Run only if an inference threshold is provided
