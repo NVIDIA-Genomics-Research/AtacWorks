@@ -36,6 +36,7 @@ batches_per_worker: 16
 gen_bigwig: False
 result_fname: 'infer_results.h5'
 deletebg: False
+layers: "None"
 
 # Eval args (Needs all the above args as well)
 threshold: 0.5
