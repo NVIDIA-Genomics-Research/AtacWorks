@@ -93,7 +93,7 @@ The inference results will be saved in the folder `output_latest`. This folder w
 
 `NK_inferred.track.bedGraph` and `NK_inferred.track.bw` contain the denoised ATAC-seq track. `NK_inferred.peaks.bedGraph` and `NK_inferred.peaks.bw` contain the positions in the genome that are designated as peaks (the model predicts that the probability of these positions being part of a peak is at least 0.5)
 
-To change any of the parameters for inference with the deep learning model, you can edit the parameters in `configs/config_params.yaml` or `configs/model_structure.yaml` and run the commands in step 7-8 above. 
+To change any of the parameters for inference with the deep learning model, you can edit the parameters in `configs/infer_config.yaml` or `configs/model_structure.yaml` and run the commands in step 7-8 above. 
 
 Type `python $atacworks/scripts/main.py infer --help` for an explanation of the parameters.
 
@@ -132,7 +132,7 @@ For more information type `python $atacworks/scripts/peaksummary.py --help`
 The model predicts the probability of every position on the genome being part of a peak. In the above command, we take a cutoff of 0.5, and output the positions of regions where the probability is greater than 0.5. To output the probability for every base in the genome without any cutoff, we use the following command:
 ```
 python $atacworks/main.py --infer \
-    --config configs/config_params.yaml \
+    --config configs/infer_config.yaml \
     --config_mparams configs/model_structure.yaml
 ```
 The inference results will be saved in the folder `output_latest`. This folder will contain the same 4 files described in Step 7. However, `NK_inferred.peaks.bedGraph` and `NK_inferred.peaks.bw` will contain the probability of being part of a peak, for every position in the genome. This command is much slower, and the `NK_inferred.peaks.bedGraph` file produced by this command is much larger than the file produced in Step 7.
