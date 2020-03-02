@@ -26,6 +26,7 @@ debug: False
 # Data processing args
 pad: 5000
 transform: "None"
+layers: "None"
 
 # Train args
 files_train: "None"

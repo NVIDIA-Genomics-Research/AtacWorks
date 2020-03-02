@@ -37,8 +37,5 @@ cla_rounding: 3
 batches_per_worker: 16
 gen_bigwig: True
 result_fname: inferred
-deletebg: True
-
-# Eval args (Needs all the above args as well)
-threshold: 0.5
-best_metric_choice: "AUROC"
+deletebg: False
+layers: "None"
