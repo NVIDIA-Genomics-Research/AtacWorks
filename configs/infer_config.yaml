@@ -9,8 +9,8 @@
 #
 
 # Experiment args
-label: 'inference_output'
 out_home: './'
+label: 'inference_output'
 task: 'both'
 print_freq: 50
 bs: 512
