@@ -40,3 +40,4 @@ val_files: "None"
 eval_freq: 1
 threshold: 0.5
 best_metric_choice: "AUROC"
+layers: "None"
