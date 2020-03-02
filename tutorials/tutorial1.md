@@ -23,7 +23,7 @@ atacworks=<path_to_atacworks>
 
 ## Step 2: Download data
 
-We will download from AWS all of the data needed for this experiment. (Note: the S3 bucket is not yet public. We can use wget for download once it is.)
+We will download all of the data needed for this experiment from AWS. (Note: the S3 bucket is not yet public. We can use wget for download once it is.)
 
 ### Noisy ATAC-seq signal from 50 Monocytes
 ```
@@ -160,7 +160,7 @@ This model has learned a mapping from the 50-cell signal to the 2400-cell signal
 
 See [Tutorial 2](tutorial2.md) for step-by-step instructions on how to apply this trained model to another dataset.
 
-To change any of the parameters for the deep learning model, you can edit the appropriate parameters in `configs/config_params.yaml` or `configs/model_structure.yaml` and run the command in step 7 above. 
+To change any of the parameters for the deep learning model, you can edit the appropriate parameters in `configs/train_config.yaml` or `configs/model_structure.yaml` and run the command in step 7 above. 
 
 Type `python $atacworks/scripts/main.py train --help` for an explanation of the parameters.
 
