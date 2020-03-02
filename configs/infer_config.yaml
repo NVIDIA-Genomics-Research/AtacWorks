@@ -38,4 +38,3 @@ batches_per_worker: 16
 gen_bigwig: True
 result_fname: inferred
 deletebg: False
-layers: "None"
