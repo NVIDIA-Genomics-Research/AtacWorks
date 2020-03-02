@@ -34,7 +34,7 @@ function print_help {
     echo " "
     echo "<out_dir>                      path to output directory."
     echo " "
-    echo "<path-to-configs-folder>       must contain config_params.yaml and model_structure.yaml. Optional. If not provided, defaults to AtacWorks/configs."
+    echo "<path-to-configs-folder>       must contain infer_config.yaml and model_structure.yaml. Optional. If not provided, defaults to AtacWorks/configs."
 }
 
 # Check test data
@@ -67,7 +67,7 @@ config_file=$(ls $CONFIGS_FOLDER/* | grep "$CONFIGS_FOLDER/infer_config.yaml")
 model_structure=$(ls $CONFIGS_FOLDER/* | grep -o "$CONFIGS_FOLDER/model_structure.yaml")
 if [ "$config_file" != "$CONFIGS_FOLDER/infer_config.yaml" ] || [ "$model_structure" != "$CONFIGS_FOLDER/model_structure.yaml" ]
 then
-    echo "config_params.yaml and model_structure.yaml files expected inside $CONFIGS_FOLDER!"
+    echo "infer_config.yaml and model_structure.yaml files expected inside $CONFIGS_FOLDER!"
     echo "See help. Note that file names are case sensitive."
     echo " "
     print_help
@@ -79,7 +79,7 @@ echo "Make test intervals"
 python $script_dir/get_intervals.py --sizes $SIZES_FILE \
     --intervalsize 50000 --out_dir $OUT_DIR --wg
 
-#bw2h5
+#Extract and encode data
 echo "Read test data over selected intervals and save into .h5 format"
 python $script_dir/bw2h5.py --noisybw $TEST_DATA_BW \
     --intervals $OUT_DIR/genome_intervals.bed \
