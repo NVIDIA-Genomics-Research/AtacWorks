@@ -39,7 +39,7 @@ function print_help {
     echo "<chromosome for validation>       name of chromosome to use for validation"
     echo " "
     echo "<chromosome for holdout>          name of chromosome to hold out from training"
-    echo "<path-to-configs-folder>          must contain config_params.yaml and model_structure.yaml. Optional. If not provided, defaults to AtacWorks/configs."
+    echo "<path-to-configs-folder>          must contain train_config.yaml and model_structure.yaml. Optional. If not provided, defaults to AtacWorks/configs."
     echo " "
 
 }
@@ -86,7 +86,7 @@ config_file=$(ls $CONFIGS_FOLDER/* | grep "$CONFIGS_FOLDER/train_config.yaml")
 model_structure=$(ls $CONFIGS_FOLDER/* | grep -o "$CONFIGS_FOLDER/model_structure.yaml")
 if [ "$config_file" != "$CONFIGS_FOLDER/train_config.yaml" ] || [ "$model_structure" != "$CONFIGS_FOLDER/model_structure.yaml" ]
 then
-    echo "config_params.yaml and model_structure.yaml files expected inside $CONFIGS_FOLDER!"
+    echo "train_config.yaml and model_structure.yaml files expected inside $CONFIGS_FOLDER!"
     echo "See help. Note that file names are case sensitive."
     echo " "
     print_help
@@ -114,7 +114,7 @@ python $script_dir/get_intervals.py --sizes $SIZES_FILE \
     --out_dir $OUT_DIR \
     --val $VAL_CHR --holdout $HOLDOUT_CHR
 
-# Training h5
+# Extract and encode training data
 echo "Save the training data and labels into .h5 format"
 python $script_dir/bw2h5.py --noisybw $NOISY_DATA_BW \
     --cleanbw $CLEAN_DATA_BW \
@@ -123,6 +123,7 @@ python $script_dir/bw2h5.py --noisybw $NOISY_DATA_BW \
     --out_dir $OUT_DIR --prefix train \
     --pad 5000 --nonzero
 
+# Extract and encode validation data
 echo "Save the validation data and labels into .h5 format"
 python $script_dir/bw2h5.py --noisybw $NOISY_DATA_BW \
     --cleanbw $CLEAN_DATA_BW \
