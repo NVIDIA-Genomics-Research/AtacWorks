@@ -31,10 +31,12 @@ layers: "None"
 files: "None"
 intervals_file: "None"
 sizes_file: "None"
-infer_threshold: 0.5
 reg_rounding: 0
 cla_rounding: 3
+infer_threshold: 0.5
 batches_per_worker: 16
-gen_bigwig: True
+
+# Output file args
 result_fname: inferred
+gen_bigwig: True
 deletebg: False
