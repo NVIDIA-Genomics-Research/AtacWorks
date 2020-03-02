@@ -13,7 +13,7 @@ If the setup above completed successfully and your system has access to [Docker 
 then the following command will run a sample AtacWorks workflow.
 
 ```
-    docker run --gpus all claraomics/atacworks /AtacWorks/example/run.sh
+    docker run --gpus all claraomics/atacworks /AtacWorks/tests/end-to-end/run.sh
 ```
 
 If the above command doesn't run successfully, please stop and re-install docker or contact the
