@@ -10,8 +10,8 @@
 
 
 # Experiment args
-label: 'trained_models'
 out_home: './'
+label: 'trained_models'
 task: 'both'
 print_freq: 50
 bs: 64
