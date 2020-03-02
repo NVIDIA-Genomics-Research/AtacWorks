@@ -3,7 +3,7 @@ To use pretrained models in this directory for inference:
 python <path to repo>/main.py --infer \
     --infer_files <test data in .h5 file> \
     --intervals_file <path to repo>/data/pretrained_models/24000.genome_intervals.bed \   
-    --sizes_file <path to repo>/example/reference/hg19.chrom.sizes \
+    --sizes_file <path to repo>/data/reference/hg19.chrom.sizes \
     --infer_threshold 0.5 \
     --weights_path <path to repo>/data/pretrained_models/bulk_blood_data/5000000.7cell.resnet.5.2.15.8.50.0803.pth.tar \
     --out_home <output directory> \

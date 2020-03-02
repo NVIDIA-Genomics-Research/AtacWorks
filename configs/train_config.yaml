@@ -26,7 +26,7 @@ dist-backend: 'gloo'
 debug: False
 
 # Train args
-files_train: "./example/result"
+files_train: "None"
 checkpoint_fname: "None"
 save_freq: 1
 #Learning args

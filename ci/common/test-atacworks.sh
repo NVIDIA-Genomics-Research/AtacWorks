@@ -34,7 +34,6 @@ rsync -aP rsync://hgdownload-euro.soe.ucsc.edu/genome/admin/exe/linux.x86_64/big
 
 # Run tests.
 if [ "${TEST_ON_GPU}" == '1' ]; then
-    ./example/run.sh
     ./tests/end-to-end/run.sh
     python -m pytest tests/
 else
