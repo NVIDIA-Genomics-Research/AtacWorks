@@ -23,25 +23,29 @@ atacworks=<path_to_atacworks>
 
 ## Step 2: Download data
 
-We will download all of the data needed for this experiment from AWS. (Note: the S3 bucket is not yet public. We can use wget for download once it is.)
+We will download all of the data needed for this experiment from AWS.
 
 ### Noisy ATAC-seq signal from 50 Monocytes
 ```
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/train_data/noisy_data/dsc.1.Mono.50.cutsites.smoothed.200.bw ./
+wget https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/train_data/noisy_data/dsc.1.Mono.50.cutsites.smoothed.200.bw
  ```
 ### Clean ATAC-seq signal from 2400 Monocytes
 ```
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/train_data/clean_data/dsc.Mono.2400.cutsites.smoothed.200.bw ./
+wget https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/train_data/clean_data/dsc.Mono.2400.cutsites.smoothed.200.bw
  ```
 ### Clean ATAC-seq peaks from 2400 Monocytes
 ```
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/train_data/clean_data/dsc.Mono.2400.cutsites.smoothed.200.3.narrowPeak ./
+wget https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/train_data/clean_data/dsc.Mono.2400.cutsites.smoothed.200.3.narrowPeak
 ```
 
 ### Config files
-We also need to download the 'configs' directory containing config files for this experiment. The config files describe the parameters of the experiment, including the structure of the deep learning model.
+We also need to download config files for this experiment. The config files describe the structure of the deep learning model and the parameters to train it. We will place these in the `configs` folder. 
 ```
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/configs/ ./configs --recursive
+wget https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/configs/train_config.yaml
+wget https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/configs/model_structure.yaml
+mkdir configs
+mv train_config.yaml configs
+mv model_structure.yaml configs
 ```
 
 ## Step 3: Convert clean peak file into bigWig format
