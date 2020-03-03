@@ -25,20 +25,23 @@ atacworks=<path to atacworks>
 
 Download a pre-trained deep learning model (model.pth.tar) trained with dsc-ATAC-seq data from Monocytes and B cells. This model was reported and used in the AtacWorks paper (1).
 ```
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/models/model.pth.tar ./models/model.pth.tar
+mkdir models
+wget -P models https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/models/model.pth.tar
 ```
 
 ## Step 3: Download config files
 
-We also need to download the 'configs' directory containing config files for this experiment. The config files describe the parameters of the experiment, including the structure of the deep learning model.
+We also need to download the 'configs' directory containing config files for this experiment. The config files describe the structure of the deep learning model and the parameters used to run inference.
 ```
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/configs/ ./configs --recursive
+mkdir configs
+wget -P configs https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/configs/infer_config.yaml
+wget -P configs https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/configs/model_structure.yaml
 ```
 
-## Step 4: Download the test dsc-ATAC-seq signal from 50 NK cells (~ 1M reads), in bigWig format
+## Step 4: Download the test dsc-ATAC-seq signal from 50 NK cells (~1M reads), in bigWig format
 
 ```
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/test_data/noisy_data/dsc.1.NK.50.cutsites.smoothed.200.bw ./
+wget https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/test_data/noisy_data/dsc.1.NK.50.cutsites.smoothed.200.bw
 ```
 
 ## Step 5: Create genomic intervals to define regions for testing
@@ -97,7 +100,7 @@ To change any of the parameters for inference with the deep learning model, you 
 
 Type `python $atacworks/scripts/main.py infer --help` for an explanation of the parameters.
 
-If you are using your own model instead of the one provided, edit `configs/config_params.yaml` to supply the path to your model under `weights_path`, in place of `model.pth.tar`.
+If you are using your own model instead of the one provided, edit `configs/infer_config.yaml` to supply the path to your model under `weights_path`, in place of `model.pth.tar`.
 
 ## Step 8: Format peak calls
 
@@ -131,7 +134,7 @@ For more information type `python $atacworks/scripts/peaksummary.py --help`
 
 The model predicts the probability of every position on the genome being part of a peak. In the above command, we take a cutoff of 0.5, and output the positions of regions where the probability is greater than 0.5. To output the probability for every base in the genome without any cutoff, we use the following command:
 ```
-python $atacworks/main.py --infer \
+python $atacworks/main.py infer \
     --config configs/infer_config.yaml \
     --config_mparams configs/model_structure.yaml
 ```

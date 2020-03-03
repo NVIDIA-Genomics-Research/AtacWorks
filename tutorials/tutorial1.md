@@ -41,11 +41,9 @@ wget https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_deno
 ### Config files
 We also need to download config files for this experiment. The config files describe the structure of the deep learning model and the parameters to train it. We will place these in the `configs` folder. 
 ```
-wget https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/configs/train_config.yaml
-wget https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/configs/model_structure.yaml
 mkdir configs
-mv train_config.yaml configs
-mv model_structure.yaml configs
+wget -P configs https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/configs/train_config.yaml
+wget -P configs https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/configs/model_structure.yaml
 ```
 
 ## Step 3: Convert clean peak file into bigWig format
@@ -178,25 +176,39 @@ In the paper (1) (refer to section), we report this experiment, although the mod
 To download the exact model used in the paper, see [Tutorial 2](tutorial2.md).
 
 In order to train the same model reported in the paper, follow the following steps. 
-- Download all the training and validation data
+- Download all the training data
 ```
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/train_data/noisy_data/ ./train_data/noisy_data/ --recursive
-aws s3 cp s3://atacworks-paper/dsc_atac_blood_cell_denoising_experiments/50_cells/train_data/clean_data/ ./train_data/clean_data/ --recursive
+mkdir train_data/noisy_data
+cell_types=(CD19 Mono)
+subsamples=(1 2 3 4 5)
+for cell_type in ${cell_types[*]}; do
+    for subsample in ${subsamples[*]}; do
+        wget -P train_data/noisy_data https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/train_data/noisy_data/dsc.$subsample.$cell_type.50.cutsites.smoothed.200.bw
+    done
+done
+
+mkdir train_data/clean_data
+
+cell_types=(CD19 Mono)
+for cell_type in ${cell_types[*]}; do
+    wget -P train_data/clean_data https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/train_data/clean_data/dsc.$cell_type.2400.cutsites.smoothed.200.bw
+    wget -P train_data/clean_data https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/train_data/clean_data/dsc.$cell_type.2400.cutsites.smoothed.200.3.narrowPeak
+done
 ```
 - Encode all the training data and save in the `train_h5` directory.
 ```
 mkdir train_h5
 cell_types = (CD19 Mono)
-samples=(1 2 3 4 5)
+subsamples=(1 2 3 4 5)
 for cell_type in ${cell_types[*]}; do
-    for sample in ${samples[*]}; do
+    for subsample in ${subsamples[*]}; do
         python $atacworks/scripts/bw2h5.py \
-           --noisybw train_data/noisy_data/dsc.$sample.${cell_type}.50.cutsites.smoothed.200.bw \
+           --noisybw train_data/noisy_data/dsc.$subsample.${cell_type}.50.cutsites.smoothed.200.bw \
            --cleanbw train_data/clean_data/dsc.${cell_type}.2400.cutsites.smoothed.200.bw \
            --cleanpeakbw train_data/clean_data/dsc.${cell_type}.2400.cutsites.smoothed.200.3.narrowPeak.bw \
            --intervals training_intervals.bed \
            --out_dir train_h5 \
-           --prefix ${cell_type}.$sample.50.2400.train \
+           --prefix ${cell_type}.$subsample.50.2400.train \
            --pad 5000 \
            --nonzero
     done
@@ -211,8 +223,8 @@ for cell_type in ${cell_types[*]}; do
            --noisybw train_data/noisy_data/dsc.1.${cell_type}.50.cutsites.smoothed.200.bw \
            --cleanbw train_data/clean_data/dsc.${cell_type}.2400.cutsites.smoothed.200.bw \
            --cleanpeakbw train_data/clean_data/dsc.${cell_type}.2400.cutsites.smoothed.200.3.narrowPeak.bw \
-           --intervals intervals/hg19.50000.val_intervals.bed \
-           --out_dir train_h5 \
+           --intervals intervals/val_intervals.bed \
+           --out_dir val_h5 \
            --prefix ${cell_type}.50.2400.val \
            --pad 5000
 done
