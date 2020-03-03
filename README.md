@@ -67,12 +67,6 @@ Run unit tests:
     python -m pytest tests/
     ```
 
-Run the following script to validate your setup.
-
-    ```
-    ./example/run.sh
-    ```
-
 ## Workflow
 
 AtacWorks trains a deep neural network to learn a mapping between noisy (low coverage/low quality) ATAC-Seq data and matching clean (high coverage/high quality) ATAC-Seq data from the same cell type. Once this mapping is learned, the trained model can be applied to improve other noisy ATAC-Seq datasets. 
@@ -80,51 +74,62 @@ AtacWorks trains a deep neural network to learn a mapping between noisy (low cov
 ### 1. Training an AtacWorks model
 
 #### Input files
-To train an AtacWorks model, you need a pair of ATAC-Seq datasets from the same cell type, where one dataset has lower coverage or lower quality than the other. You can also use multiple such pairs of datasets. For each such pair of datasets, AtacWorks requires three input files:
+To train an AtacWorks model, you need a pair of ATAC-Seq datasets from the same cell type, where one dataset has lower coverage or lower quality than the other. You can also use multiple such pairs of datasets. For each such pair of datasets, AtacWorks requires four input files:
+
 1. A coverage track representing the number of sequencing reads mapped to each position on the genome in the low-coverage or low-quality dataset. This may be smoothed or processed. Format: [bigWig](https://genome.ucsc.edu/goldenPath/help/bigWig.html)
+
 2. A coverage track representing the number of sequencing reads mapped to each position on the genome in the high-coverage or high-quality dataset. This may be smoothed or processed in the same way as the previous track. Format: [bigWig](https://genome.ucsc.edu/goldenPath/help/bigWig.html) 
+
 3. The genomic positions of peaks called on the high-coverage or high-quality dataset. These can be obtained by using [MACS2](https://github.com/taoliu/MACS) or any other peak caller. Format: either [BED](http://genome.ucsc.edu/FAQ/FAQformat) or the narrowPeak format produced by MACS2.
+
+4. Chromosome sizes file - a tab-separated text file containing the names and sizes of all chromosomes to be used for training or validation.
 
 The model learns a mapping from (1) to both (2) and (3); in other words, from the noisy coverage track, it learns to predict both the clean coverage track, and the positions of peaks in the clean dataset.
 
 #### Training command
 
-To train an AtacWorks model, create a directory containing two subdirectories 'clean_data'
+To train an AtacWorks model:
 
 ```
-bash <path to AtacWorks repository>/scripts/run_training.sh <path to bigWig file with noisy ATAC-seq data> <path to bigWig file with clean ATAC-seq data> <path to bed or narrowPeak file with clean ATAC-seq peak calls> <path to chromosome sizes file> <location to save output folder> <chromosome for validation> <chromosome to hold out> <path to folder containing config files (optional)>
+bash AtacWorks/scripts/run_training.sh <path to bigWig file with noisy ATAC-seq coverage track> <path to bigWig file with clean ATAC-seq coverage track> <path to bed or narrowPeak file with clean ATAC-seq peak calls> <path to chromosome sizes file> <location to save output folder> <chromosome for validation> <chromosome to hold out> <path to folder containing config files (optional)>
 ```
 This command produces a directory (`output_latest`) containing several trained models, of which the best model will be saved as `model_best.pth.tar`. 
-The config files determine the parameters of the model and training. If no folder containing config files is supplied, the folder `AtacWorks/configs` containing default parameter values will be used.
+
+The config files contain the structure of the deep learning model and all the parameters used for training. If no folder containing config files is supplied, the folder `AtacWorks/configs` containing default parameter values will be used.
+
+In order to vary model parameters, output file names, or output file formats, you can create your own config files using `AtacWorks/configs` as a template. Type `python AtacWorks/scripts/main.py train --help` to understand which arguments to vary.
 
 #### Advanced usage: step-by-step training with subcommands
 See [Tutorial 1](tutorials/tutorial1.md) for an advanced workflow detailing the individual steps of data processing, encoding and training and how to modify the parameters used in these steps.
 
 ### 2. Denoising and peak calling using a trained AtacWorks model
 
-All models described in [Lal & Chiang, et al. (2019)](https://www.biorxiv.org/content/10.1101/829481) are available for download and use at <S3 link>
+All models described in [Lal & Chiang, et al. (2019)](https://www.biorxiv.org/content/10.1101/829481) are available for download and use at `https://atacworks-paper.s3.us-east-2.amazonaws.com`. See below for instructions to use these or other trained models:
 
 #### Input files
 
-To denoise and call peaks from low-coverage/low-quality ATAC-seq data, you need only one input file:
-1. A coverage track representing the number of sequencing reads mapped to each position on the genome in the low-coverage or low-quality dataset. This may be smoothed or processed in the same way as the files used for training the model. Format: [bigWig](https://genome.ucsc.edu/goldenPath/help/bigWig.html)
+To denoise and call peaks from low-coverage/low-quality ATAC-seq data, you need only three input files:
+
+1. A trained AtacWorks model file with extension `.pth.tar`.
+
+2. A coverage track representing the number of sequencing reads mapped to each position on the genome in the low-coverage or low-quality dataset. This may be smoothed or processed in the same way as the files used for training the model. Format: [bigWig](https://genome.ucsc.edu/goldenPath/help/bigWig.html)
+
+3. Chromosome sizes file - a tab-separated text file containing the names and sizes of chromosomes in the genome.
 
 #### Denoising + peak calling command
 ```
-$atacworks/scripts/run_inference.sh <path to bigWig file with test ATAC-seq data> <path to saved model file> <path to chromosome sizes file> <output directory> <path to folder containing config files (optional)>
+bash Atacworks/scripts/run_inference.sh <path to bigWig file with test ATAC-seq data> <path to model file> <path to chromosome sizes file> <output directory> <path to folder containing config files (optional)>
 ```
-This command produces several outputs in the supplied output directory:
-1. config_params.yaml: a file recording the parameters used for this experiment for later reference.
-2. a folder (`output_latest`) containing several files:
-    2a. <prefix>.track.bw: A bigWig file containing the denoised ATAC-seq track. 
-    2b. infer_results_peaks.bed: A BED file containing the peaks called from the denoised ATAC-seq track. This file has 8 columns. These are, in order: chromosome, peak start position, peak end position, peak length (bp), Mean coverage over peak, Maximum coverage in peak, Position of summit (relative to start), and Position of summit (absolute). 
-    2c. <prefix>_infer_results.peaks.bw: The same peak calls, in the form of a bigWig track for genome browser visualization.
+This command produces a folder (`output_latest`) containing several files:
+1. <prefix>_infer_results.track.bw: A bigWig file containing the denoised ATAC-seq coverage track. 
+2. infer_results_peaks.bed: A BED file containing the peaks called from the denoised ATAC-seq track. This file has 8 columns. These are, in order: chromosome, peak start position, peak end position, peak length (bp), Mean coverage over peak, Maximum coverage in peak, Position of summit (relative to start), and Position of summit (absolute). By default, a threshold of 0.5 is used for peak calling.
+3. <prefix>_infer_results.peaks.bw: The same peak calls, in the form of a bigWig track for genome browser visualization.
 
-The config files supplied to `run_inference.sh` supply the parameters of the experiment. If no folder containing config files is supplied, the folder `AtacWorks/configs` containing default parameter values will be used.
+The config files supplied to `run_inference.sh` supply the structure of the deep learning model and the parameters of the experiment. If no folder containing config files is supplied, the folder `AtacWorks/configs` containing default parameter values will be used.
 
-In order to vary model parameters, output file names, or output file formats, you can create your own config files using `AtacWorks/configs` as a template. See the documentation inside the default config files to understand which arguments to vary.
+In order to vary model parameters, output file names, or output file formats, you can create your own config files using `AtacWorks/configs` as a template. Type `python AtacWorks/scripts/main.py infer --help` to understand which arguments to vary.
 
-In particular, the threshold for peak calling is controlled by the `infer_threshold` parameter in the file `configs/config_params.yaml`. By default, this is set to 0.5. If `infer_threshold` is set to "None" in the config file, `run_inference.sh` will instead produce a bigWig file in which each base is labeled with the probability (between 0 and 1) that it is part of a peak. 
+In particular, the threshold for peak calling is controlled by the `infer_threshold` parameter in the file `configs/infer_config.yaml`. By default, this is set to 0.5. If `infer_threshold` is set to "None" in the config file, `run_inference.sh` will instead produce a bigWig file in which each base is labeled with the probability (between 0 and 1) that it is part of a peak. 
 
 #### Advanced usage: step-by-step denoising + peak calling with subcommands
 See [Tutorial 2](tutorials/tutorial2.md) for an advanced workflow detailing the individual steps of data processing, encoding and prediction using a trained model, and how to modify the parameters used in these steps. 
