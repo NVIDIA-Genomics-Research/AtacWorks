@@ -24,7 +24,7 @@ python $root_dir/main.py infer \
     --infer_threshold 0.5 \
     --result_fname infer \
     --config_mparams $config_dir/model_structure.yaml \
-    --gen_bigwig
+    --gen_bigwig --bs 4
 
 echo ""
 echo "Verifying output result against expected result."
