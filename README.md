@@ -84,7 +84,7 @@ To train an AtacWorks model, you need a pair of ATAC-Seq datasets from the same 
 
 The model learns a mapping from (1) to both (2) and (3); in other words, from the noisy coverage track, it learns to predict both the clean coverage track, and the positions of peaks in the clean dataset.
 
-See [Tutorial 1](tutorials/tutorial1.md) for an advanced workflow detailing the individual steps of data processing, encoding and training and how to modify the parameters used in these steps.
+See [Tutorial 1](tutorials/tutorial1.md) for a workflow detailing the steps of data processing, encoding and model training and how to modify the parameters used in these steps.
 
 ### 2. Denoising and peak calling using a trained AtacWorks model
 
@@ -92,7 +92,7 @@ All models described in [Lal & Chiang, et al. (2019)](https://www.biorxiv.org/co
 
 #### Input files
 
-To denoise and call peaks from low-coverage/low-quality ATAC-seq data, you need only three input files:
+To denoise and call peaks from low-coverage/low-quality ATAC-seq data, you need three input files:
 
 1. A trained AtacWorks model file with extension `.pth.tar`.
 
@@ -104,16 +104,24 @@ To denoise and call peaks from low-coverage/low-quality ATAC-seq data, you need 
 ```
 bash Atacworks/scripts/run_inference.sh <path to bigWig file with test ATAC-seq data> <path to model file> <path to chromosome sizes file> <output directory> <path to folder containing config files (optional)>
 ```
-This command produces a folder (`output_latest`) containing several files:
+This command produces a folder containing several files:
 1. <prefix>_infer_results.track.bw: A bigWig file containing the denoised ATAC-seq coverage track. 
-2. infer_results_peaks.bed: A BED file containing the peaks called from the denoised ATAC-seq track. This file has 8 columns. These are, in order: chromosome, peak start position, peak end position, peak length (bp), Mean coverage over peak, Maximum coverage in peak, Position of summit (relative to start), and Position of summit (absolute). By default, a threshold of 0.5 is used for peak calling.
+2. infer_results_peaks.bed: A BED file containing the peaks called from the denoised ATAC-seq track. This file has 8 columns, in order: 
+- chromosome
+- peak start position
+- peak end position
+- peak length (bp)
+- Mean coverage over peak
+- Maximum coverage in peak
+- Position of summit (relative to start)
+- Position of summit (absolute). 
 3. <prefix>_infer_results.peaks.bw: The same peak calls, in the form of a bigWig track for genome browser visualization.
 
-The config files supplied to `run_inference.sh` supply the structure of the deep learning model and the parameters of the experiment. If no folder containing config files is supplied, the folder `AtacWorks/configs` containing default parameter values will be used.
+`run_inference.sh` optionally takes a folder containing config files - specifically, this folder needs to contain two files, `infer_config.yaml` which specifies parameters for inference, and `model_structure.yaml` which specifies the structure of the deep learning model. If no folder containing config files is supplied, the folder `AtacWorks/configs` containing default parameter values will be used.
 
-In order to vary model parameters, output file names, or output file formats, you can create your own config files using `AtacWorks/configs` as a template. Type `python AtacWorks/scripts/main.py infer --help` to understand which arguments to vary.
+In order to vary output file names or formats, or inference parameters, you can change the arguments supplied in `infer_config.yaml`. Type `python AtacWorks/scripts/main.py infer --help` to understand which arguments to change.
 
-In particular, the threshold for peak calling is controlled by the `infer_threshold` parameter in the file `configs/infer_config.yaml`. By default, this is set to 0.5. If `infer_threshold` is set to "None" in the config file, `run_inference.sh` will instead produce a bigWig file in which each base is labeled with the probability (between 0 and 1) that it is part of a peak. 
+In particular, the threshold for peak calling is controlled by the `infer_threshold` parameter in `infer_config.yaml`. By default, this is set to 0.5. If `infer_threshold` is set to "None" in the config file, `run_inference.sh` will instead produce a bigWig file in which each base is labeled with the probability (between 0 and 1) that it is part of a peak. 
 
 #### Advanced usage: step-by-step denoising + peak calling with subcommands
 See [Tutorial 2](tutorials/tutorial2.md) for an advanced workflow detailing the individual steps of data processing, encoding and prediction using a trained model, and how to modify the parameters used in these steps. 

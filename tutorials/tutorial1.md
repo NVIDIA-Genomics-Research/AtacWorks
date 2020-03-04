@@ -2,9 +2,9 @@
 
 ## Introduction
 
-In this tutorial we train an AtacWorks model to denoise the signal track and call peaks from aggregate single-cell ATAC-seq data derived from a small number of cells. We use the dsc-ATAC-seq dataset presented in reference (1), section (once the text is final we will refer to page number, section, table). This dataset consists of single-cell ATAC-seq data from several types of human blood cells.
+In this tutorial we train an AtacWorks model to denoise the signal track and call peaks from aggregate single-cell ATAC-seq data derived from a small number of cells. We use the dsc-ATAC-seq dataset presented in reference (1) (Section "AtacWorks enhances ATAC-seq results from small numbers of single cells", also Supplementary Table 8). This dataset consists of single-cell ATAC-seq data from several types of human blood cells.
 
-Note that all the AtacWorks models described in reference (1) are available to download (insert public link when available) and you may be able to use one of these instead of training a new model. To learn how to download and use an existing model, refer to [Tutorial 2](tutorial2.md).
+Note that all the AtacWorks models described in reference (1) are available to download (https://atacworks-paper.s3.us-east-2.amazonaws.com) and you may be able to use one of these instead of training a new model. To learn how to download and use an existing model, refer to [Tutorial 2](tutorial2.md).
  
 We selected 2400 Monocytes from this dataset - this is our ‘clean’, high-coverage dataset. We then randomly sampled 50 of these 2400 Monocytes. Here's what the ATAC-seq signal from 50 cells and 2400 cells looks like, for a region on chromosome 10:
 
@@ -154,7 +154,7 @@ python $atacworks/scripts/main.py train \
         --config configs/train_config.yaml \
         --config_mparams configs/model_structure.yaml \
         --train_files Mono.50.2400.train.h5 \
-        --val_files Mono.50.2400.val.h5 \
+        --val_files Mono.50.2400.val.h5
 ```
 This command trains a deep learning model using the supplied clean and noisy ATAC-seq data, for 5 epochs (5 full passes through the dataset). At the end of every epoch, the current state of the model is saved in the directory `output_latest`, and the performance of the current model is measured on the validation set. At the end, out of the 5 saved models, the one with the best performance on the validation set is saved as `output_latest/model_best.pth.tar`
 
@@ -162,16 +162,28 @@ This model has learned a mapping from the 50-cell signal to the 2400-cell signal
 
 See [Tutorial 2](tutorial2.md) for step-by-step instructions on how to apply this trained model to another dataset.
 
-To change any of the parameters for the deep learning model, you can edit the appropriate parameters in `configs/train_config.yaml` or `configs/model_structure.yaml` and run the command in step 7 above. 
-
-Type `python $atacworks/scripts/main.py train --help` for an explanation of the parameters.
+To change any of the parameters for the deep learning model, you can edit the appropriate parameters in `configs/train_config.yaml` or `configs/model_structure.yaml` and run the command in step 7 above. Type `python $atacworks/scripts/main.py train --help` for an explanation of the parameters.
 
 ## References
 (1) Lal, A., Chiang, Z.D., Yakovenko, N., Duarte, F.M., Israeli, J. and Buenrostro, J.D., 2019. AtacWorks: A deep convolutional neural network toolkit for epigenomics. BioRxiv, p.829481. (https://www.biorxiv.org/content/10.1101/829481v1)
 
-## Appendix 1: Reproducing the model reported in the AtacWorks preprint (1)
+## Appendix 1: Training on multiple pairs of clean and noisy datasets
 
-In the paper (1) (refer to section), we report this experiment, although the model we use there is trained on more data.
+If using multiple pairs of clean and noisy datasets for training, use steps 5 and 6 on each pair to create a training h5 file and a validation h5 file for each pair. Save all of the training h5 files into a single folder and all of the validation h5 files into another folder.
+
+Run step 7 as follows:
+```
+python $atacworks/scripts/main.py train \
+        --config configs/train_config.yaml \
+        --config_mparams configs/model_structure.yaml \
+        --train_files <path to folder containing all h5 files for training> \
+        --val_files <path to folder containing all h5 files for validation>
+```
+See Appendix 2 below for an example.
+
+## Appendix 2: Reproducing the model reported in the AtacWorks preprint (Reference 1)
+
+In Section "AtacWorks enhances ATAC-seq results from small numbers of single cells" (also Supplementary Table 8), we report this experiment, although the model we use there is trained on more data.
 
 To download the exact model used in the paper, see [Tutorial 2](tutorial2.md).
 
