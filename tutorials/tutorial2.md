@@ -82,11 +82,10 @@ For more information type `python $atacworks/scripts/bw2h5.py --help`
 
 ```
 python $atacworks/scripts/main.py infer \
-    --infer_files NK.50_cells.h5 \
+    --files NK.50_cells.h5 \
     --sizes_file $atacworks/example/reference/hg19.auto.sizes \
     --config configs/infer_config.yaml \
     --config_mparams configs/model_structure.yaml \
-    --infer_threshold 0.5
 ```
 
 The inference results will be saved in the folder `output_latest`. This folder will contain four files: 
@@ -136,10 +135,13 @@ For more information type `python $atacworks/scripts/peaksummary.py --help`
 The model predicts the probability of every position on the genome being part of a peak. In the above command, we take a cutoff of 0.5, and output the positions of regions where the probability is greater than 0.5. To output the probability for every base in the genome without any cutoff, we use the following command:
 ```
 python $atacworks/main.py infer \
+    --files NK.50_cells.h5 \
+    --sizes_file $atacworks/example/reference/hg19.auto.sizes \
     --config configs/infer_config.yaml \
     --config_mparams configs/model_structure.yaml
+    --infer_threshold None
 ```
-The inference results will be saved in the folder `output_latest`. This folder will contain the same 4 files described in Step 7. However, `NK_inferred.peaks.bedGraph` and `NK_inferred.peaks.bw` will contain the probability of being part of a peak, for every position in the genome. This command is much slower, and the `NK_inferred.peaks.bedGraph` file produced by this command is much larger than the file produced in Step 7.
+The inference results will be saved in the folder `output_latest`. This folder will contain the same 4 files described in Step 7. However, `NK_inferred.peaks.bedGraph` and `NK_inferred.peaks.bw` will contain the probability of being part of a peak, for every position in the genome. This command is significantly slower, and the `NK_inferred.peaks.bedGraph` file produced by this command is larger than the file produced in Step 7.
 
 The above command is useful in the following situations:
 1. To calculate AUPRC or AUROC metrics.
