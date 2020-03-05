@@ -49,6 +49,7 @@ wget https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_deno
 The model we downloaded takes the input ATAC-seq signal in non-overlapping genomic intervals spanning 50,000 bp. To define the genomic regions for the model to read, we take the chromosomes on which we want to apply the model and split their lengths into 50,000-bp intervals, which we save in BED format. 
 In this example, we will apply the model to chromosomes 1-22. The reference genome we use is hg19. We use the prepared chromosome sizes file `hg19.auto.sizes`, which contains the sizes of chromosomes 1-22 in hg19.
 ```
+mkdir intervals
 python $atacworks/scripts/get_intervals.py \
     --sizes $atacworks/example/reference/hg19.auto.sizes \
     --intervalsize 50000 \
