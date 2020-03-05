@@ -21,6 +21,6 @@ python $root_dir/main.py train\
     --val_files $out_dir/val_data.h5 \
     --checkpoint_fname checkpoint.pth.tar \
     --epochs 1 --bs 4 \
-    --width 50 --width_cla 50 --dil_cla 10
+    --width 50 --width_cla 50 --dil_cla 10 --pad 0
 # Training is not deterministic, so we are not comparing results.
 check_status $? "Training run not succesful!"

@@ -25,7 +25,7 @@ python $root_dir/main.py infer \
     --result_fname infer \
     --config_mparams $config_dir/model_structure.yaml \
     --gen_bigwig --bs 4 \
-    --width 50 --width_cla 50 --dil_cla 10
+    --width 50 --width_cla 50 --dil_cla 10 --pad 0
 
 echo ""
 echo "Verifying output result against expected result."
