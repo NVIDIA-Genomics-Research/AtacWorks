@@ -435,7 +435,7 @@ def main():
             #############################################################
     # Save config parameters
     dst_config_path = os.path.join(args.out_home,
-                                   args.mode + "_config_params.yaml")
+                                   args.mode + "_config.yaml")
     save_config(dst_config_path, args)
 
 

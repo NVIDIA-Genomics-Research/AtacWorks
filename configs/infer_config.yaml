@@ -8,16 +8,13 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
-
 # Experiment args
-label: 'AtacWorks'
-out_home: './Cache'
+out_home: './'
+label: 'inference_output'
 task: 'both'
-print_freq: 10
-bs: 8
+print_freq: 50
+bs: 512
 num_workers: 4
-pad: "None"
-transform: "None"
 weights_path: "None"
 gpu: 0
 distributed: False
@@ -25,19 +22,21 @@ dist-url: 'tcp://127.0.0.1:4321'
 dist-backend: 'gloo'
 debug: False
 
+# Data processing args
+pad: 5000
+transform: "None"
+layers: "None"
+
 #Infer args
 files: "None"
 intervals_file: "None"
 sizes_file: "None"
-infer_threshold: "None"
 reg_rounding: 0
 cla_rounding: 3
+infer_threshold: 0.5
 batches_per_worker: 16
-gen_bigwig: False
-result_fname: 'infer_results.h5'
-deletebg: False
-layers: "None"
 
-# Eval args (Needs all the above args as well)
-threshold: 0.5
-best_metric_choice: "AUROC"
+# Output file args
+result_fname: inferred
+gen_bigwig: True
+deletebg: False

@@ -41,6 +41,25 @@ _logger.setLevel(logging.INFO)
 _logger.addHandler(_handler)
 
 
+def type_or_none_fn(type):
+    """Generate function to interpret a string as a specific type or None.
+
+    Args:
+        type: Data type to check for.
+
+    Error:
+        None, if val is str(None)
+        else, type(val)
+
+    """
+    def type_or_none(val):
+        if str(val) == "None":
+            return None
+        else:
+            return type(val)
+    return type_or_none
+
+
 def model_args_v1(root_dir):
     """Parse arguments relevant to model structure.
 
@@ -83,7 +102,7 @@ def model_args_v1(root_dir):
                help='kernel size for classification blocks in resnet')
     parser.add('--nfilt_cla', required=True, type=int,
                help='number of filters for classification blocks in resnet')
-    parser.add('--field', required=True, type=int,
+    parser.add('--field', required=True, type=type_or_none_fn(int),
                help='receptive field for linear/logistic regression')
     parser.add('--in_channels', required=True, type=int,
                help='number of channels for input data')
