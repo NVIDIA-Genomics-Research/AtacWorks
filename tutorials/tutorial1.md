@@ -50,12 +50,12 @@ wget -P configs https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_bloo
 
 The clean peak calls (`dsc.Mono.2400.cutsites.smoothed.200.3.narrowPeak`) were produced by MACS2 and are in .narrowPeak format. We need to convert them to bigWig format for use. This also requires us to supply a chromosome sizes file describing the reference genome that we use. 
 
-Chromosome sizes files for the hg19 and hg38 human reference genomes are supplied with AtacWorks in the folder `AtacWorks/example/reference`. Here, we are using hg19.
+Chromosome sizes files for the hg19 and hg38 human reference genomes are supplied with AtacWorks in the folder `AtacWorks/data/reference`. Here, we are using hg19.
 
 ```
 python $atacworks/scripts/peak2bw.py \
     --input dsc.Mono.2400.cutsites.smoothed.200.3.narrowPeak \
-    --sizes $atacworks/example/reference/hg19.chrom.sizes \
+    --sizes $atacworks/data/reference/hg19.chrom.sizes \
     --out_dir ./ \
     --skip 1
 ```
@@ -83,7 +83,7 @@ We provide a chromosome sizes file 'hg19.auto.sizes' that contains sizes for all
 
 ```
 python $atacworks/scripts/get_intervals.py \
-     --sizes $atacworks/example/reference/hg19.auto.sizes \
+     --sizes $atacworks/data/reference/hg19.auto.sizes \
      --intervalsize 50000 \
      --out_dir ./ \
      --val chr20 \
