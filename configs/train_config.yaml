@@ -1,0 +1,48 @@
+#
+# Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
+#
+# NVIDIA CORPORATION and its licensors retain all intellectual property
+# and proprietary rights in and to this software, related documentation
+# and any modifications thereto.  Any use, reproduction, disclosure or
+# distribution of this software and related documentation without an express
+# license agreement from NVIDIA CORPORATION is strictly prohibited.
+#
+
+
+# Experiment args
+out_home: './'
+label: 'trained_models'
+task: 'both'
+print_freq: 50
+bs: 64
+num_workers: 4
+weights_path: "None"
+gpu: 0
+distributed: False
+dist-url: 'tcp://127.0.0.1:4321'
+dist-backend: 'gloo'
+debug: False
+
+# Data processing args
+pad: 5000
+transform: "None"
+layers: "None"
+
+# Train args
+files_train: "None"
+checkpoint_fname: "None"
+save_freq: 1
+
+#Learning args
+clip_grad: 0 
+lr: 0.0002 
+epochs: 25
+mse_weight: 0.0005 
+pearson_weight: 1
+poisson_weight: 0
+
+# Validation args
+val_files: "None"
+eval_freq: 1
+best_metric_choice: "AUROC"
+threshold: 0.5
