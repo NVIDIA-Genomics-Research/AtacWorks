@@ -64,7 +64,6 @@ def type_or_none_fn(type):
         else, type(val)
 
     """
-
     def type_or_none(val):
         if str(val) == "None":
             return None
