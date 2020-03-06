@@ -23,7 +23,7 @@ from subprocess import check_output
 cpp_exts = {".hpp", ".cpp", ".cu", ".cuh", ".cc", ".h", ".c"}
 
 cpp_copyright = r"""/*
-* Copyright (c) 2019, NVIDIA CORPORATION.  All rights reserved.
+* Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
 *
 * NVIDIA CORPORATION and its licensors retain all intellectual property
 * and proprietary rights in and to this software, related documentation
@@ -35,7 +35,7 @@ cpp_copyright = r"""/*
 """
 
 other_copyright = r"""#
-# Copyright (c) 2019, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
 #
 # NVIDIA CORPORATION and its licensors retain all intellectual property
 # and proprietary rights in and to this software, related documentation
