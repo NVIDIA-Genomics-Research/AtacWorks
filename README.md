@@ -102,7 +102,7 @@ To denoise and call peaks from low-coverage/low-quality ATAC-seq data, you need 
 
 #### One step denoising + peak calling command
 ```
-bash Atacworks/scripts/run_inference.sh <path to bigWig file with test ATAC-seq data> <path to model file> <path to chromosome sizes file> <output directory> <path to folder containing config files (optional)>
+bash Atacworks/scripts/run_inference.sh -bw <path to bigWig file with test ATAC-seq data> -m <path to model file> -f <path to chromosome sizes file> -o <output directory> -c <path to folder containing config files (optional)>
 ```
 This command produces a folder containing several files:
 1. <prefix>_infer_results.track.bw: A bigWig file containing the denoised ATAC-seq coverage track. 

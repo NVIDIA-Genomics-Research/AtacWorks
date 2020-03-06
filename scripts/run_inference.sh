@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (c) 2019, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
 #
 # NVIDIA CORPORATION and its licensors retain all intellectual property
 # and proprietary rights in and to this software, related documentation
@@ -10,32 +10,83 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
+function print_help {
+    echo "$atacworks/scripts/run_inference.sh -bw <path-to-test-bigWig-file> -m <path-to-model-file>
+    -f <path-to-chromosome-sizes-file> -o <out_dir> -c <path-to-configs-folder>"
+    echo "-bw | --bigwig      path to a single bigWig file containing noisy ATAC-seq data for inference"
+    echo " "
+    echo "-m | --model        path to .pth.tar file containing saved model"
+    echo " "
+    echo "-f | --sizesfile    tab separated file with names and sizes of all chromosomes to test on"
+    echo " "
+    echo "-o | --outdir       path to output directory."
+    echo " "
+    echo "-c | --cfgdir       must contain infer_config.yaml and model_structure.yaml. Optional. If not provided, defaults to AtacWorks/configs."
+}
+
+function is_initialized {
+if [ -z "$1" ]
+then
+    echo "Required variables not provided. See help!"
+    print_help
+    exit
+fi
+}
+
+
 script_dir=$(readlink -f $(dirname "$0"))
 default_config_dir=$script_dir/../configs
-
-# Define args
-TEST_DATA_BW=$1
-MODEL_FILE=$2
-SIZES_FILE=$3
-OUT_DIR=$4
-CONFIGS_FOLDER=${5:-$default_config_dir}
+CONFIGS_FOLDER=$default_config_dir
 
 echo "Set environment"
 set -e
+while [[ $# -gt 0 ]]
+do
+key="$1"
 
-function print_help {
-    echo "$atacworks/scripts/run_inference.sh <path-to-test-bigWig-file> <path-to-model-file>
-    <path-to-chromosome-sizes-file> <out_dir> <path-to-configs-folder>"
-    echo "<path-to-test-file>            path to a single bigWig file containing noisy ATAC-seq data for inference"
-    echo " "
-    echo "<path-to-model-file>           path to .pth.tar file containing saved model"
-    echo " "
-    echo "<path-to-chromosome-sizes-file> tab separated file with names and sizes of all chromosomes to test on"
-    echo " "
-    echo "<out_dir>                      path to output directory."
-    echo " "
-    echo "<path-to-configs-folder>       must contain infer_config.yaml and model_structure.yaml. Optional. If not provided, defaults to AtacWorks/configs."
-}
+case $key in
+    -bw|--bigwig)
+    TEST_DATA_BW="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -m|--model)
+    MODEL_FILE="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -f|--sizesfile)
+    SIZES_FILE="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -o|--outdir)
+    OUT_DIR="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -c|--cfgdir)
+    CONFIGS_FOLDER="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --default)
+    DEFAULT=YES
+    shift # past argument
+    ;;
+    *)    # unknown option
+    POSITIONAL+=("$1") # save it in an array for later
+    shift # past argument
+    ;;
+esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+# Check to see all required arguments are initialized.
+is_initialized $TEST_DATA_BW
+is_initialized $MODEL_FILE
+is_initialized $SIZES_FILE
+is_initialized $OUT_DIR
 
 # Check test data
 echo "BigWig file containing test ATAC-seq data: $TEST_DATA_BW"
