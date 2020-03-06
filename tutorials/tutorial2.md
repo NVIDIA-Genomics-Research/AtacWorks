@@ -51,7 +51,7 @@ In this example, we will apply the model to chromosomes 1-22. The reference geno
 ```
 mkdir intervals
 python $atacworks/scripts/get_intervals.py \
-    --sizes $atacworks/example/reference/hg19.auto.sizes \
+    --sizes $atacworks/data/reference/hg19.auto.sizes \
     --intervalsize 50000 \
     --out_dir intervals \
     --prefix hg19.50000 \
@@ -83,7 +83,7 @@ For more information type `python $atacworks/scripts/bw2h5.py --help`
 ```
 python $atacworks/scripts/main.py infer \
     --files NK.50_cells.h5 \
-    --sizes_file $atacworks/example/reference/hg19.auto.sizes \
+    --sizes_file $atacworks/data/reference/hg19.auto.sizes \
     --config configs/infer_config.yaml \
     --config_mparams configs/model_structure.yaml \
 ```
@@ -136,7 +136,7 @@ The model predicts the probability of every position on the genome being part of
 ```
 python $atacworks/main.py infer \
     --files NK.50_cells.h5 \
-    --sizes_file $atacworks/example/reference/hg19.auto.sizes \
+    --sizes_file $atacworks/data/reference/hg19.auto.sizes \
     --config configs/infer_config.yaml \
     --config_mparams configs/model_structure.yaml
     --infer_threshold None
