@@ -164,6 +164,8 @@ See [Tutorial 2](tutorial2.md) for step-by-step instructions on how to apply thi
 
 To change any of the parameters for the deep learning model, you can edit the appropriate parameters in `configs/train_config.yaml` or `configs/model_structure.yaml` and run the command in step 7 above. Type `python $atacworks/scripts/main.py train --help` for an explanation of the parameters.
 
+Note: `train_config.yaml` is set up to use multiple GPUs. If you are using a single GPU, edit `train_config.yaml` to change the line `gpu: "None"` to read `gpu: 0`. 
+
 ## References
 (1) Lal, A., Chiang, Z.D., Yakovenko, N., Duarte, F.M., Israeli, J. and Buenrostro, J.D., 2019. AtacWorks: A deep convolutional neural network toolkit for epigenomics. BioRxiv, p.829481. (https://www.biorxiv.org/content/10.1101/829481v1)
 
