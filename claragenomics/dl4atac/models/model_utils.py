@@ -158,11 +158,11 @@ def build_model(rank, interval_size, resume,
                                 dilation_class=model_args.dil_cla,
                                 in_channels=model_args.in_channels)
 
-    elif model == 'linear':
+    elif model_args.model == 'linear':
         model = DenoisingLinear(
             interval_size=interval_size, field=model_args.field)
 
-    elif model == 'logistic':
+    elif model_args.model == 'logistic':
         model = DenoisingLogistic(
             interval_size=interval_size, field=model_args.field)
 
