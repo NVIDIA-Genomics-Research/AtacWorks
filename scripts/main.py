@@ -173,17 +173,13 @@ def writer(infer, intervals_file, exp_dir, result_fname,
     out_base_path = os.path.join(exp_dir, prefix + "_" + result_fname)
     if task == "regression":
         channels = [0]
-        outfiles = [os.path.join(out_base_path + ".track.bedGraph")]
-        rounding = [reg_rounding]
     elif task == "classification":
         channels = [1]
-        outfiles = [os.path.join(out_base_path + ".peaks.bedGraph")]
-        rounding = [cla_rounding]
     elif task == "both":
         channels = [0, 1]
-        outfiles = [os.path.join(out_base_path + ".track.bedGraph"),
-                    os.path.join(out_base_path + ".peaks.bedGraph")]
-        rounding = [reg_rounding, cla_rounding]
+    outfiles = [os.path.join(out_base_path + ".track.bedGraph"),
+                os.path.join(out_base_path + ".peaks.bedGraph")]
+    rounding = [reg_rounding, cla_rounding]
 
     # Temp dir used to save temp files during multiprocessing.
     temp_dir = tempfile.mkdtemp()

@@ -87,6 +87,7 @@ python $atacworks/scripts/main.py infer \
     --config configs/infer_config.yaml \
     --config_mparams configs/model_structure.yaml \
 ```
+Note: `infer_config.yaml` is set up to use multiple GPUs. If you are using a single GPU, edit `infer_config.yaml` to change the line `gpu: "None"` to read `gpu: 0`. 
 
 The inference results will be saved in the folder `output_latest`. This folder will contain four files: 
 1. `NK_inferred.track.bedGraph` 
@@ -96,7 +97,7 @@ The inference results will be saved in the folder `output_latest`. This folder w
 
 `NK_inferred.track.bedGraph` and `NK_inferred.track.bw` contain the denoised ATAC-seq track. `NK_inferred.peaks.bedGraph` and `NK_inferred.peaks.bw` contain the positions in the genome that are designated as peaks (the model predicts that the probability of these positions being part of a peak is at least 0.5)
 
-To change any of the parameters for inference with the deep learning model, you can edit the parameters in `configs/infer_config.yaml` or `configs/model_structure.yaml` and run the commands in step 7-8 above. 
+To change any of the parameters for inference with the deep learning model, you can edit the parameters in `configs/infer_config.yaml` or `configs/model_structure.yaml` and run the command above. 
 
 Type `python $atacworks/scripts/main.py infer --help` for an explanation of the parameters.
 
