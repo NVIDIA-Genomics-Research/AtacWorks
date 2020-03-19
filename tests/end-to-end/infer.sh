@@ -39,3 +39,23 @@ python $utils_dir/verify_diff.py --result_path $out_dir/inference_latest/no_labe
     --expected_path $expected_results_dir/inference_latest/no_label_infer.track.bedGraph \
     --format "general_diff"
 check_status $? "Inferred track bedGraph files do not match!"
+
+echo ""
+echo "Run inference in classification only mode..."
+echo ""
+python $root_dir/main.py infer \
+	--files $out_dir/no_label.h5 \
+	--model logistic --field 8401 \
+	--out_home $out_dir --label logistic_inference \
+	--task classification \
+	--bs 64 --pad 0 --distributed \
+	--intervals_file $out_dir/result.holdout_intervals.bed \
+	--sizes_file $ref_dir/hg19.auto.sizes \
+	--result_fname inferred \
+	--weights_path $expected_results_dir/logistic_model_latest/model_best.pth.tar
+echo ""
+echo "Verifying output result against expected result."
+python $utils_dir/verify_diff.py --result_path $out_dir/logistic_inference_latest/no_label_inferred.peaks.bedGraph \
+    --expected_path $expected_results_dir/logistic_inference_latest/no_label_inferred.peaks.bedGraph \
+    --format "general_diff"
+check_status $? "Inferred peak bedGraph files for classification test do not match!"
