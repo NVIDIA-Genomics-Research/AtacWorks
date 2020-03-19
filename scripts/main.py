@@ -88,13 +88,14 @@ def check_intervals(intervals_df, sizes_df, h5_file):
             excess_intervals)
 
 
-def save_to_bedgraph(batch_range, item, channel, intervals,
+def save_to_bedgraph(batch_range, item, task, channel, intervals,
                      outfile, rounding=None, threshold=None):
     """Write out the tracks and peaks to bedGraphs.
 
     Args:
         batch_range : List containing start and end position of batch to write.
         item : Output from the queue.
+        task: Whether the task is classification or regression or both.
         channel : Channel to be written out.
         intervals : pandas object containing inference intervals.
         outfile : The output file to write the output to.
@@ -105,7 +106,10 @@ def save_to_bedgraph(batch_range, item, channel, intervals,
     keys, batch = item
     start = batch_range[0]
     end = batch_range[1]
-    scores = batch[start:end, :, channel]
+    if task == "both":
+        scores = batch[start:end, :, channel]
+    else:
+        scores = batch[start:end, :, 0]
     # Round scores - for regression output
     if rounding is not None:
         scores = scores.astype('float64')
@@ -200,7 +204,7 @@ def writer(infer, intervals_file, exp_dir, result_fname,
                 end = batch.shape[0]
                 for channel in channels:
                     with open(outfiles[channel], "a+") as outfile:
-                        save_to_bedgraph([start, end], item, channel,
+                        save_to_bedgraph([start, end], item, task, channel,
                                          intervals, outfile,
                                          rounding=rounding[channel],
                                          threshold=infer_threshold)
@@ -229,6 +233,7 @@ def writer(infer, intervals_file, exp_dir, result_fname,
                     ) for num in range(num_jobs)]
                     if infer_threshold is None:
                         map_args = list(zip(tmp_batch_ranges, all_items,
+                                            [task] * len(tmp_batch_ranges),
                                             [channel] * len(
                                                 tmp_batch_ranges),
                                             all_intervals,
@@ -237,6 +242,7 @@ def writer(infer, intervals_file, exp_dir, result_fname,
                                                 tmp_batch_ranges)))
                     else:
                         map_args = list(zip(tmp_batch_ranges, all_items,
+                                            [task] * len(tmp_batch_ranges),
                                             [channel] * len(
                                                 tmp_batch_ranges),
                                             all_intervals,
