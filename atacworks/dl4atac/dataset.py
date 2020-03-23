@@ -33,7 +33,7 @@ class DatasetBase(Dataset):
         self.files = files
         self.layers = layers
         self._h5_gen = None
-        assert len(files) > 0,\
+        assert len(files) > 0, \
             "Need to supply at least one file for dataset loading"
         self.running_counts = [0]
         for file in self.files:
@@ -166,28 +166,29 @@ class DatasetInfer(DatasetBase):
 
     def _get_generator(self):
         """Get generator."""
-        hdrecs = []
-        for i, filename in enumerate(self.files):
-            hf = h5py.File(filename, 'r')
-            hd = hf["input"]
-            # Read additional layers
-            if self.layers is not None:
-                for layer_key in self.layers:
-                    hd = np.dstack((hd, hf[layer_key]))
-            hdrecs.append(hd)
-            sys.stdout.flush()
         idx = yield
         while True:
             # Find correct dataset, given idx
             file_id, local_idx = self._get_file_id(idx)
+            filename = self.files[file_id]
             assert file_id < len(self.files)
             if (local_idx < self.fh_indices[file_id][0]) or (
                     local_idx >= self.fh_indices[file_id][1]):
                 # Data is not pre loaded, so load new data
+                # Read additional layers
+                hf = h5py.File(filename, 'r')
+                prefetch_hdrecs = hf["input"][
+                    local_idx: local_idx + self.prefetch_size]
+                if self.layers is not None:
+                    for layer_key in self.layers:
+                        prefetch_hdrecs = np.dstack(
+                            (prefetch_hdrecs,
+                             hf[layer_key][local_idx:
+                                           local_idx + self.prefetch_size]))
+                sys.stdout.flush()
                 self.fh_indices[file_id] = (
                     local_idx, local_idx + self.prefetch_size)
-                self.fh_data[file_id] = hdrecs[file_id][
-                    local_idx: local_idx + self.prefetch_size]
+                self.fh_data[file_id] = prefetch_hdrecs
                 sys.stdout.flush()
             rec = self.fh_data[file_id][
                 local_idx - self.fh_indices[file_id][0]]
