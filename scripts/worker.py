@@ -155,14 +155,12 @@ def get_model(args, gpu, rank):
     return model, model_params
 
 
-def train_worker(gpu, ngpu_per_node, args, timers=None):
+def train_worker(gpu, args):
     """Build models and run training.
 
     Args:
         gpu : GPU identity, if using specific GPU.
-        ngpu_per_node : Number of GPUs per node.
         args : argument object.
-        timers : .
 
     """
     # fix random seed so models have the same starting weights
@@ -185,7 +183,6 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
             train_dataset)
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.bs, shuffle=(train_sampler is None),
-        # collate_fn=custom_collate_train,
         num_workers=args.num_workers, pin_memory=True, sampler=train_sampler,
         drop_last=False
     )
@@ -201,8 +198,6 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
         # collate_fn=custom_collate_train,
         num_workers=args.num_workers, pin_memory=True, sampler=val_sampler,
         drop_last=False
-        # drop_last=True # need to drop irregular batch for distributed
-        # evaluation due to limitation of dist.all_gather
     )
 
     loss_func = get_losses(args.task, args.mse_weight,
@@ -253,12 +248,11 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
                             epoch=epoch, is_best=new_best)
 
 
-def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
+def infer_worker(gpu, args, res_queue=None):
     """Run inference.
 
     Args:
         gpu : GPU identity number, if using specific GPU.
-        ngpu_per_node : Number of GPUs per node.
         args : argument object.
         res_queue : Inference queue.
 
@@ -286,12 +280,11 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
           pad=args.pad, transform=args.transform)
 
 
-def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
+def eval_worker(gpu, args, res_queue=None):
     """Run evaluation.
 
     Args:
         gpu : GPU identity number, if using specific GPU.
-        ngpu_per_node : Number of GPUs per node.
         args : argument object.
         res_queue : Evaluate queue.
 
