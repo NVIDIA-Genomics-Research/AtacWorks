@@ -355,15 +355,10 @@ def main():
             mp.spawn(train_worker, nprocs=ngpus_per_node,
                      args=(ngpus_per_node, args), join=True)
         else:
-            gpu = args.gpu
-            # If only one device is available, default the gpu index to 0
-            if gpu > ngpus_per_node - 1:
-                _logger.info("Requested GPU index greater than the number of available devices, defaulting the gpu index to zero.")
-                gpu = 0
-            assert_device_available(gpu)
-            _logger.info('Running on GPU: %s' % str(gpu))
+            assert_device_available(args.gpu)
+            _logger.info('Running on GPU: %s' % str(args.gpu))
             args.world_size = 1
-            train_worker(gpu, ngpus_per_node, args, timers=Timers)
+            train_worker(args.gpu, ngpus_per_node, args, timers=Timers)
 
     # infer & eval
     ##########################################################################
@@ -430,14 +425,9 @@ def main():
                 mp.spawn(worker, nprocs=ngpus_per_node, args=(
                     ngpus_per_node, args, res_queue), join=True)
             else:
-                # If only one device is available, default the gpu index to 0
-                gpu = args.gpu
-                if gpu > ngpus_per_node - 1:
-                    _logger.info("Requested GPU index greater than the number of available devices, defaulting the gpu index to zero.")
-                    gpu = 0
-                assert_device_available(gpu)
+                assert_device_available(args.gpu)
                 args.world_size = 1
-                worker(gpu, ngpus_per_node, args, res_queue)
+                worker(args.gpu, ngpus_per_node, args, res_queue)
 
             # finish off writing
             #############################################################
