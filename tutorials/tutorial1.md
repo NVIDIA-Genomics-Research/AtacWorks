@@ -178,7 +178,7 @@ Run step 7 as follows:
 python $atacworks/scripts/main.py train \
         --config configs/train_config.yaml \
         --config_mparams configs/model_structure.yaml \
-        --train_files <path to folder containing all h5 files for training> \
+        --files_train <path to folder containing all h5 files for training> \
         --val_files <path to folder containing all h5 files for validation>
 ```
 See Appendix 2 below for an example.
