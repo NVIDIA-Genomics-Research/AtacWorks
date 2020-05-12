@@ -165,8 +165,6 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
         timers : .
 
     """
-    # fix random seed so models have the same starting weights
-    torch.manual_seed(42)
 
     rank = gpu if args.distributed else 0
 

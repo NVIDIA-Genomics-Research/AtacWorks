@@ -126,6 +126,8 @@ def add_common_options(parser):
                help='url used to set up distributed training')
     parser.add('--dist-backend', required=True, type=str,
                help='distributed backend')
+    parser.add('--seed', required=True, type=int,
+               help='Seed value to set. Must be greater than 0')
     # debug
     parser.add('--debug', action='store_true',
                help='Enable debug prints')
