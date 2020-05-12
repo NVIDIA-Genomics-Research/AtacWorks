@@ -50,11 +50,11 @@ import argparse
 import logging
 import os
 
-from claragenomics.dl4atac.utils import gather_key_files_from_cmdline
-from claragenomics.io.bedio import read_intervals
-from claragenomics.io.bigwigio import (check_bigwig_intervals_nonzero,
-                                       extract_bigwig_intervals)
-from claragenomics.io.h5io import dict_to_h5
+from atacworks.dl4atac.utils import gather_key_files_from_cmdline
+from atacworks.io.bedio import read_intervals
+from atacworks.io.bigwigio import (check_bigwig_intervals_nonzero,
+                                   extract_bigwig_intervals)
+from atacworks.io.h5io import dict_to_h5
 
 import numpy as np
 

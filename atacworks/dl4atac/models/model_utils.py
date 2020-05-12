@@ -17,11 +17,11 @@ import sys
 import warnings
 
 # module imports
-from claragenomics.dl4atac.models.models import DenoisingLinear, \
+from atacworks.dl4atac.models.models import DenoisingLinear, \
     DenoisingLogistic
-from claragenomics.dl4atac.models.models import DenoisingResNet, DenoisingUNet
+from atacworks.dl4atac.models.models import DenoisingResNet, DenoisingUNet
 
-from claragenomics.dl4atac.utils import load_model, myprint
+from atacworks.dl4atac.utils import load_model, myprint
 
 import configargparse
 

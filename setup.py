@@ -79,7 +79,7 @@ setup(name='atacworks',
                   os.path.join(current_dir, 'requirements-macs2.txt')))
       ],
       packages=find_namespace_packages(where=current_dir,
-                                       include=['claragenomics.*']),
+                                       include=['atacworks.*']),
       python_requires='>=3.5',
       long_description='Python libraries and utilities for manipulating '
                        'genomics data',

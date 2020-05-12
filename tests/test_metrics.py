@@ -8,7 +8,7 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
-import claragenomics.dl4atac.metrics as metrics
+import atacworks.dl4atac.metrics as metrics
 
 import pytest
 
