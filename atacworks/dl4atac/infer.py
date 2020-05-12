@@ -11,7 +11,7 @@
 
 import time
 
-from claragenomics.dl4atac.utils import myprint, progbar
+from atacworks.dl4atac.utils import myprint, progbar
 
 import numpy as np
 

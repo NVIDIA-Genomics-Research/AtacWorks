@@ -31,8 +31,8 @@ import logging
 import os
 import subprocess
 
-from claragenomics.io.bedio import df_to_bed, read_intervals
-from claragenomics.io.bigwigio import extract_bigwig_intervals
+from atacworks.io.bedio import df_to_bed, read_intervals
+from atacworks.io.bigwigio import extract_bigwig_intervals
 
 import numpy as np
 

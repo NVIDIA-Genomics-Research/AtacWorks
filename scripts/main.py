@@ -22,12 +22,12 @@ import tempfile
 import warnings
 
 # module imports
-from claragenomics.dl4atac.utils import (Timers, assert_device_available,
-                                         gather_files_from_cmdline,
-                                         make_experiment_dir, save_config)
-from claragenomics.io.bedgraphio import df_to_bedGraph, intervals_to_bg
-from claragenomics.io.bedio import read_intervals, read_sizes
-from claragenomics.io.bigwigio import bedgraph_to_bigwig
+from atacworks.dl4atac.utils import (Timers, assert_device_available,
+                                     gather_files_from_cmdline,
+                                     make_experiment_dir, save_config)
+from atacworks.io.bedgraphio import df_to_bedGraph, intervals_to_bg
+from atacworks.io.bedio import read_intervals, read_sizes
+from atacworks.io.bigwigio import bedgraph_to_bigwig
 
 from cmd_args import parse_args
 

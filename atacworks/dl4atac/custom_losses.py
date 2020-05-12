@@ -9,7 +9,7 @@
 #
 """Custom loss definitions."""
 
-from claragenomics.dl4atac.metrics import CorrCoef
+from atacworks.dl4atac.metrics import CorrCoef
 
 import torch
 import torch.nn as nn
