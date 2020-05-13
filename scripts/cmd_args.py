@@ -164,7 +164,7 @@ def add_train_options(parser):
     parser.add_argument('--poisson_weight', required=True, type=float,
                         help='relative weight of poisson loss')
     # validation args
-    parser.add('--val_files', required=True, type=str,
+    parser.add('--files_val', required=True, type=str,
                help='list of data files in the form of [file1, file2, '
                     '...];'
                     'or a single path to a folder of files')

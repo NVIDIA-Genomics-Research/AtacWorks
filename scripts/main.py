@@ -331,9 +331,9 @@ def main():
     ##########################################################################
     if args.mode == "train":
         args.files_train = gather_files_from_cmdline(args.files_train)
-        args.val_files = gather_files_from_cmdline(args.val_files)
+        args.files_val = gather_files_from_cmdline(args.files_val)
         _logger.debug("Training data:   " + "\n".join(args.files_train))
-        _logger.debug("Validation data: " + "\n".join(args.val_files))
+        _logger.debug("Validation data: " + "\n".join(args.files_val))
 
         # Get model parameters
         with h5py.File(args.files_train[0], 'r') as f:

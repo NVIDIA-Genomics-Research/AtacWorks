@@ -159,7 +159,7 @@ python $atacworks/scripts/main.py train \
         --config configs/train_config.yaml \
         --config_mparams configs/model_structure.yaml \
         --files_train Mono.50.2400.train.h5 \
-        --val_files Mono.50.2400.val.h5
+        --files_val Mono.50.2400.val.h5
 ```
 This command trains a deep learning model using the supplied clean and noisy ATAC-seq data, for 5 epochs (5 full passes through the dataset). At the end of every epoch, the current state of the model is saved in the directory `trained_models_latest`, and the performance of the current model is measured on the validation set. At the end, out of the 5 saved models, the one with the best performance on the validation set is saved as `trained_models_latest/model_best.pth.tar`
 
@@ -184,7 +184,7 @@ python $atacworks/scripts/main.py train \
         --config configs/train_config.yaml \
         --config_mparams configs/model_structure.yaml \
         --files_train <path to folder containing all h5 files for training> \
-        --val_files <path to folder containing all h5 files for validation>
+        --files_val <path to folder containing all h5 files for validation>
 ```
 See Appendix 2 below for an example.
 
@@ -254,5 +254,5 @@ python $atacworks/scripts/main.py train \
         --config configs/train_config.yaml \
         --config_mparams configs/model_structure.yaml \
         --files_train train_h5 \
-        --val_files val_h5 \
+        --files_val val_h5 \
 ```

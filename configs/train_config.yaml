@@ -42,7 +42,7 @@ pearson_weight: 1
 poisson_weight: 0
 
 # Validation args
-val_files: "None"
+files_val: "None"
 eval_freq: 1
 best_metric_choice: "AUROC"
 threshold: 0.5

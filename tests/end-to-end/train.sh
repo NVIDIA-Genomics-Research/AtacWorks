@@ -18,7 +18,7 @@ python $root_dir/main.py train\
     --label model \
     --distributed \
     --files_train $out_dir/train_data.h5 \
-    --val_files $out_dir/val_data.h5 \
+    --files_val $out_dir/val_data.h5 \
     --checkpoint_fname checkpoint.pth.tar \
     --epochs 1 --bs 4 \
     --width 50 --width_cla 50 --dil_cla 10 --pad 0
@@ -30,7 +30,7 @@ echo "Test classification mode of training"
 echo ""
 python $root_dir/main.py train \
     --files_train $out_dir/train_data.h5 \
-    --val_files $out_dir/val_data.h5 \
+    --files_val $out_dir/val_data.h5 \
     --model logistic --field 8401 \
     --out_home $out_dir --label logistic \
     --task classification --bs 4 \

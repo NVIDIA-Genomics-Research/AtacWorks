@@ -191,7 +191,7 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
     )
 
     # TODO: need DatasetVal? Not for now
-    val_dataset = DatasetTrain(files=args.val_files, layers=args.layers)
+    val_dataset = DatasetTrain(files=args.files_val, layers=args.layers)
     val_sampler = None
     if args.distributed:
         val_sampler = torch.utils.data.distributed.DistributedSampler(
