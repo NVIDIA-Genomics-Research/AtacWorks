@@ -1,0 +1,12 @@
+Data type	|Noise type	|Noisy data depth	|Clean data depth	|Noisy data cell count	|Clean data cell count	|Single-cell protocol	|Training cell type(s)	|Model path
+-----------	|-------	|---------------	|----------------	|-------------------	|-------------------	|-------------------	|-------------------	|----------
+Bulk	|Low coverage	|0.2M	|50M	|N/A	|N/A	|N/A	|CD4, CD8, B, NK	|https://atacworks-paper.s3.us-east-2.amazonaws.com/bulk_blood_cell_denoising_experiments/200000_reads/models/model.pth.tar
+Bulk	|Low coverage	|1M	|50M	|N/A	|N/A	|N/A	|CD4, CD8, B, NK	|https://atacworks-paper.s3.us-east-2.amazonaws.com/bulk_blood_cell_denoising_experiments/1000000_reads/models/model.pth.tar
+Bulk	|Low coverage	|5M	|50M	|N/A	|N/A	|N/A	|CD4, CD8, B, NK	|https://atacworks-paper.s3.us-east-2.amazonaws.com/bulk_blood_cell_denoising_experiments/5000000_reads/models/model.pth.tar
+Bulk	|Low coverage	|10M	|50M	|N/A	|N/A	|N/A	|CD4, CD8, B, NK	|https://atacworks-paper.s3.us-east-2.amazonaws.com/bulk_blood_cell_denoising_experiments/10000000_reads/models/model.pth.tar
+Bulk	|Low coverage	|20M	|50M	|N/A	|N/A	|N/A	|CD4, CD8, B, NK	|https://atacworks-paper.s3.us-east-2.amazonaws.com/bulk_blood_cell_denoising_experiments/20000000_reads/models/model.pth.tar
+Bulk	|Low quality	|20M	|20M	|N/A	|N/A	|N/A	|Monocytes	|https://atacworks-paper.s3.us-east-2.amazonaws.com/bulk_blood_cell_quality_experiments/models/model.pth.tar
+Single-cell	|Low cell count	|~0.2M	|~13M	|90		|6000	|dsci-ATAC	|CD4, CD8, preB	|https://atacworks-paper.s3.us-east-2.amazonaws.com/dsci_atac_blood_cell_denoising_experiments/90_cells/models/model.pth.tar
+Single-cell	|Low cell count	|~1M	|~13M	|450	|6000	|dsci-ATAC	|CD4, CD8, preB	|https://atacworks-paper.s3.us-east-2.amazonaws.com/dsci_atac_blood_cell_denoising_experiments/450_cells/models/model.pth.tar
+Single-cell	|Low cell count	|~0.2M	|~48M	|10		|2400	|dsc-ATAC	|B, Monocytes	|https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/10_cells/models/model.pth.tar
+Single-cell	|Low cell count	|~1M	|~48M	|50		|2400	|dsc-ATAC	|B, Monocytes	|https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/models/model.pth.tar

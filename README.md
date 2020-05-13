@@ -74,6 +74,7 @@ AtacWorks trains a deep neural network to learn a mapping between noisy (low cov
 ### 1. Training an AtacWorks model
 
 #### Input files
+
 To train an AtacWorks model, you need a pair of ATAC-Seq datasets from the same cell type, where one dataset has lower coverage or lower quality than the other. You can also use multiple such pairs of datasets. For each such pair of datasets, AtacWorks requires three input files:
 
 1. A coverage track representing the number of sequencing reads mapped to each position on the genome in the low-coverage or low-quality dataset. This may be smoothed or processed. Format: [bigWig](https://genome.ucsc.edu/goldenPath/help/bigWig.html)
@@ -84,11 +85,21 @@ To train an AtacWorks model, you need a pair of ATAC-Seq datasets from the same 
 
 The model learns a mapping from (1) to both (2) and (3); in other words, from the noisy coverage track, it learns to predict both the clean coverage track, and the positions of peaks in the clean dataset.
 
+#### Tutorial
+
 See [Tutorial 1](tutorials/tutorial1.md) for a workflow detailing the steps of data processing, encoding and model training and how to modify the parameters used in these steps.
 
 ### 2. Denoising and peak calling using a trained AtacWorks model
 
-All models described in [Lal & Chiang, et al. (2019)](https://www.biorxiv.org/content/10.1101/829481) are available for download and use at `https://atacworks-paper.s3.us-east-2.amazonaws.com`. See below for instructions to use these models or your own trained models:
+#### Downloading pre-trained models
+
+All models described in [Lal & Chiang, et al. (2019)](https://www.biorxiv.org/content/10.1101/829481v2) are available for download and use at `https://atacworks-paper.s3.us-east-2.amazonaws.com`. 
+
+See [pre-trained denoising models](pretrained_models.md) for a list of the available pre-trained denoising models.
+
+Before using one of these models, please read the description of how the training datasets for these models were preprocessed, in [Lal & Chiang, et al. (2019)](https://www.biorxiv.org/content/10.1101/829481v2), Methods section, paragraph 1. If your data processing pipeline is different, it is advisable to train a new model using the instructions above.
+
+See below for instructions to use our pre-trained models or your own trained models.
 
 #### Input files
 
@@ -136,4 +147,4 @@ Please cite AtacWorks as follows:
 
 Lal, A., Chiang, Z.D., Yakovenko, N., Duarte, F.M., Israeli, J. and Buenrostro, J.D., 2019. AtacWorks: A deep convolutional neural network toolkit for epigenomics. BioRxiv, p.829481.
 
-Link: https://www.biorxiv.org/content/10.1101/829481v1
+Link: https://www.biorxiv.org/content/10.1101/829481v2
