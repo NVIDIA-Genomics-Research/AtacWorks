@@ -11,7 +11,7 @@
 
 import time
 
-from claragenomics.dl4atac.utils import myprint, progbar, equal_width_formatter
+from atacworks.dl4atac.utils import myprint, progbar, equal_width_formatter
 
 import torch
 import torch.distributed as dist

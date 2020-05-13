@@ -27,12 +27,12 @@ import logging
 
 import os
 
-from claragenomics.dl4atac.metrics import (AUPRC, AUROC, Accuracy, CorrCoef,
-                                           F1, MSE, Precision, Recall,
-                                           SpearmanCorrCoef, Specificity)
-from claragenomics.io.bedio import read_intervals, read_sizes
-from claragenomics.io.bigwigio import extract_bigwig_intervals
-from claragenomics.io.h5io import h5_to_array
+from atacworks.dl4atac.metrics import (AUPRC, AUROC, Accuracy, CorrCoef,
+                                       F1, MSE, Precision, Recall,
+                                       SpearmanCorrCoef, Specificity)
+from atacworks.io.bedio import read_intervals, read_sizes
+from atacworks.io.bigwigio import extract_bigwig_intervals
+from atacworks.io.h5io import h5_to_array
 
 import numpy as np
 

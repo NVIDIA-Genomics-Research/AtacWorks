@@ -43,8 +43,8 @@ import argparse
 import logging
 import os
 
-from claragenomics.io.bedio import df_to_bed, read_sizes
-from claragenomics.io.bigwigio import check_bigwig_intervals_peak
+from atacworks.io.bedio import df_to_bed, read_sizes
+from atacworks.io.bigwigio import check_bigwig_intervals_peak
 
 import pandas as pd
 

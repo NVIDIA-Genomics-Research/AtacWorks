@@ -11,7 +11,7 @@
 
 from collections import Iterable, OrderedDict
 
-from claragenomics.dl4atac.custom_losses import PearsonLoss, PoissonLoss
+from atacworks.dl4atac.custom_losses import PearsonLoss, PoissonLoss
 
 import torch
 
