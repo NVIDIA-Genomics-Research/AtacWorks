@@ -46,7 +46,7 @@ wget https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_deno
 ### Config files
 We also need to download config files for this experiment. The config files describe the structure of the deep learning model and the parameters to train it. We will place these in the `configs` folder. 
 ```
-mkdir config_files
+mkdir configs
 wget -P configs https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/configs/train_config.yaml
 wget -P configs https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/configs/model_structure.yaml
 ```
