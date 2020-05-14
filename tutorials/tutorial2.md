@@ -15,10 +15,15 @@ As reported in our paper, we trained an AtacWorks model to learn a mapping from 
 If you want to train your own AtacWorks model instead of using the model reported in the paper, refer to [Tutorial 1](tutorial1.md).
 
 
-## Step 1: Set parameters
+## Step 1: Create folder and set AtacWorks path
 
 ```
 atacworks=<path to atacworks>
+```
+Create a folder for this experiment.
+```
+mkdir tutorial2
+cd tutorial2
 ```
 
 ## Step 2: Download model
