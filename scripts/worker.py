@@ -18,17 +18,17 @@ import os
 # python imports
 import warnings
 
-from claragenomics.dl4atac import metrics
+from atacworks.dl4atac import metrics
 # module imports
-from claragenomics.dl4atac.dataset import DatasetInfer, DatasetTrain
-from claragenomics.dl4atac.evaluate import evaluate
-from claragenomics.dl4atac.infer import infer
-from claragenomics.dl4atac.losses import MultiLoss
-from claragenomics.dl4atac.metrics import (AUROC, BCE, CorrCoef, MSE,
-                                           Recall, Specificity)
-from claragenomics.dl4atac.models.model_utils import build_model
-from claragenomics.dl4atac.train import train
-from claragenomics.dl4atac.utils import myprint, save_config, save_model
+from atacworks.dl4atac.dataset import DatasetInfer, DatasetTrain
+from atacworks.dl4atac.evaluate import evaluate
+from atacworks.dl4atac.infer import infer
+from atacworks.dl4atac.losses import MultiLoss
+from atacworks.dl4atac.metrics import (AUROC, BCE, CorrCoef, MSE,
+                                       Recall, Specificity)
+from atacworks.dl4atac.models.model_utils import build_model
+from atacworks.dl4atac.train import train
+from atacworks.dl4atac.utils import myprint, save_config, save_model
 
 import torch
 
