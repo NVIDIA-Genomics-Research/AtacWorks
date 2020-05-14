@@ -156,7 +156,7 @@ python $atacworks/scripts/main.py train \
         --train_files Mono.50.2400.train.h5 \
         --val_files Mono.50.2400.val.h5
 ```
-This command trains a deep learning model using the supplied clean and noisy ATAC-seq data, for 5 epochs (5 full passes through the dataset). At the end of every epoch, the current state of the model is saved in the directory `output_latest`, and the performance of the current model is measured on the validation set. At the end, out of the 5 saved models, the one with the best performance on the validation set is saved as `output_latest/model_best.pth.tar`
+This command trains a deep learning model using the supplied clean and noisy ATAC-seq data, for 5 epochs (5 full passes through the dataset). At the end of every epoch, the current state of the model is saved in the directory `trained_models_latest`, and the performance of the current model is measured on the validation set. At the end, out of the 5 saved models, the one with the best performance on the validation set is saved as `trained_models_latest/model_best.pth.tar`
 
 This model has learned a mapping from the 50-cell signal to the 2400-cell signal and peak calls. Given a new 50-cell ATAC-seq track, it can denoise the track and produce high-quality peak calls.
 
