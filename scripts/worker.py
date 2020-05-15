@@ -165,7 +165,6 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
         timers : .
 
     """
-
     rank = gpu if args.distributed else 0
 
     model, model_params = get_model(args, gpu, rank)
