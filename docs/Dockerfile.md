@@ -35,3 +35,9 @@ Use the `-v` option in docker to mount volumes with your data. Official document
         /data/hg19.auto.sizes \
         --prefix=/data/out
 ```
+## FAQ
+1. Unexpected bus error, how to troubleshoot?
+```
+    ERROR: Unexpected bus error encountered in worker. This might be caused by insufficient shared memory (shm).
+```
+A. This happens when docker container does not have enough shared memory allocation for deep learning frameworks. Checkout this doc on shared memory allocation [here](https://docs.nvidia.com/deeplearning/frameworks/user-guide/index.html#setincshmem). You can run your docker by adding this flag `--shm-size`. Increase the memory to 1GB or higher.

@@ -31,4 +31,4 @@ RUN git clone --recursive https://github.com/clara-genomics/AtacWorks.git
 
 # Install AtacWorks requirements
 RUN pip3 install -r AtacWorks/requirements-base.txt && pip3 install -r AtacWorks/requirements-macs2.txt
-RUN pip install .
+RUN cd AtacWorks && pip3 install --upgrade setuptools && pip3 install .
