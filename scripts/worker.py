@@ -35,7 +35,6 @@ import torch
 import torch.distributed as dist
 
 from torch.optim import Adam
-
 warnings.filterwarnings("ignore")
 
 # Set up logging
@@ -165,6 +164,10 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
         timers : .
 
     """
+    # fix random seed so models have the same starting weights
+    if args.seed is not None and args.seed > 0:
+        torch.manual_seed(args.seed)
+        torch.cuda.manual_seed(args.seed)
     rank = gpu if args.distributed else 0
 
     model, model_params = get_model(args, gpu, rank)
@@ -260,6 +263,10 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
         res_queue : Inference queue.
 
     """
+    # fix random seed so models have the same starting weights
+    if args.seed is not None and args.seed > 0:
+        torch.manual_seed(args.seed)
+        torch.cuda.manual_seed(args.seed)
     rank = gpu if args.distributed else 0
 
     model, _ = get_model(args, gpu, rank)
@@ -293,6 +300,10 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
         res_queue : Evaluate queue.
 
     """
+    # fix random seed so models have the same starting weights
+    if args.seed is not None and args.seed > 0:
+        torch.manual_seed(args.seed)
+        torch.cuda.manual_seed(args.seed)
     rank = gpu if args.distributed else 0
 
     model, _ = get_model(args, gpu, rank)

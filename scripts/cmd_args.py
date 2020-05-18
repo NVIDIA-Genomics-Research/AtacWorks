@@ -127,7 +127,9 @@ def add_common_options(parser):
     parser.add('--dist-backend', required=True, type=str,
                help='distributed backend')
     parser.add('--seed', required=True, type=int,
-               help='Seed value to set. Must be greater than 0')
+               help='Seed value to set for RNG (Random Number Generators).\
+                     Data loading and model initialization are \
+                     deterministic with seed setting, model training is not.')
     # debug
     parser.add('--debug', action='store_true',
                help='Enable debug prints')
