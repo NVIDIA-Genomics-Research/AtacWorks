@@ -30,7 +30,7 @@ layers: "None"
 
 # Train args
 files_train: "None"
-checkpoint_fname: "None"
+checkpoint_fname: "checkpoint.pth.tar"
 save_freq: 1
 
 #Learning args

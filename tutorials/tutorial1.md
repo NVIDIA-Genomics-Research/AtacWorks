@@ -14,16 +14,21 @@ Compared to the 'clean' signal from 2400 cells, the aggregated ATAC-Seq signal t
 
 We train an AtacWorks model to learn a mapping from the 50-cell ATAC-seq signals to the 2400-cell ATAC-seq signal and peak calls. In other words, given a noisy ATAC-seq signal from 50 cells, this model learns what the signal would look like - and where the peaks would be called - if we had sequenced 2400 cells.
 
-## Step 1: Set parameters
+## Step 1: Create folder and set AtacWorks path
 
 Replace 'path_to_atacworks' with the path to your cloned and set up 'AtacWorks' github repository.
 ```
 atacworks=<path_to_atacworks>
 ```
+Create a folder for this experiment.
+```
+mkdir tutorial1
+cd tutorial1
+```
 
 ## Step 2: Download data
 
-We will download all of the data needed for this experiment from AWS.
+We will download all of the data needed for this experiment from AWS into the `tutorial1` folder.
 
 ### Noisy ATAC-seq signal from 50 Monocytes
 ```
@@ -153,10 +158,10 @@ To train the model, we supply the training and validation datasets as well as th
 python $atacworks/scripts/main.py train \
         --config configs/train_config.yaml \
         --config_mparams configs/model_structure.yaml \
-        --train_files Mono.50.2400.train.h5 \
+        --files_train Mono.50.2400.train.h5 \
         --val_files Mono.50.2400.val.h5
 ```
-This command trains a deep learning model using the supplied clean and noisy ATAC-seq data, for 5 epochs (5 full passes through the dataset). At the end of every epoch, the current state of the model is saved in the directory `output_latest`, and the performance of the current model is measured on the validation set. At the end, out of the 5 saved models, the one with the best performance on the validation set is saved as `output_latest/model_best.pth.tar`
+This command trains a deep learning model using the supplied clean and noisy ATAC-seq data, for 5 epochs (5 full passes through the dataset). At the end of every epoch, the current state of the model is saved in the directory `trained_models_latest`, and the performance of the current model is measured on the validation set. At the end, out of the 5 saved models, the one with the best performance on the validation set is saved as `trained_models_latest/model_best.pth.tar`
 
 This model has learned a mapping from the 50-cell signal to the 2400-cell signal and peak calls. Given a new 50-cell ATAC-seq track, it can denoise the track and produce high-quality peak calls.
 
@@ -248,6 +253,6 @@ done
 python $atacworks/scripts/main.py train \
         --config configs/train_config.yaml \
         --config_mparams configs/model_structure.yaml \
-        --train_files train_h5 \
+        --files_train train_h5 \
         --val_files val_h5 \
 ```
