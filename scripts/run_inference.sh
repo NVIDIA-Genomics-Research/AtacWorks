@@ -142,8 +142,8 @@ echo "Inference on selected intervals, producing denoised track and binary peak 
 python $script_dir/main.py infer \
     --infer_files $OUT_DIR/test_data.h5 \
     --weights_path $MODEL_FILE \
-    --sizes_file $SIZES_FILE \
-    --intervals_file $OUT_DIR/genome_intervals.bed \
+    --file_chromsizes $SIZES_FILE \
+    --file_intervals $OUT_DIR/genome_intervals.bed \
     --config $config_file --config_mparams $model_structure
 
 #peaksummary

@@ -19,8 +19,8 @@ python $root_dir/main.py infer \
     --weights_path $expected_results_dir/model_latest/model_best.pth.tar \
     --num_workers 0 \
     --files $out_dir/no_label.h5 \
-    --intervals_file $out_dir/result.holdout_intervals.bed \
-    --sizes_file $ref_dir/hg19.auto.sizes \
+    --file_intervals $out_dir/result.holdout_intervals.bed \
+    --file_chromsizes $ref_dir/hg19.auto.sizes \
     --infer_threshold 0.5 \
     --result_fname infer \
     --config_mparams $config_dir/model_structure.yaml \
@@ -49,8 +49,8 @@ python $root_dir/main.py infer \
 	--out_home $out_dir --label logistic_inference \
 	--task classification \
 	--bs 64 --pad 0 --distributed \
-	--intervals_file $out_dir/result.holdout_intervals.bed \
-	--sizes_file $ref_dir/hg19.auto.sizes \
+	--file_intervals $out_dir/result.holdout_intervals.bed \
+	--file_chromsizes $ref_dir/hg19.auto.sizes \
 	--result_fname inferred \
 	--weights_path $expected_results_dir/logistic_model_latest/model_best.pth.tar
 echo ""

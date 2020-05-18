@@ -87,6 +87,7 @@ The model learns a mapping from (1) to both (2) and (3); in other words, from th
 
 #### Tutorial
 
+NOTE: Tutorials are not compatible across different branches. Currently tutorials are only compatible with the master branch.
 See [Tutorial 1](tutorials/tutorial1.md) for a workflow detailing the steps of data processing, encoding and model training and how to modify the parameters used in these steps.
 
 ### 2. Denoising and peak calling using a trained AtacWorks model

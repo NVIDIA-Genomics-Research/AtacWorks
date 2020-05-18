@@ -88,7 +88,7 @@ For more information type `python $atacworks/scripts/bw2h5.py --help`
 ```
 python $atacworks/scripts/main.py infer \
     --files NK.50_cells.h5 \
-    --sizes_file $atacworks/data/reference/hg19.auto.sizes \
+    --file_chromsizes $atacworks/data/reference/hg19.auto.sizes \
     --config configs/infer_config.yaml \
     --config_mparams configs/model_structure.yaml \
 ```
@@ -142,7 +142,7 @@ The model predicts the probability of every position on the genome being part of
 ```
 python $atacworks/main.py infer \
     --files NK.50_cells.h5 \
-    --sizes_file $atacworks/data/reference/hg19.auto.sizes \
+    --file_chromsizes $atacworks/data/reference/hg19.auto.sizes \
     --config configs/infer_config.yaml \
     --config_mparams configs/model_structure.yaml
     --infer_threshold None

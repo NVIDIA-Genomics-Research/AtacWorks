@@ -29,8 +29,8 @@ layers: "None"
 
 #Infer args
 files: "None"
-intervals_file: "None"
-sizes_file: "None"
+file_intervals: "None"
+file_chromsizes: "None"
 reg_rounding: 0
 cla_rounding: 3
 infer_threshold: 0.5

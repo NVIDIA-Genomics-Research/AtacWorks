@@ -198,10 +198,10 @@ def add_inference_options(parser):
                help='list of data files in the form of "[file1, file2, '
                     '...]";'
                     'or a single path to a file or folder of files')
-    parser.add('--intervals_file', required=True, type=str,
+    parser.add('--file_intervals', required=True, type=str,
                help='bed file containing the genomic\
                                intervals for inference')
-    parser.add('--sizes_file', required=True, type=str,
+    parser.add('--file_chromsizes', required=True, type=str,
                help='chromosome sizes file for the genome. \
                        Chromosome sizes files for hg19 and hg38 are \
                        given in the data/reference folder.')

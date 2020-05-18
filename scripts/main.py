@@ -135,9 +135,9 @@ def save_to_bedgraph(batch_range, item, task, channel, intervals,
         df_to_bedGraph(batch_bg, outfile)
 
 
-def writer(infer, intervals_file, exp_dir, result_fname,
+def writer(infer, file_intervals, exp_dir, result_fname,
            task, num_workers, infer_threshold, reg_rounding, cla_rounding,
-           batches_per_worker, gen_bigwig, sizes_file,
+           batches_per_worker, gen_bigwig, file_chromsizes,
            res_queue, prefix, deletebg):
     """Write out the inference output to specified format.
 
@@ -147,7 +147,7 @@ def writer(infer, intervals_file, exp_dir, result_fname,
     Args:
         infer: Whether inferring or not. Writing only to be called to write
         inference output.
-        intervals_file: Files containing the chromosome intervals.
+        file_intervals: Files containing the chromosome intervals.
         exp_dir: Experiment directory.
         result_fname:Name of the result.
         task: Regression, classification or both.
@@ -158,7 +158,7 @@ def writer(infer, intervals_file, exp_dir, result_fname,
         batches_per_worker: If using multi processing, how many batches per
         worker.
         gen_bigwig: Whether to generate bigwig file
-        sizes_file: The chromosome size file
+        file_chromsizes: The chromosome size file
         res_queue: Inference queue
         prefix: Prefix to use for output files
         deletebg: Delete bedgraph file after generating bigwig
@@ -168,7 +168,7 @@ def writer(infer, intervals_file, exp_dir, result_fname,
     if not infer:
         assert False, "writer called but infer = False."
 
-    intervals = pd.read_csv(intervals_file, sep='\t', header=None,
+    intervals = pd.read_csv(file_intervals, sep='\t', header=None,
                             names=['chrom', 'start', 'end'],
                             usecols=(0, 1, 2),
                             dtype={'chrom': str, 'start': int, 'end': int})
@@ -283,7 +283,7 @@ def writer(infer, intervals_file, exp_dir, result_fname,
         print("Writing the output to bigwig files")
         for channel in channels:
             bedgraph_to_bigwig(
-                outfiles[channel], sizes_file, prefix=None,
+                outfiles[channel], file_chromsizes, prefix=None,
                 deletebg=deletebg, sort=True)
 
 
@@ -373,8 +373,8 @@ def main():
 
                 # Check that intervals, sizes and h5 file are all compatible.
                 _logger.info('Checkng input files for compatibility')
-                intervals = read_intervals(args.intervals_file)
-                sizes = read_sizes(args.sizes_file)
+                intervals = read_intervals(args.file_intervals)
+                sizes = read_sizes(args.file_chromsizes)
                 check_intervals(intervals, sizes, args.files[0])
 
                 # Delete intervals and sizes objects in main thread
@@ -395,7 +395,7 @@ def main():
             # Create a keyword argument dictionary to pass into the
             # multiprocessor
             keyword_args = {"infer": args.mode == "infer",
-                            "intervals_file": args.intervals_file,
+                            "file_intervals": args.file_intervals,
                             "exp_dir": args.exp_dir,
                             "result_fname": args.result_fname,
                             "task": args.task,
@@ -405,7 +405,7 @@ def main():
                             "cla_rounding": args.cla_rounding,
                             "batches_per_worker": args.batches_per_worker,
                             "gen_bigwig": args.gen_bigwig,
-                            "sizes_file": args.sizes_file,
+                            "file_chromsizes": args.file_chromsizes,
                             "res_queue": res_queue, "prefix": prefix,
                             "deletebg": args.deletebg}
             write_proc = mp.Process(target=writer, kwargs=keyword_args)
