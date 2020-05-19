@@ -327,6 +327,10 @@ def main():
     if args.layers is not None:
         args.layers = args.layers.strip("[]").split(",")
 
+    if args.seed is not None and args.seed > 0:
+        np.random.seed(args.seed)
+        torch.manual_seed(args.seed)
+        torch.cuda.manual_seed(args.seed)
     # train & resume
     ##########################################################################
     if args.mode == "train":

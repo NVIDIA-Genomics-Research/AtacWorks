@@ -20,6 +20,7 @@ gpu: 0
 distributed: False
 dist-url: 'tcp://127.0.0.1:4321'
 dist-backend: 'gloo'
+seed: 42
 debug: False
 
 # Data processing args
