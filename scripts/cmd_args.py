@@ -84,6 +84,8 @@ def add_common_options(parser):
 
     """
     # experiment args
+    parser.add('--config', required=False,
+               is_config_file=True, help='config file path')
     parser.add('--label', required=True, type=str,
                help='label of the experiment; used for naming output folder')
     parser.add('--out_home', required=True, type=str,
@@ -192,8 +194,6 @@ def add_inference_options(parser):
 
     """
     add_common_options(parser)
-    parser.add('--config', required=False,
-               is_config_file=True, help='config file path')
     parser.add('--files', required=True, type=str,
                help='list of data files in the form of "[file1, file2, '
                     '...]";'
