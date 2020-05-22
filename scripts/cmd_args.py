@@ -118,7 +118,7 @@ def add_common_options(parser):
                help="checkpoint path to load the model from for\
                    inference or resume training")
     # dist-env args
-    parser.add('--gpu', required=True, type=int,
+    parser.add('--gpu', required=True, type=type_or_none_fn(int),
                help='GPU id to use; preempted by --distributed\
                            which uses all available gpus ')
     parser.add('--distributed', action='store_true',

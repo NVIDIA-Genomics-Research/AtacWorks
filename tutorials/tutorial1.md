@@ -161,7 +161,7 @@ python $atacworks/scripts/main.py train \
         --files_train Mono.50.2400.train.h5 \
         --val_files Mono.50.2400.val.h5
 ```
-This command trains a deep learning model using the supplied clean and noisy ATAC-seq data, for 5 epochs (5 full passes through the dataset). At the end of every epoch, the current state of the model is saved in the directory `output_latest`, and the performance of the current model is measured on the validation set. At the end, out of the 5 saved models, the one with the best performance on the validation set is saved as `output_latest/model_best.pth.tar`
+This command trains a deep learning model using the supplied clean and noisy ATAC-seq data, for 25 epochs (25 full passes through the dataset). At the end of every epoch, the current state of the model is saved in the directory `trained_model_latest`, and the performance of the current model is measured on the validation set. At the end, out of the 25 saved models, the one with the best performance on the validation set is saved as `trained_model_latest/model_best.pth.tar`
 
 This model has learned a mapping from the 50-cell signal to the 2400-cell signal and peak calls. Given a new 50-cell ATAC-seq track, it can denoise the track and produce high-quality peak calls.
 
@@ -169,7 +169,7 @@ See [Tutorial 2](tutorial2.md) for step-by-step instructions on how to apply thi
 
 To change any of the parameters for the deep learning model, you can edit the appropriate parameters in `configs/train_config.yaml` or `configs/model_structure.yaml` and run the command in step 7 above. Type `python $atacworks/scripts/main.py train --help` for an explanation of the parameters.
 
-Note: `train_config.yaml` is set up to use multiple GPUs. If you are using a single GPU, edit `train_config.yaml` to change the line `gpu: "None"` to read `gpu: 0`. 
+Note: `train_config.yaml` is set up to use multiple GPUs. If you are using a single GPU, edit `train_config.yaml` to change the line `gpu: "None"` to read `gpu: 0` and set `--distributed: True` to `--distributed: False`. 
 
 ## References
 (1) Lal, A., Chiang, Z.D., Yakovenko, N., Duarte, F.M., Israeli, J. and Buenrostro, J.D., 2019. AtacWorks: A deep convolutional neural network toolkit for epigenomics. BioRxiv, p.829481. (https://www.biorxiv.org/content/10.1101/829481v1)
