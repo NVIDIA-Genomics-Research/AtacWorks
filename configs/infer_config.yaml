@@ -40,3 +40,7 @@ batches_per_worker: 16
 result_fname: inferred
 gen_bigwig: True
 deletebg: False
+
+#Eval options
+best_metric_choice: "AUROC"
+threshold: 0.5
