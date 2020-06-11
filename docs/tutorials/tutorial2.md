@@ -15,10 +15,15 @@ As reported in our paper, we trained an AtacWorks model to learn a mapping from 
 If you want to train your own AtacWorks model instead of using the model reported in the paper, refer to [Tutorial 1](tutorial1.md).
 
 
-## Step 1: Set parameters
+## Step 1: Create folder and set AtacWorks path
 
 ```
 atacworks=<path to atacworks>
+```
+Create a folder for this experiment.
+```
+mkdir tutorial2
+cd tutorial2
 ```
 
 ## Step 2: Download model
@@ -51,7 +56,7 @@ In this example, we will apply the model to chromosomes 1-22. The reference geno
 ```
 mkdir intervals
 python $atacworks/scripts/get_intervals.py \
-    --sizes $atacworks/example/reference/hg19.auto.sizes \
+    --sizes $atacworks/data/reference/hg19.auto.sizes \
     --intervalsize 50000 \
     --out_dir intervals \
     --prefix hg19.50000 \
@@ -83,10 +88,11 @@ For more information type `python $atacworks/scripts/bw2h5.py --help`
 ```
 python $atacworks/scripts/main.py infer \
     --files NK.50_cells.h5 \
-    --sizes_file $atacworks/example/reference/hg19.auto.sizes \
+    --sizes_file $atacworks/data/reference/hg19.auto.sizes \
     --config configs/infer_config.yaml \
     --config_mparams configs/model_structure.yaml \
 ```
+Note: `infer_config.yaml` is set up to use multiple GPUs. If you are using a single GPU, edit `infer_config.yaml` to change the line `gpu: "None"` to read `gpu: 0`. 
 
 The inference results will be saved in the folder `output_latest`. This folder will contain four files: 
 1. `NK_inferred.track.bedGraph` 
@@ -96,7 +102,7 @@ The inference results will be saved in the folder `output_latest`. This folder w
 
 `NK_inferred.track.bedGraph` and `NK_inferred.track.bw` contain the denoised ATAC-seq track. `NK_inferred.peaks.bedGraph` and `NK_inferred.peaks.bw` contain the positions in the genome that are designated as peaks (the model predicts that the probability of these positions being part of a peak is at least 0.5)
 
-To change any of the parameters for inference with the deep learning model, you can edit the parameters in `configs/infer_config.yaml` or `configs/model_structure.yaml` and run the commands in step 7-8 above. 
+To change any of the parameters for inference with the deep learning model, you can edit the parameters in `configs/infer_config.yaml` or `configs/model_structure.yaml` and run the command above. 
 
 Type `python $atacworks/scripts/main.py infer --help` for an explanation of the parameters.
 
@@ -136,7 +142,7 @@ The model predicts the probability of every position on the genome being part of
 ```
 python $atacworks/main.py infer \
     --files NK.50_cells.h5 \
-    --sizes_file $atacworks/example/reference/hg19.auto.sizes \
+    --sizes_file $atacworks/data/reference/hg19.auto.sizes \
     --config configs/infer_config.yaml \
     --config_mparams configs/model_structure.yaml
     --infer_threshold None

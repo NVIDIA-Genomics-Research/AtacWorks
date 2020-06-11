@@ -9,7 +9,7 @@
 #
 """Model definitions."""
 
-from claragenomics.dl4atac.layers import ConvAct1d, DownBlock, \
+from atacworks.dl4atac.layers import ConvAct1d, DownBlock, \
     ResBlock, UpBlock, ZeroSamePad1d
 
 import torch

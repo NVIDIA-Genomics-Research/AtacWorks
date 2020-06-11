@@ -66,7 +66,7 @@ pyaw_classifiers = [
 ]
 
 setup(name='atacworks',
-      version='0.2.0',
+      version='0.2.2',
       description='NVIDIA genomics python libraries and utiliites',
       author='NVIDIA Corporation',
       url="https://github.com/clara-genomics/AtacWorks",
@@ -79,7 +79,7 @@ setup(name='atacworks',
                   os.path.join(current_dir, 'requirements-macs2.txt')))
       ],
       packages=find_namespace_packages(where=current_dir,
-                                       include=['claragenomics.*']),
+                                       include=['atacworks.*']),
       python_requires='>=3.5',
       long_description='Python libraries and utilities for manipulating '
                        'genomics data',

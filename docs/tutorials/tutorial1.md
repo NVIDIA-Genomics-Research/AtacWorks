@@ -14,16 +14,21 @@ Compared to the 'clean' signal from 2400 cells, the aggregated ATAC-Seq signal t
 
 We train an AtacWorks model to learn a mapping from the 50-cell ATAC-seq signals to the 2400-cell ATAC-seq signal and peak calls. In other words, given a noisy ATAC-seq signal from 50 cells, this model learns what the signal would look like - and where the peaks would be called - if we had sequenced 2400 cells.
 
-## Step 1: Set parameters
+## Step 1: Create folder and set AtacWorks path
 
 Replace 'path_to_atacworks' with the path to your cloned and set up 'AtacWorks' github repository.
 ```
 atacworks=<path_to_atacworks>
 ```
+Create a folder for this experiment.
+```
+mkdir tutorial1
+cd tutorial1
+```
 
 ## Step 2: Download data
 
-We will download all of the data needed for this experiment from AWS.
+We will download all of the data needed for this experiment from AWS into the `tutorial1` folder.
 
 ### Noisy ATAC-seq signal from 50 Monocytes
 ```
@@ -50,12 +55,12 @@ wget -P configs https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_bloo
 
 The clean peak calls (`dsc.Mono.2400.cutsites.smoothed.200.3.narrowPeak`) were produced by MACS2 and are in .narrowPeak format. We need to convert them to bigWig format for use. This also requires us to supply a chromosome sizes file describing the reference genome that we use. 
 
-Chromosome sizes files for the hg19 and hg38 human reference genomes are supplied with AtacWorks in the folder `AtacWorks/example/reference`. Here, we are using hg19.
+Chromosome sizes files for the hg19 and hg38 human reference genomes are supplied with AtacWorks in the folder `AtacWorks/data/reference`. Here, we are using hg19.
 
 ```
 python $atacworks/scripts/peak2bw.py \
     --input dsc.Mono.2400.cutsites.smoothed.200.3.narrowPeak \
-    --sizes $atacworks/example/reference/hg19.chrom.sizes \
+    --sizes $atacworks/data/reference/hg19.chrom.sizes \
     --out_dir ./ \
     --skip 1
 ```
@@ -83,7 +88,7 @@ We provide a chromosome sizes file 'hg19.auto.sizes' that contains sizes for all
 
 ```
 python $atacworks/scripts/get_intervals.py \
-     --sizes $atacworks/example/reference/hg19.auto.sizes \
+     --sizes $atacworks/data/reference/hg19.auto.sizes \
      --intervalsize 50000 \
      --out_dir ./ \
      --val chr20 \
@@ -153,16 +158,18 @@ To train the model, we supply the training and validation datasets as well as th
 python $atacworks/scripts/main.py train \
         --config configs/train_config.yaml \
         --config_mparams configs/model_structure.yaml \
-        --train_files Mono.50.2400.train.h5 \
+        --files_train Mono.50.2400.train.h5 \
         --val_files Mono.50.2400.val.h5
 ```
-This command trains a deep learning model using the supplied clean and noisy ATAC-seq data, for 5 epochs (5 full passes through the dataset). At the end of every epoch, the current state of the model is saved in the directory `output_latest`, and the performance of the current model is measured on the validation set. At the end, out of the 5 saved models, the one with the best performance on the validation set is saved as `output_latest/model_best.pth.tar`
+This command trains a deep learning model using the supplied clean and noisy ATAC-seq data, for 5 epochs (5 full passes through the dataset). At the end of every epoch, the current state of the model is saved in the directory `trained_models_latest`, and the performance of the current model is measured on the validation set. At the end, out of the 5 saved models, the one with the best performance on the validation set is saved as `trained_models_latest/model_best.pth.tar`
 
 This model has learned a mapping from the 50-cell signal to the 2400-cell signal and peak calls. Given a new 50-cell ATAC-seq track, it can denoise the track and produce high-quality peak calls.
 
 See [Tutorial 2](tutorial2.md) for step-by-step instructions on how to apply this trained model to another dataset.
 
 To change any of the parameters for the deep learning model, you can edit the appropriate parameters in `configs/train_config.yaml` or `configs/model_structure.yaml` and run the command in step 7 above. Type `python $atacworks/scripts/main.py train --help` for an explanation of the parameters.
+
+Note: `train_config.yaml` is set up to use multiple GPUs. If you are using a single GPU, edit `train_config.yaml` to change the line `gpu: "None"` to read `gpu: 0`. 
 
 ## References
 (1) Lal, A., Chiang, Z.D., Yakovenko, N., Duarte, F.M., Israeli, J. and Buenrostro, J.D., 2019. AtacWorks: A deep convolutional neural network toolkit for epigenomics. BioRxiv, p.829481. (https://www.biorxiv.org/content/10.1101/829481v1)
@@ -176,7 +183,7 @@ Run step 7 as follows:
 python $atacworks/scripts/main.py train \
         --config configs/train_config.yaml \
         --config_mparams configs/model_structure.yaml \
-        --train_files <path to folder containing all h5 files for training> \
+        --files_train <path to folder containing all h5 files for training> \
         --val_files <path to folder containing all h5 files for validation>
 ```
 See Appendix 2 below for an example.
@@ -246,6 +253,6 @@ done
 python $atacworks/scripts/main.py train \
         --config configs/train_config.yaml \
         --config_mparams configs/model_structure.yaml \
-        --train_files train_h5 \
+        --files_train train_h5 \
         --val_files val_h5 \
 ```

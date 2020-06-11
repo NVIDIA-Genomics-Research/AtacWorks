@@ -22,12 +22,12 @@ import tempfile
 import warnings
 
 # module imports
-from claragenomics.dl4atac.utils import (Timers, assert_device_available,
-                                         gather_files_from_cmdline,
-                                         make_experiment_dir, save_config)
-from claragenomics.io.bedgraphio import df_to_bedGraph, intervals_to_bg
-from claragenomics.io.bedio import read_intervals, read_sizes
-from claragenomics.io.bigwigio import bedgraph_to_bigwig
+from atacworks.dl4atac.utils import (Timers, assert_device_available,
+                                     gather_files_from_cmdline,
+                                     make_experiment_dir, save_config)
+from atacworks.io.bedgraphio import df_to_bedGraph, intervals_to_bg
+from atacworks.io.bedio import read_intervals, read_sizes
+from atacworks.io.bigwigio import bedgraph_to_bigwig
 
 from cmd_args import parse_args
 
@@ -88,13 +88,14 @@ def check_intervals(intervals_df, sizes_df, h5_file):
             excess_intervals)
 
 
-def save_to_bedgraph(batch_range, item, channel, intervals,
+def save_to_bedgraph(batch_range, item, task, channel, intervals,
                      outfile, rounding=None, threshold=None):
     """Write out the tracks and peaks to bedGraphs.
 
     Args:
         batch_range : List containing start and end position of batch to write.
         item : Output from the queue.
+        task: Whether the task is classification or regression or both.
         channel : Channel to be written out.
         intervals : pandas object containing inference intervals.
         outfile : The output file to write the output to.
@@ -105,7 +106,10 @@ def save_to_bedgraph(batch_range, item, channel, intervals,
     keys, batch = item
     start = batch_range[0]
     end = batch_range[1]
-    scores = batch[start:end, :, channel]
+    if task == "both":
+        scores = batch[start:end, :, channel]
+    else:
+        scores = batch[start:end, :, 0]
     # Round scores - for regression output
     if rounding is not None:
         scores = scores.astype('float64')
@@ -173,17 +177,13 @@ def writer(infer, intervals_file, exp_dir, result_fname,
     out_base_path = os.path.join(exp_dir, prefix + "_" + result_fname)
     if task == "regression":
         channels = [0]
-        outfiles = [os.path.join(out_base_path + ".track.bedGraph")]
-        rounding = [reg_rounding]
     elif task == "classification":
         channels = [1]
-        outfiles = [os.path.join(out_base_path + ".peaks.bedGraph")]
-        rounding = [cla_rounding]
     elif task == "both":
         channels = [0, 1]
-        outfiles = [os.path.join(out_base_path + ".track.bedGraph"),
-                    os.path.join(out_base_path + ".peaks.bedGraph")]
-        rounding = [reg_rounding, cla_rounding]
+    outfiles = [os.path.join(out_base_path + ".track.bedGraph"),
+                os.path.join(out_base_path + ".peaks.bedGraph")]
+    rounding = [reg_rounding, cla_rounding]
 
     # Temp dir used to save temp files during multiprocessing.
     temp_dir = tempfile.mkdtemp()
@@ -204,7 +204,7 @@ def writer(infer, intervals_file, exp_dir, result_fname,
                 end = batch.shape[0]
                 for channel in channels:
                     with open(outfiles[channel], "a+") as outfile:
-                        save_to_bedgraph([start, end], item, channel,
+                        save_to_bedgraph([start, end], item, task, channel,
                                          intervals, outfile,
                                          rounding=rounding[channel],
                                          threshold=infer_threshold)
@@ -233,6 +233,7 @@ def writer(infer, intervals_file, exp_dir, result_fname,
                     ) for num in range(num_jobs)]
                     if infer_threshold is None:
                         map_args = list(zip(tmp_batch_ranges, all_items,
+                                            [task] * len(tmp_batch_ranges),
                                             [channel] * len(
                                                 tmp_batch_ranges),
                                             all_intervals,
@@ -241,6 +242,7 @@ def writer(infer, intervals_file, exp_dir, result_fname,
                                                 tmp_batch_ranges)))
                     else:
                         map_args = list(zip(tmp_batch_ranges, all_items,
+                                            [task] * len(tmp_batch_ranges),
                                             [channel] * len(
                                                 tmp_batch_ranges),
                                             all_intervals,
@@ -325,6 +327,10 @@ def main():
     if args.layers is not None:
         args.layers = args.layers.strip("[]").split(",")
 
+    if args.seed is not None and args.seed > 0:
+        np.random.seed(args.seed)
+        torch.manual_seed(args.seed)
+        torch.cuda.manual_seed(args.seed)
     # train & resume
     ##########################################################################
     if args.mode == "train":

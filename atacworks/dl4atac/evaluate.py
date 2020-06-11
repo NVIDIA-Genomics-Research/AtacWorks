@@ -12,7 +12,7 @@
 import time
 import torch
 import numpy as np
-from claragenomics.dl4atac.utils import myprint, gather_tensor, progbar
+from atacworks.dl4atac.utils import myprint, gather_tensor, progbar
 
 
 def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg,
