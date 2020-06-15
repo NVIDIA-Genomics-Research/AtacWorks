@@ -217,7 +217,7 @@ done
 - Encode all the training data and save in the `train_h5` directory.
 ```
 mkdir train_h5
-cell_types = (CD19 Mono)
+cell_types=(CD19 Mono)
 subsamples=(1 2 3 4 5)
 for cell_type in ${cell_types[*]}; do
     for subsample in ${subsamples[*]}; do
@@ -236,7 +236,7 @@ done
 - Encode all the validation data and save in the `val_h5` directory.
 ```
 mkdir val_h5
-cell_types = (CD19 Mono)
+cell_types=(CD19 Mono)
 for cell_type in ${cell_types[*]}; do
     python $atacworks/scripts/bw2h5.py \
            --noisybw train_data/noisy_data/dsc.1.${cell_type}.50.cutsites.smoothed.200.bw \
