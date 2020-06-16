@@ -78,11 +78,16 @@ setup(name='atacworks',
               get_verified_absolute_path(
                   os.path.join(current_dir, 'requirements-macs2.txt')))
       ],
-      packages=find_namespace_packages(where=current_dir,
-                                       include=['atacworks.*']),
+      packages=find_namespace_packages(),
       python_requires='>=3.5',
       long_description='Python libraries and utilities for manipulating '
                        'genomics data',
       classifiers=pyaw_classifiers,
+      entry_points={'console_scripts': ['atacworks = scripts.main:main']},
+      data_files=[
+          ('configs', ['configs/infer_config.yaml',
+                       'configs/train_config.yaml',
+                       'configs/model_structure.yaml']),
+          ('reference', ['reference/hg19.auto.sizes'])],
       platforms=['any'],
       )

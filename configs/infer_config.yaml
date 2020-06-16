@@ -11,7 +11,15 @@
 # Experiment args
 out_home: './'
 label: 'inference_output'
-task: 'both'
+# If both peaks and tracks are False, then the program enters into a default mode and outputs both.
+# If both peaks and tracks are True, then the program outputs both.
+# If either one of them is True, then only the corresponding denoised output is saved.
+peaks: False
+tracks: False
+# Task is the task that model was trained for. If the task is regression, then model cannot
+# output denosied peaks. Similarly, if the task is classification, then model cannot 
+# output denoised tracks. The above peaks, tracks options only are relevant if task is "both".
+task: "both"
 print_freq: 50
 bs: 512
 num_workers: 4
@@ -29,7 +37,7 @@ transform: "None"
 layers: "None"
 
 #Infer args
-files: "None"
+input_files: "None"
 intervals_file: "None"
 sizes_file: "None"
 reg_rounding: 0

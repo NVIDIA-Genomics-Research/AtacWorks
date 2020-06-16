@@ -29,7 +29,7 @@ from atacworks.io.bedgraphio import df_to_bedGraph, intervals_to_bg
 from atacworks.io.bedio import read_intervals, read_sizes
 from atacworks.io.bigwigio import bedgraph_to_bigwig
 
-from cmd_args import parse_args
+from scripts.cmd_args import parse_args
 
 import h5py
 
@@ -41,7 +41,7 @@ import torch
 
 import torch.multiprocessing as mp
 
-from worker import eval_worker, infer_worker, train_worker
+from scripts.worker import eval_worker, infer_worker, train_worker
 
 warnings.filterwarnings("ignore")
 
@@ -136,8 +136,8 @@ def save_to_bedgraph(batch_range, item, task, channel, intervals,
 
 
 def writer(infer, intervals_file, exp_dir, result_fname,
-           task, num_workers, infer_threshold, reg_rounding, cla_rounding,
-           batches_per_worker, gen_bigwig, sizes_file,
+           task, peaks, tracks, num_workers, infer_threshold, reg_rounding,
+           cla_rounding, batches_per_worker, gen_bigwig, sizes_file,
            res_queue, prefix, deletebg):
     """Write out the inference output to specified format.
 
@@ -151,6 +151,8 @@ def writer(infer, intervals_file, exp_dir, result_fname,
         exp_dir: Experiment directory.
         result_fname:Name of the result.
         task: Regression, classification or both.
+        peaks: classification output.
+        tracks: regression output.
         num_workers: Number of workers to use, for multi-processing
         infer_threshold: Value to threshold the inference output at.
         reg_rounding: Number of digits to round the regression output.
@@ -175,12 +177,22 @@ def writer(infer, intervals_file, exp_dir, result_fname,
 
     channels = []
     out_base_path = os.path.join(exp_dir, prefix + "_" + result_fname)
-    if task == "regression":
-        channels = [0]
+
+    if task == "both":
+        if tracks and not peaks:
+            channels = [0]
+        elif peaks and not tracks:
+            channels = [1]
+        elif tracks and peaks:
+            channels = [0, 1]
+        # If both tracks and peaks are false, turn them to default true.
+        elif not(tracks or peaks):
+            channels = [0, 1]
     elif task == "classification":
         channels = [1]
-    elif task == "both":
-        channels = [0, 1]
+    elif task == "regression":
+        channels = [0]
+
     outfiles = [os.path.join(out_base_path + ".track.bedGraph"),
                 os.path.join(out_base_path + ".peaks.bedGraph")]
     rounding = [reg_rounding, cla_rounding]
@@ -306,7 +318,9 @@ def main():
     """Main."""
     root_dir = os.path.abspath(
         os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), ".."))
+
     args = parse_args(root_dir)
+
     # Set log level
     if args.debug:
         _handler.setLevel(logging.DEBUG)
@@ -366,26 +380,26 @@ def main():
 
     # infer & eval
     ##########################################################################
-    if args.mode == "infer" or args.mode == "eval":
-        files = args.files
+    if args.mode == "denoise" or args.mode == "eval":
+        files = args.input_files
         files = gather_files_from_cmdline(files)
         for x in range(len(files)):
             infile = files[x]
-            args.files = [infile]
-            if args.mode == "infer":
-                _logger.debug("Inference data: ", args.files)
+            args.input_files = [infile]
+            if args.mode == "denoise":
+                _logger.debug("Inference data: ", args.input_files)
 
                 # Check that intervals, sizes and h5 file are all compatible.
                 _logger.info('Checkng input files for compatibility')
                 intervals = read_intervals(args.intervals_file)
                 sizes = read_sizes(args.sizes_file)
-                check_intervals(intervals, sizes, args.files[0])
+                check_intervals(intervals, sizes, args.input_files[0])
 
                 # Delete intervals and sizes objects in main thread
                 del intervals
                 del sizes
             else:
-                _logger.debug("Evaluation data: ", args.files)
+                _logger.debug("Evaluation data: ", args.input_files)
             # Get model parameters
             with h5py.File(files[x], 'r') as f:
                 args.interval_size = f['input'].shape[1]
@@ -398,11 +412,13 @@ def main():
             res_queue = manager.Queue()
             # Create a keyword argument dictionary to pass into the
             # multiprocessor
-            keyword_args = {"infer": args.mode == "infer",
+            keyword_args = {"infer": args.mode == "denoise",
                             "intervals_file": args.intervals_file,
                             "exp_dir": args.exp_dir,
                             "result_fname": args.result_fname,
                             "task": args.task,
+                            "peaks": args.peaks,
+                            "tracks": args.tracks,
                             "num_workers": args.num_workers,
                             "infer_threshold": args.infer_threshold,
                             "reg_rounding": args.reg_rounding,
@@ -423,7 +439,7 @@ def main():
             args.distributed = False if ngpus_per_node == 1 else \
                 args.distributed
 
-            worker = infer_worker if args.mode == "infer" else eval_worker
+            worker = infer_worker if args.mode == "denoise" else eval_worker
             if args.distributed:
                 args.world_size = ngpus_per_node
                 mp.spawn(worker, nprocs=ngpus_per_node, args=(

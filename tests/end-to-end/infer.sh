@@ -14,11 +14,11 @@ echo ""
 echo "Run inference on test set with default peak calling setting..."
 echo ""
 
-python $root_dir/main.py infer \
+atacworks denoise \
     --out_home $out_dir --label inference \
     --weights_path $expected_results_dir/model_latest/model_best.pth.tar \
     --num_workers 0 \
-    --files $out_dir/no_label.h5 \
+    --input_files $out_dir/no_label.h5 \
     --intervals_file $out_dir/result.holdout_intervals.bed \
     --sizes_file $ref_dir/hg19.auto.sizes \
     --infer_threshold 0.5 \
@@ -43,8 +43,8 @@ check_status $? "Inferred track bedGraph files do not match!"
 echo ""
 echo "Run inference in classification only mode..."
 echo ""
-python $root_dir/main.py infer \
-	--files $out_dir/no_label.h5 \
+atacworks denoise \
+	--input_files $out_dir/no_label.h5 \
 	--model logistic --field 8401 \
 	--out_home $out_dir --label logistic_inference \
 	--task classification \
