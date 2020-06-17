@@ -4,7 +4,7 @@
 
 In this tutorial we train an AtacWorks model to denoise the signal track and call peaks from aggregate single-cell ATAC-seq data derived from a small number of cells. We use the dsc-ATAC-seq dataset presented in reference (1) (Section "AtacWorks enhances ATAC-seq results from small numbers of single cells", also Supplementary Table 8). This dataset consists of single-cell ATAC-seq data from several types of human blood cells.
 
-Note that all the AtacWorks models described in reference (1) are available to download (https://atacworks-paper.s3.us-east-2.amazonaws.com) and you may be able to use one of these instead of training a new model. To learn how to download and use an existing model, refer to [Tutorial 2](tutorial2.md).
+Note that all the AtacWorks models described in reference (1) are available to download (https://atacworks-paper.s3.us-east-2.amazonaws.com) and you may be able to use one of these instead of training a new model. To learn how to download and use an existing model, refer to Tutorial 2.
  
 We selected 2400 Monocytes from this dataset - this is our ‘clean’, high-coverage dataset. We then randomly sampled 50 of these 2400 Monocytes. Here's what the ATAC-seq signal from 50 cells and 2400 cells looks like, for a region on chromosome 10:
 
@@ -165,7 +165,7 @@ This command trains a deep learning model using the supplied clean and noisy ATA
 
 This model has learned a mapping from the 50-cell signal to the 2400-cell signal and peak calls. Given a new 50-cell ATAC-seq track, it can denoise the track and produce high-quality peak calls.
 
-See [Tutorial 2](tutorial2.md) for step-by-step instructions on how to apply this trained model to another dataset.
+See Tutorial 2 for step-by-step instructions on how to apply this trained model to another dataset.
 
 To change any of the parameters for the deep learning model, you can edit the appropriate parameters in `configs/train_config.yaml` or `configs/model_structure.yaml` and run the command in step 7 above. Type `python $atacworks/scripts/main.py train --help` for an explanation of the parameters.
 
@@ -192,7 +192,7 @@ See Appendix 2 below for an example.
 
 In Section "AtacWorks enhances ATAC-seq results from small numbers of single cells" (also Supplementary Table 8), we report this experiment, although the model we use there is trained on more data.
 
-To download the exact model used in the paper, see [Tutorial 2](tutorial2.md).
+To download the exact model used in the paper, see Tutorial 2.
 
 In order to train the same model reported in the paper, follow the following steps. 
 - Download all the training data
