@@ -9,33 +9,38 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
-######################################
-# ClaraGenomicsAnalysis CPU/GPU conda build script for CI #
-######################################
+################################################################################
+# AtacWorks CPU/GPU conda build script for CI #
+################################################################################
 set -e
 
-# Logger function for build status output
-function logger() {
-  echo -e "\n>>>> $@\n"
-}
+# Stat time for logger
+START_TIME=$(date +%s)
+
+export PATH=/conda/bin:/usr/local/cuda/bin:$PATH
+# Set home to the job's workspace
+export HOME=$WORKSPACE
+cd "${WORKSPACE}"
 
 ################################################################################
 # Init
 ################################################################################
 
-export PATH=/conda/bin:/usr/local/cuda/bin:$PATH
-PARALLEL_LEVEL=4
+source ci/common/logger.sh
 
-# Set home to the job's workspace
-export HOME=$WORKSPACE
-
-cd ${WORKSPACE}
-
-source ci/common/prep-init-env.sh ${WORKSPACE}
+logger "Calling prep-init-env..."
+source ci/common/prep-init-env.sh
 
 ################################################################################
-# Pyclaragenomics tests
+# Install AtacWorks
 ################################################################################
 
-cd ${WORKSPACE}
-source ci/common/test-atacworks.sh $WORKSPACE/
+cd "${WORKSPACE}"
+source ci/common/install-package.sh
+
+################################################################################
+# AtacWorks tests
+################################################################################
+
+cd "${WORKSPACE}"
+source ci/common/test-atacworks.sh "$WORKSPACE"
