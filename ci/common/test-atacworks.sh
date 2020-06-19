@@ -16,7 +16,7 @@
 # Run tests.
 if [ "${TEST_ON_GPU}" == '1' ]; then
     ./tests/end-to-end/run.sh
-    python -m pytest tests/
+    python -m pytest -m gpu tests/ -v
 else
-    logger "No CPU tests."
+    python -m pytest -m cpu tests/ -v
 fi
