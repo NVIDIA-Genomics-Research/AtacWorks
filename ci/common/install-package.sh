@@ -15,7 +15,7 @@
 
 #Install external dependencies.
 python -m pip install --ignore-installed -r requirements-base.txt && python -m pip install -r requirements-macs2.txt
-pip install .
+pip install --ignore-installed .
 
 LOCAL_BIN_DIR="${WORKSPACE}/local_bin"
 mkdir -p "${LOCAL_BIN_DIR}"

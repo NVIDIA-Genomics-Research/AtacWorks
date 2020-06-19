@@ -34,13 +34,13 @@ source ci/common/prep-init-env.sh
 ################################################################################
 # Install AtacWorks
 ################################################################################
-
+logger "Insalling AtacWorks..."
 cd "${WORKSPACE}"
 source ci/common/install-package.sh
 
 ################################################################################
 # AtacWorks tests
 ################################################################################
-
+logger "Running AtacWorks tests..."
 cd "${WORKSPACE}"
 source ci/common/test-atacworks.sh "$WORKSPACE"
