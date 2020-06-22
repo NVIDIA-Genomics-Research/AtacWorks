@@ -13,7 +13,7 @@ source $utils_dir/utils.sh
 echo ""
 echo "Train "
 echo ""
-python $root_dir/main.py train\
+atacworks train\
     --out_home $out_dir \
     --label model \
     --distributed \
@@ -28,7 +28,7 @@ check_status $? "Training run not succesful!"
 echo ""
 echo "Test classification mode of training"
 echo ""
-python $root_dir/main.py train \
+atacworks train \
     --files_train $out_dir/train_data.h5 \
     --val_files $out_dir/val_data.h5 \
     --model logistic --field 8401 \
