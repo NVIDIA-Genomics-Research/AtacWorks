@@ -83,11 +83,16 @@ setup(name='atacworks',
       url="https://github.com/clara-genomics/AtacWorks",
       include_package_data=True,
       install_requires=required_packages,
-      packages=find_namespace_packages(where=current_dir,
-                                       include=['atacworks.*']),
+      packages=find_namespace_packages(),
       python_requires='>=3.5',
       long_description='Python libraries and utilities for manipulating '
                        'genomics data',
       classifiers=pyaw_classifiers,
+      entry_points={'console_scripts': ['atacworks = scripts.main:main']},
+      data_files=[
+          ('configs', ['configs/infer_config.yaml',
+                       'configs/train_config.yaml',
+                       'configs/model_structure.yaml']),
+          ('reference', ['reference/hg19.auto.sizes'])],
       platforms=['any'],
       )
