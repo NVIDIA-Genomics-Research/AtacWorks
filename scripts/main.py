@@ -268,7 +268,7 @@ def writer(infer, intervals_file, exp_dir, result_fname,
             # Only one file should be left after the combiner stage
             assert (len(files) == 1)
             # move final files out of tmp folder
-            shutil.move(files[0], outfiles[channel])
+            shutil.copy(files[0], outfiles[channel])
 
     # remove tmp folder
     shutil.rmtree(temp_dir)
