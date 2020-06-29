@@ -1,4 +1,4 @@
-# Tutorial 2: Using a trained AtacWorks model to denoise ATAC-seq data and call peaks. 
+# Denoising and peak calling using a trained AtacWorks model 
 
 ## Introduction
 
@@ -14,148 +14,53 @@ As reported in our paper, we trained an AtacWorks model to learn a mapping from 
 
 If you want to train your own AtacWorks model instead of using the model reported in the paper, refer to [Tutorial 1](tutorial1.md).
 
+## Downloading pre-trained models
 
-## Step 1: Create folder and set AtacWorks path
+All models described in [Lal & Chiang, et al. (2019)](https://www.biorxiv.org/content/10.1101/829481v2) are available for download and use at `https://atacworks-paper.s3.us-east-2.amazonaws.com`. 
 
+See [pre-trained denoising models](pretrained_models.md) for a list of the available pre-trained denoising models.
+
+Before using one of these models, please consider the following:
+
+1. Please read the description of how the training datasets for these models were preprocessed, in Lal & Chiang, et al. (2019), Methods section, paragraph 1. If your data processing pipeline is different, it is advisable to train a new model using the instructions in [tutorial 1](tutorial1.md).
+
+2. AtacWorks models should only be applied to data of similar sequencing depth as the data used to train the model. If the sequencing depth of your dataset is different from that used for our pre-trained models, it is also advisable to train a new model using the instructions in [Tutorial 1](tutorial1.md).
+
+See below for instructions to use our pre-trained models or your own trained models.
+
+## Input files
+
+To denoise and call peaks from low-coverage, low cell count, or low quality ATAC-seq data, you need three input files:
+
+1. A trained AtacWorks model file with extension `.pth.tar`.
+
+2. A coverage track representing the number of sequencing reads mapped to each position on the genome in the low-coverage or low-quality dataset. This track should be processed in the same way as the files used for training the model. Format: [bigWig](https://genome.ucsc.edu/goldenPath/help/bigWig.html)
+
+3. Chromosome sizes file - a tab-separated text file containing the names and sizes of chromosomes in the genome.
+
+## One step denoising + peak calling command
 ```
-atacworks=<path to atacworks>
+bash Atacworks/scripts/run_inference.sh -bw <path to bigWig file with test ATAC-seq data> -m <path to model file> -f <path to chromosome sizes file> -o <output directory> -c <path to folder containing config files (optional)>
 ```
-Create a folder for this experiment.
-```
-mkdir tutorial2
-cd tutorial2
-```
+This command produces a folder containing several files:
+1. <prefix>_infer_results.track.bw: A bigWig file containing the denoised ATAC-seq coverage track. 
+2. infer_results_peaks.bed: A BED file containing the peaks called from the denoised ATAC-seq track. This file has 8 columns, in order: 
+- chromosome
+- peak start position
+- peak end position
+- peak length (bp)
+- Mean coverage over peak
+- Maximum coverage in peak
+- Position of summit (relative to start)
+- Position of summit (absolute). 
+3. <prefix>_infer_results.peaks.bw: The same peak calls, in the form of a bigWig track for genome browser visualization.
 
-## Step 2: Download model
+`run_inference.sh` optionally takes a folder containing config files - specifically, this folder needs to contain two files, `infer_config.yaml` which specifies parameters for inference, and `model_structure.yaml` which specifies the structure of the deep learning model. If no folder containing config files is supplied, the folder `AtacWorks/configs` containing default parameter values will be used.
 
-Download a pre-trained deep learning model (model.pth.tar) trained with dsc-ATAC-seq data from Monocytes and B cells. This model was reported and used in the AtacWorks paper (1).
-```
-mkdir models
-wget -P models https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/models/model.pth.tar
-```
+In order to vary output file names or formats, or inference parameters, you can change the arguments supplied in `infer_config.yaml`. Type `python AtacWorks/scripts/main.py infer --help` to understand which arguments to change.
 
-## Step 3: Download config files
+In particular, the threshold for peak calling is controlled by the `infer_threshold` parameter in `infer_config.yaml`. By default, this is set to 0.5. If `infer_threshold` is set to "None" in the config file, `run_inference.sh` will instead produce a bigWig file in which each base is labeled with the probability (between 0 and 1) that it is part of a peak. 
 
-We also need to download the 'configs' directory containing config files for this experiment. The config files describe the structure of the deep learning model and the parameters used to run inference.
-```
-mkdir configs
-wget -P configs https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/configs/infer_config.yaml
-wget -P configs https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/configs/model_structure.yaml
-```
+## Tutorial Notebook
 
-## Step 4: Download the test dsc-ATAC-seq signal from 50 NK cells (~1M reads), in bigWig format
-
-```
-wget https://atacworks-paper.s3.us-east-2.amazonaws.com/dsc_atac_blood_cell_denoising_experiments/50_cells/test_data/noisy_data/dsc.1.NK.50.cutsites.smoothed.200.bw
-```
-
-## Step 5: Create genomic intervals to define regions for testing
-
-The model we downloaded takes the input ATAC-seq signal in non-overlapping genomic intervals spanning 50,000 bp. To define the genomic regions for the model to read, we take the chromosomes on which we want to apply the model and split their lengths into 50,000-bp intervals, which we save in BED format. 
-In this example, we will apply the model to chromosomes 1-22. The reference genome we use is hg19. We use the prepared chromosome sizes file `hg19.auto.sizes`, which contains the sizes of chromosomes 1-22 in hg19.
-```
-mkdir intervals
-python $atacworks/scripts/get_intervals.py \
-    --sizes $atacworks/data/reference/hg19.auto.sizes \
-    --intervalsize 50000 \
-    --out_dir intervals \
-    --prefix hg19.50000 \
-    --wg
-```
-This produces a BED file (`intervals/hg19.50000.genome_intervals.bed`).
-
-For more information type `python $atacworks/scripts/get_intervals.py --help`
-
-## Step 6: Read test data over the selected intervals, and save in .h5 format
-
-We supply to `bw2h5.py` the bigWig file containing the noisy ATAC-seq signal, and the BED file containing the intervals on which to apply the model. This script reads the ATAC-seq signal within each supplied interval and saves it to a .h5 file.
-
-```
-python $atacworks/scripts/bw2h5.py \
-           --noisybw dsc.1.NK.50.cutsites.smoothed.200.bw \
-           --intervals intervals/hg19.50000.genome_intervals.bed \
-           --out_dir ./ \
-           --prefix NK.50_cells \
-           --pad 5000 \
-           --nolabel
-```
-This creates a file `NK.50_cells.h5`, which contains the noisy ATAC-seq signal to be fed to the pre-trained model.
-
-For more information type `python $atacworks/scripts/bw2h5.py --help`
-
-## Step 7: Inference on selected intervals, producing denoised track and binary peak calls
-
-```
-python $atacworks/scripts/main.py infer \
-    --files NK.50_cells.h5 \
-    --sizes_file $atacworks/data/reference/hg19.auto.sizes \
-    --config configs/infer_config.yaml \
-    --config_mparams configs/model_structure.yaml \
-```
-Note: `infer_config.yaml` is set up to use multiple GPUs. If you are using a single GPU, edit `infer_config.yaml` to change the line `gpu: "None"` to read `gpu: 0`. 
-
-The inference results will be saved in the folder `output_latest`. This folder will contain four files: 
-1. `NK_inferred.track.bedGraph` 
-2. `NK_inferred.track.bw` 
-3. `NK_inferred.peaks.bedGraph`. 
-4. `NK_inferred.peaks.bw`
-
-`NK_inferred.track.bedGraph` and `NK_inferred.track.bw` contain the denoised ATAC-seq track. `NK_inferred.peaks.bedGraph` and `NK_inferred.peaks.bw` contain the positions in the genome that are designated as peaks (the model predicts that the probability of these positions being part of a peak is at least 0.5)
-
-To change any of the parameters for inference with the deep learning model, you can edit the parameters in `configs/infer_config.yaml` or `configs/model_structure.yaml` and run the command above. 
-
-Type `python $atacworks/scripts/main.py infer --help` for an explanation of the parameters.
-
-If you are using your own model instead of the one provided, edit `configs/infer_config.yaml` to supply the path to your model under `weights_path`, in place of `model.pth.tar`.
-
-## Step 8: Format peak calls
-
-Delete peaks that are shorter than 20 bp in leangth, and format peak calls in BED format with coverage statistics and summit calls:
-
-```
-python $atacworks/scripts/peaksummary.py \
-    --peakbw output_latest/NK_inferred.peaks.bw \
-    --trackbw output_latest/NK_inferred.track.bw \
-    --prefix output_latest/NK_inferred.peak_calls \
-    --minlen 20
-```
-This produces a file `output_latest/NK_inferred.peak_calls.bed` with 8 columns:
-1. chromosome
-2. start position of peak
-3. end position of peak
-4. length of peak (bp)
-5. Mean coverage over peak
-6. Maximum coverage in peak
-7. Position of summit (relative to start)
-8. Position of summit (absolute)
-
-For more information type `python $atacworks/scripts/peaksummary.py --help`
-
-
-## References
-(1) Lal, A., Chiang, Z.D., Yakovenko, N., Duarte, F.M., Israeli, J. and Buenrostro, J.D., 2019. AtacWorks: A deep convolutional neural network toolkit for epigenomics. BioRxiv, p.829481. (https://www.biorxiv.org/content/10.1101/829481v1)
-
-
-## Appendix 1: Output the peak probabilities in inference instead of peak calls
-
-The model predicts the probability of every position on the genome being part of a peak. In the above command, we take a cutoff of 0.5, and output the positions of regions where the probability is greater than 0.5. To output the probability for every base in the genome without any cutoff, we use the following command:
-```
-python $atacworks/main.py infer \
-    --files NK.50_cells.h5 \
-    --sizes_file $atacworks/data/reference/hg19.auto.sizes \
-    --config configs/infer_config.yaml \
-    --config_mparams configs/model_structure.yaml
-    --infer_threshold None
-```
-The inference results will be saved in the folder `output_latest`. This folder will contain the same 4 files described in Step 7. However, `NK_inferred.peaks.bedGraph` and `NK_inferred.peaks.bw` will contain the probability of being part of a peak, for every position in the genome. This command is significantly slower, and the `NK_inferred.peaks.bedGraph` file produced by this command is larger than the file produced in Step 7.
-
-The above command is useful in the following situations:
-1. To calculate AUPRC or AUROC metrics.
-2. If you are not sure what probability threshold to use for peak calling and want to try multiple thresholds.
-3. If you wish to use the MACS2 subcommand `macs2 bdgpeakcall` for peak calling.
-
-To call peaks from the probability track generated by this command, you can use `macs2 callpeak` from MACS2 (link) with the following command:
-```
-macs2 bdgpeakcall -i output_latest/inferred.peaks.bedGraph -o output_latest/inferred.peaks.narrowPeak -c 0.5
-```
-Where `0.5` is the probability threshold to call peaks. Note that the summit calls and peak sizes generated by this procedure will be slightly different from those produced by steps 7-8.
+The above one step command is a good place to get started. For advanced usages, this command is not suitable. For easy demonstration of the inference workflow, we've set up a notebook that breaks the above command down into it's component parts and familiarizes users with each step and all of the options available. Click here to access the [notebook](https://github.com/clara-parabricks/AtacWorks/blob/dev-v0.3.0/tutorials/tutorial2.ipynb).
