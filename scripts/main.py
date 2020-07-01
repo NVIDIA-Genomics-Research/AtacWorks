@@ -365,9 +365,9 @@ def main():
         # Get model parameters
         with h5py.File(args.files_train[0], 'r') as f:
             if args.pad is not None:
-                args.interval_size = f['input'].shape[1] - 2*args.pad
+                args.interval_size = f['input'].shape[1] - 2 * args.pad
             else:
-                args.interval_size = f['input'].shape[1] 
+                args.interval_size = f['input'].shape[1]
             args.batch_size = 1
 
         ngpus_per_node = torch.cuda.device_count()
@@ -415,7 +415,7 @@ def main():
             # Get model parameters
             with h5py.File(files[x], 'r') as f:
                 if args.pad is not None:
-                    args.interval_size = f['input'].shape[1] - 2*args.pad
+                    args.interval_size = f['input'].shape[1] - 2 * args.pad
                 else:
                     args.interval_size = f['input'].shape[1]
                 args.batch_size = 1

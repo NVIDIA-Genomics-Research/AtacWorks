@@ -73,8 +73,7 @@ def contract_interval(expanded_df, positive=True):
 
 
 def combine_over_bins(df, bin_size):
-    """
-    # Combine rows of bedGraph format dataFrame into equal-sized bins
+    """Combine rows of bedGraph format dataFrame into equal-sized bins.
 
     Args:
         df: Expanded pandas dataframe with columns chrom, start, end, score
@@ -89,7 +88,7 @@ def combine_over_bins(df, bin_size):
     # Check that total interval size is a multiple of bin_size
     assert(len(df) % bin_size == 0)
     # Split expanded interval
-    num_splits = (df.end.iloc[-1] - df.start.iloc[0])/bin_size
+    num_splits = (df.end.iloc[-1] - df.start.iloc[0]) / bin_size
     split_df = np.split(df, num_splits)
     # Group rows and aggregate scores
     binned_df = pd.concat([combine_bin(bin) for bin in split_df], axis=1).T
@@ -97,17 +96,18 @@ def combine_over_bins(df, bin_size):
 
 
 def combine_bin(df):
-    """
-    # Combine rows of bedGraph format dataFrame
+    """Combine rows of bedGraph format dataFrame.
 
     Args:
-        df: Expanded pandas dataframe for a single bin, with columns chrom, start, end, score
+        df: Expanded pandas dataframe for a single bin, with columns
+            chrom, start, end, score
 
     Returns:
         bin_series: Pandas series describing the bin
 
     """
-    bin_series = pd.Series({'chrom':df.chrom.iloc[0], 'start':min(df.start), 'end':max(df.end), 'score':np.mean(df.score)})
+    bin_series = pd.Series({'chrom': df.chrom.iloc[0], 'start': min(df.start),
+                            'end': max(df.end), 'score': np.mean(df.score)})
     return bin_series
 
 
