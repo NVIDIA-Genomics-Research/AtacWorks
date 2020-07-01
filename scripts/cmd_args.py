@@ -239,7 +239,7 @@ def add_inference_options(parser):
                help='prefix for the inference result files.')
     parser.add('--deletebg', action='store_true',
                help='delete output bedGraph file')
-    parser.add('--bin_size', required=False, type=type_or_none_fn(int),
+    parser.add('--out_resolution', required=False, type=type_or_none_fn(int),
                help='resolution of output files. \
                default 1bp.')
 

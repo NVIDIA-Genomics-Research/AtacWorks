@@ -52,4 +52,4 @@ batches_per_worker: 16
 result_fname: inferred
 gen_bigwig: False
 deletebg: False
-bin_size: "None"
+out_resolution: "None"
