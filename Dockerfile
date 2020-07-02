@@ -27,8 +27,4 @@ RUN rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bedG
 RUN rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bigWigToBedGraph /usr/local/bin
 
 # Download AtacWorks repo
-RUN git clone --recursive -b master https://github.com/clara-genomics/AtacWorks.git
-
-# Install AtacWorks requirements
-RUN pip3 install -r AtacWorks/requirements-base.txt && pip3 install -r AtacWorks/requirements-macs2.txt
-RUN cd AtacWorks && pip3 install --upgrade setuptools && pip3 install .
+RUN pip3 install -i https://test.pypi.org/simple/  --extra-index-url https://pypi.org/simple atacworks==0.2.2 
