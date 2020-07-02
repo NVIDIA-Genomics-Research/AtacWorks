@@ -44,3 +44,12 @@ source ci/common/install-package.sh
 logger "Running AtacWorks tests..."
 cd "${WORKSPACE}"
 source ci/common/test-atacworks.sh "$WORKSPACE"
+
+################################################################################
+# Upload AtacWorks to PyPI
+################################################################################
+logger "Upload Wheel to PyPI..."
+cd "${WORKSPACE}"
+source ci/release/pypi_uploader.sh
+
+logger "Done..."

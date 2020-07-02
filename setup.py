@@ -68,11 +68,7 @@ pyaw_classifiers = [
 required_packages = \
     get_installation_requirments(
         get_verified_absolute_path(
-            os.path.join(current_dir, 'requirements-base.txt'))
-    ) + \
-    get_installation_requirments(
-        get_verified_absolute_path(
-            os.path.join(current_dir, 'requirements-macs2.txt'))
+            os.path.join(current_dir, 'requirements.txt'))
     )
 
 
