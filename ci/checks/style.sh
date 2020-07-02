@@ -12,23 +12,22 @@
 # Ignore errors and set path
 set -e
 
-# Logger function for build status output
-function logger() {
-  echo -e "\n>>>> $@\n"
-}
+# Stat time for logger
+START_TIME=$(date +%s)
+
+PATH=/conda/bin:$PATH
+# Set home to the job's workspace
+export HOME=$WORKSPACE
+cd "${WORKSPACE}"
 
 ################################################################################
 # Init
 ################################################################################
 
-PATH=/conda/bin:$PATH
+source ci/common/logger.sh
 
-# Set home to the job's workspace
-export HOME=$WORKSPACE
-
-cd ${WORKSPACE}
-
-source ci/common/prep-init-env.sh ${WORKSPACE}
+logger "Calling prep-init-env..."
+source ci/common/prep-init-env.sh "${WORKSPACE}"
 
 ################################################################################
 # SDK style check
@@ -42,5 +41,5 @@ logger "Run Copyright header check..."
 ./ci/checks/check_copyright.py
 
 # Run linting and documentation tests.
-flake8 --ignore=E901 $HOME
-pydocstyle --convention=google $HOME
+flake8 --ignore=E901 "$HOME"
+pydocstyle --convention=google "$HOME"

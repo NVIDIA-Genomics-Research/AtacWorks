@@ -9,7 +9,5 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
-
-export BUILD_FOR_GPU=1
 export TEST_ON_GPU=1
-export TEST_PYCLARAGENOMICSANALYSIS=1
+export CONDA_ENV_NAME="gdf"

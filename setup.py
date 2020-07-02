@@ -65,19 +65,24 @@ pyaw_classifiers = [
     "Programming Language :: Python :: 3.9"
 ]
 
+required_packages = \
+    get_installation_requirments(
+        get_verified_absolute_path(
+            os.path.join(current_dir, 'requirements-base.txt'))
+    ) + \
+    get_installation_requirments(
+        get_verified_absolute_path(
+            os.path.join(current_dir, 'requirements-macs2.txt'))
+    )
+
+
 setup(name='atacworks',
       version='0.2.2',
       description='NVIDIA genomics python libraries and utiliites',
       author='NVIDIA Corporation',
       url="https://github.com/clara-genomics/AtacWorks",
       include_package_data=True,
-      install_requires=[get_installation_requirments(
-          get_verified_absolute_path(
-              os.path.join(current_dir, 'requirements-base.txt'))),
-          get_installation_requirments(
-              get_verified_absolute_path(
-                  os.path.join(current_dir, 'requirements-macs2.txt')))
-      ],
+      install_requires=required_packages,
       packages=find_namespace_packages(),
       python_requires='>=3.5',
       long_description='Python libraries and utilities for manipulating '

@@ -67,6 +67,27 @@ Run unit tests:
     python -m pytest tests/
     ```
 
+####Running CI Tests Locally
+Please note, your git repository will be mounted to the container, any untracked files will be removed from it.
+Before executing the CI locally, stash or add them to the index.
+
+Requirements:
+1. docker (https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+2. nvidia-docker (https://github.com/NVIDIA/nvidia-docker)
+3. nvidia-container-runtime (https://github.com/NVIDIA/nvidia-container-runtime)
+
+Run the following command to execute the CI build steps inside a container locally:
+```bash
+bash ci/local/build.sh -r <Atacworks repo path>
+```
+ci/local/build.sh script was adapted from [rapidsai/cudf](https://github.com/rapidsai/cudf/tree/branch-0.11/ci/local)
+
+The default docker image is **clara-genomics-base:cuda10.1-ubuntu16.04-gcc5-py3.6**.
+Other images from [gpuci/clara-genomics-base](https://hub.docker.com/r/gpuci/clara-genomics-base/tags) repository can be used instead, by using -i argument
+```bash
+bash ci/local/build.sh -r <Atacworks repo path> -i gpuci/clara-genomics-base:cuda10.0-ubuntu18.04-gcc7-py3.6
+```
+
 ## Workflow
 
 AtacWorks trains a deep neural network to learn a mapping between noisy (low coverage/low quality) ATAC-Seq data and matching clean (high coverage/high quality) ATAC-Seq data from the same cell type. Once this mapping is learned, the trained model can be applied to improve other noisy ATAC-Seq datasets. 
