@@ -35,6 +35,8 @@ git clone --recursive https://github.com/clara-genomics/AtacWorks.git
 * (Optional) A conda or virtualenv setup
 * Any NVIDIA GPU. AtacWorks training and inference currently does not run on CPU.
 
+### 3. Installing from Source
+
 #### Install dependencies
 
 * Download `bedGraphToBigWig` and `bigWigToBedGraph` binaries and add to your $PATH
@@ -59,7 +61,7 @@ git clone --recursive https://github.com/clara-genomics/AtacWorks.git
 Note: The above non-standard installation is necessary to ensure the requirements for macs2 are installed
 before macs2 itself.
 
-### 3. Tests
+### 4. Tests
 
 Run unit tests:
 
@@ -67,6 +69,11 @@ Run unit tests:
     python -m pytest tests/
     ```
 
+### 5. Run atacworks
+
+   ```
+   atacworks -h
+   ```
 ####Running CI Tests Locally
 Please note, your git repository will be mounted to the container, any untracked files will be removed from it.
 Before executing the CI locally, stash or add them to the index.

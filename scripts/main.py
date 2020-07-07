@@ -30,6 +30,9 @@ from atacworks.io.bedio import read_intervals, read_sizes
 from atacworks.io.bigwigio import bedgraph_to_bigwig
 
 from scripts.cmd_args import parse_args
+from scripts.get_intervals import get_intervals
+from scripts.peak2bw import peak2bw
+from scripts.bw2h5 import bw2h5
 
 import h5py
 
@@ -135,9 +138,9 @@ def save_to_bedgraph(batch_range, item, task, channel, intervals,
         df_to_bedGraph(batch_bg, outfile)
 
 
-def writer(infer, intervals_file, exp_dir, result_fname,
+def writer(infer, intervals_file, exp_dir,
            task, peaks, tracks, num_workers, infer_threshold, reg_rounding,
-           cla_rounding, batches_per_worker, gen_bigwig, sizes_file,
+           batches_per_worker, gen_bigwig, sizes_file,
            res_queue, prefix, deletebg):
     """Write out the inference output to specified format.
 
@@ -149,14 +152,12 @@ def writer(infer, intervals_file, exp_dir, result_fname,
         inference output.
         intervals_file: Files containing the chromosome intervals.
         exp_dir: Experiment directory.
-        result_fname:Name of the result.
         task: Regression, classification or both.
         peaks: classification output.
         tracks: regression output.
         num_workers: Number of workers to use, for multi-processing
         infer_threshold: Value to threshold the inference output at.
         reg_rounding: Number of digits to round the regression output.
-        cla_rounding: Number of digits to round the classification output.
         batches_per_worker: If using multi processing, how many batches per
         worker.
         gen_bigwig: Whether to generate bigwig file
@@ -176,6 +177,7 @@ def writer(infer, intervals_file, exp_dir, result_fname,
                             dtype={'chrom': str, 'start': int, 'end': int})
 
     channels = []
+    result_fname = "infer"
     out_base_path = os.path.join(exp_dir, prefix + "_" + result_fname)
 
     if task == "both":
@@ -186,7 +188,7 @@ def writer(infer, intervals_file, exp_dir, result_fname,
         elif tracks and peaks:
             channels = [0, 1]
         # If both tracks and peaks are false, turn them to default true.
-        elif not(tracks or peaks):
+        elif not (tracks or peaks):
             channels = [0, 1]
     elif task == "classification":
         channels = [1]
@@ -195,7 +197,7 @@ def writer(infer, intervals_file, exp_dir, result_fname,
 
     outfiles = [os.path.join(out_base_path + ".track.bedGraph"),
                 os.path.join(out_base_path + ".peaks.bedGraph")]
-    rounding = [reg_rounding, cla_rounding]
+    rounding = [reg_rounding, 3]
 
     # Temp dir used to save temp files during multiprocessing.
     temp_dir = tempfile.mkdtemp()
@@ -321,11 +323,12 @@ def main():
 
     args = parse_args(root_dir)
 
-    # Set log level
-    if args.debug:
-        _handler.setLevel(logging.DEBUG)
-        _logger.setLevel(logging.DEBUG)
+    if args.genome == "hg19":
+        args.genome = os.path.join(root_dir, "reference", "hg19.chrom.sizes")
+    elif args.genome == "hg38":
+        args.genome = os.path.join(root_dir, "reference", "hg38.chrom.sizes")
 
+    # Set log level
     _logger.debug(args)
 
     # check gpu
@@ -335,7 +338,7 @@ def main():
 
     # all output will be written in the exp_dir folder
     args.exp_dir = make_experiment_dir(
-        args.label, args.out_home, timestamp=True)
+        args.exp_name, args.out_home, timestamp=True)
 
     # Convert layer names to a list
     if args.layers is not None:
@@ -345,18 +348,63 @@ def main():
         np.random.seed(args.seed)
         torch.manual_seed(args.seed)
         torch.cuda.manual_seed(args.seed)
+
     # train & resume
     ##########################################################################
     if args.mode == "train":
-        args.files_train = gather_files_from_cmdline(args.files_train)
-        args.val_files = gather_files_from_cmdline(args.val_files)
-        _logger.debug("Training data:   " + "\n".join(args.files_train))
+
+        args.cleanpeakfile = gather_files_from_cmdline(args.cleanpeakfile)
+        args.noisybw = gather_files_from_cmdline(args.noisybw, extension=".bw")
+        args.cleanbw = gather_files_from_cmdline(args.cleanbw, extension=".bw")
+
+        # We have to make sure there is a 1-1 correspondence between files.
+        assert len(args.cleanpeakfile) == len(args.noisybw)
+        assert len(args.cleanbw) == len(args.noisybw)
+
+        train_files = []
+        val_files = []
+        for idx in range(len(args.cleanbw)):
+            cleanbw = args.cleanbw[idx]
+            noisybw = args.noisybw[idx]
+            cleanpeakfile = args.cleanpeakfile[idx]
+            # Read in the narrowPeak or BED files for clean data peak
+            # labels, convert them to bigwig
+            out_path = os.path.join(args.exp_dir, "bigwig_peakfiles")
+            cleanpeakbw = peak2bw(cleanpeakfile, args.genome, out_path)
+            # Generate training, validation, holdout intervals files
+            out_path = os.path.join(args.exp_dir, "intervals")
+            train_intervals, val_intervals, holdout_intervals = \
+                get_intervals(args.genome, args.interval_size,
+                              out_path,
+                              val=args.val_chrom,
+                              holdout=args.holdout_chrom,
+                              nonpeak=args.nonpeak,
+                              peakfile=cleanpeakbw)
+
+            # Convert the input bigiwg files and the clean peak files into
+            # h5 for training.
+            out_path = os.path.join(args.exp_dir, "bw2h5")
+            nolabel = False
+            nonzero = True
+            prefix = os.path.basename(cleanbw) + ".train"
+            train_file = bw2h5(noisybw, cleanbw, args.layersbw,
+                               cleanpeakbw, args.batch_size,
+                               nolabel, nonzero, train_intervals, out_path,
+                               prefix, args.pad)
+            train_files.append(train_file)
+            prefix = os.path.basename(cleanbw) + ".val"
+            val_file = bw2h5(noisybw, cleanbw, args.layersbw, cleanpeakbw,
+                             args.batch_size,
+                             nolabel, nonzero, val_intervals, out_path,
+                             prefix, args.pad)
+            val_files.append(val_file)
+
+        args.train_files = train_files
+        args.val_files = val_files
+        _logger.debug("Training data:   " + "\n".join(args.train_files))
         _logger.debug("Validation data: " + "\n".join(args.val_files))
 
-        # Get model parameters
-        with h5py.File(args.files_train[0], 'r') as f:
-            args.interval_size = f['input'].shape[1]
-            args.batch_size = 1
+        args.batch_size = 1
 
         ngpus_per_node = torch.cuda.device_count()
         # WAR: gloo distributed doesn't work if world size is 1.
@@ -381,27 +429,63 @@ def main():
     # infer & eval
     ##########################################################################
     if args.mode == "denoise" or args.mode == "eval":
-        files = args.input_files
-        files = gather_files_from_cmdline(files)
+
+        cleanpeakbw = None
+        if args.mode == "eval":
+            # Read in the narrowPeak or BED files for clean data peak
+            # labels, convert them to bigwig
+            out_path = os.path.join(args.exp_dir, "bigwig_peakfiles")
+            cleanpeakbw = peak2bw(args.cleanpeakfile, args.genome,
+                                  out_path)
+
+        # Generate training, validation, holdout intervals files
+        out_path = os.path.join(args.exp_dir, "intervals")
+        infer_intervals = get_intervals(args.genome, args.interval_size,
+                                        out_path,
+                                        args.wg, regions=args.regions,
+                                        nonpeak=args.nonpeak,
+                                        cleanpeakfile=cleanpeakbw)
+
+        # Convert the input bigiwg files and the clean peak files into h5
+        # for training.
+        args.noisybw = gather_files_from_cmdline(args.noisybw, extension=".bw")
+
+        files = []
+        for idx in range(len(args.noisybw)):
+            out_path = os.path.join(args.exp_dir, "bw2h5")
+            nolabel = True
+            nonzero = False
+            cleanbw = None
+            noisybw = args.noisybw[idx]
+            if args.mode == "eval":
+                cleanbw = args.cleanbw[idx]
+                nolabel = False
+            prefix = os.path.basename(noisybw) + "." + args.mode
+            infer_file = bw2h5(noisybw, cleanbw, args.layersbw, None,
+                               args.batch_size,
+                               nolabel, nonzero, infer_intervals, out_path,
+                               prefix, args.pad)
+            files.append(infer_file)
+
         for x in range(len(files)):
             infile = files[x]
             args.input_files = [infile]
             if args.mode == "denoise":
-                _logger.debug("Inference data: ", args.input_files)
+                _logger.debug("Inference data: ", infile)
 
                 # Check that intervals, sizes and h5 file are all compatible.
                 _logger.info('Checkng input files for compatibility')
-                intervals = read_intervals(args.intervals_file)
-                sizes = read_sizes(args.sizes_file)
-                check_intervals(intervals, sizes, args.input_files[0])
+                intervals = read_intervals(infer_intervals)
+                sizes = read_sizes(args.genome)
+                check_intervals(intervals, sizes, infile)
 
                 # Delete intervals and sizes objects in main thread
                 del intervals
                 del sizes
             else:
-                _logger.debug("Evaluation data: ", args.input_files)
+                _logger.debug("Evaluation data: ", infile)
             # Get model parameters
-            with h5py.File(files[x], 'r') as f:
+            with h5py.File(infile, 'r') as f:
                 args.interval_size = f['input'].shape[1]
                 args.batch_size = 1
 
@@ -413,19 +497,17 @@ def main():
             # Create a keyword argument dictionary to pass into the
             # multiprocessor
             keyword_args = {"infer": args.mode == "denoise",
-                            "intervals_file": args.intervals_file,
+                            "intervals_file": infer_intervals,
                             "exp_dir": args.exp_dir,
-                            "result_fname": args.result_fname,
                             "task": args.task,
                             "peaks": args.peaks,
                             "tracks": args.tracks,
                             "num_workers": args.num_workers,
-                            "infer_threshold": args.infer_threshold,
+                            "infer_threshold": args.threshold,
                             "reg_rounding": args.reg_rounding,
-                            "cla_rounding": args.cla_rounding,
                             "batches_per_worker": args.batches_per_worker,
                             "gen_bigwig": args.gen_bigwig,
-                            "sizes_file": args.sizes_file,
+                            "sizes_file": args.genome,
                             "res_queue": res_queue, "prefix": prefix,
                             "deletebg": args.deletebg}
             write_proc = mp.Process(target=writer, kwargs=keyword_args)

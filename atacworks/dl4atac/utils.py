@@ -198,7 +198,7 @@ def progbar(*, curr, total, progbar_len, pre_bar_msg, post_bar_msg):
     # sys.stdout.flush()
 
 
-def gather_files_from_cmdline(input, extension=".h5"):
+def gather_files_from_cmdline(input, extension=(".h5", ".bed", ".narrowPeak")):
     """Gather all input files and return as list.
 
     Args:

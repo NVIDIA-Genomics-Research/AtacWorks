@@ -10,36 +10,9 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
-r"""Creates intervals tiling across the whole genome or given chromosomes.
-
-Workflow:
-    1. Reads chromosome names and sizes for the genome
-    2. Produces intervals tiling across the genome or given chromosomes
-    3. Optionally splits intervals into train, val, holdout chromosomes
-    4. Optionally down-samples intervals without peaks in a given dataset
-
-Output:
-    BED file containg intervals spanning all provided chromosomes, OR
-    BED files containing training, validation and holdout intervals.
-
-Examples:
-    Whole-genome intervals of size 50 kb:
-        python get_intervals.py --sizes data/reference/hg19.chrom.sizes \
-        --intervalsize 50000 --out_dir ./ --wg
-    Train/val/holdout intervals of size 50 kb
-        python get_intervals.py --sizes data/reference/hg19.auto.sizes \
-        --intervalsize 50000 --out_dir ./ --val chr20 --holdout chr10
-    Train/val/holdout intervals of size 50 kb
-    (upsampling peaks to 1/2 of the final training set)
-        python get_intervals.py --sizes data/reference/hg19.auto.sizes \
-        --intervalsize 50000 --out_dir ./ --val chr20 --holdout chr10 \
-        --peakfile HSC-1.merge.filtered.depth_1000000_peaks.bw \
-        --nonpeak 1
-
-"""
+r"""Creates intervals tiling across the whole genome or given chromosomes."""
 
 # Import requirements
-import argparse
 import logging
 import os
 
@@ -47,7 +20,6 @@ from atacworks.io.bedio import df_to_bed, read_sizes
 from atacworks.io.bigwigio import check_bigwig_intervals_peak
 
 import pandas as pd
-
 
 # Set up logging
 log_formatter = logging.Formatter(
@@ -60,7 +32,7 @@ _logger.setLevel(logging.INFO)
 _logger.addHandler(_handler)
 
 
-def get_tiling_intervals(sizes, intervalsize, shift=None):
+def get_tiling_intervals(sizes, intervalsize):
     """Produce intervals of given chromosomes.
 
     Tile from start to end of given chromosomes, shifting by given length.
@@ -76,8 +48,7 @@ def get_tiling_intervals(sizes, intervalsize, shift=None):
 
     """
     # Default: non-overlapping intervals
-    if shift is None:
-        shift = intervalsize
+    shift = intervalsize
 
     # Create empty DataFrame
     intervals = pd.DataFrame()
@@ -98,84 +69,66 @@ def get_tiling_intervals(sizes, intervalsize, shift=None):
     return intervals.loc[:, ('chrom', 'start', 'end')]
 
 
-def parse_args():
-    """Parse command line arguments.
+def get_intervals(sizesfile, intervalsize, out_dir, wg=None, val=None,
+                  holdout=None, nonpeak=None, peakfile=None, regions=None):
+    """Read chromosome sizes and generate intervals.
 
-    Return:
-        parsed argument object.
+     Args:
+         sizesfile: BED file containing sizes of each chromosome.
+         intervalsize: Size of the intervals at each row.
+         out_dir: Directory to save the output files to.
+         wg: Create intervals for the whole genome.
+         val: Chromosome to reserve for validation.
+         holdout: Chromosome to reserve for evaluation.
+         nonpeak: Ratio of nonpeak to peak intervals desired in training
+         dataset.
+         peakfile: File with clean peaks to know which intervals have non-zero
+         values. Only useful if nonpeak is greater than one.
+
+    Returns:
+         Paths of files saved.
 
     """
-    parser = argparse.ArgumentParser(description='AtacWorks interval script')
-    parser.add_argument('--sizes', type=str,
-                        help='Path to chromosome sizes file',
-                        required=True)
-    parser.add_argument('--intervalsize', type=int, help='Interval size',
-                        required=True)
-    parser.add_argument('--out_dir', type=str, help='Directory to save \
-                        output file', required=True)
-    parser.add_argument('--prefix', type=str, help='Optional prefix to '
-                                                   'append to \
-                        output file names')
-    parser.add_argument('--shift', type=int, help='Shift between training \
-                        intervals. If not given, intervals are \
-                        non-overlapping')
-    parser.add_argument('--wg', action='store_true',
-                        help='Produce one set of intervals for whole genome')
-    parser.add_argument('--val', type=str, help='Chromosome for validation')
-    parser.add_argument('--holdout', type=str, help='Chromosome to hold out')
-    parser.add_argument('--nonpeak', type=int,
-                        help='Ratio between number of non-peak\
-                        intervals and peak intervals', default=1)
-    parser.add_argument('--peakfile', type=str,
-                        help='Path to bigWig file containing peaks. \
-                        Use when setting --nonpeak. Use peak2bw.py \
-                        to create this bigWig file.')
-    args = parser.parse_args()
-    return args
-
-
-def main():
-    """Read chromosome sizes and generate intervals."""
-    args = parse_args()
-
     # Read chromosome sizes
-    sizes = read_sizes(args.sizes)
+    sizes = read_sizes(sizesfile)
 
+    # Create the output dir
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
     # Generate intervals
-    if args.wg:
+    if wg:
 
         # Generate intervals tiling across all chromosomes in the sizes file
         _logger.info("Generating intervals tiling across all chromosomes \
-            in sizes file: " + args.sizes)
-        intervals = get_tiling_intervals(sizes, args.intervalsize, args.shift)
+            in sizes file: " + sizesfile)
+        intervals = get_tiling_intervals(sizes, intervalsize)
 
         # Write to file
-        if args.prefix is None:
-            out_file_name = 'genome_intervals.bed'
-        else:
-            out_file_name = args.prefix + '.genome_intervals.bed'
-        out_file_path = os.path.join(args.out_dir, out_file_name)
-        df_to_bed(intervals, out_file_path)
+        out_file_name = str(intervalsize) + '.genome_intervals.bed'
+        wg_file_path = os.path.join(out_dir, out_file_name)
+        df_to_bed(intervals, wg_file_path)
+        _logger.info('Done!')
+        return wg_file_path
 
-    else:
+    elif not (val is None or holdout is None):
 
         # Generate training intervals - can overlap
         _logger.info("Generating training intervals")
-        train_sizes = sizes[sizes['chrom'] != args.val]
-        if args.holdout is not None:
-            train_sizes = train_sizes[train_sizes['chrom'] != args.holdout]
+        train_sizes = sizes[sizes['chrom'] != val]
+        if holdout is not None:
+            train_sizes = train_sizes[train_sizes['chrom'] != holdout]
         train = get_tiling_intervals(
-            train_sizes, args.intervalsize, args.shift)
+            train_sizes, intervalsize)
 
         # Optional - Set fraction of training intervals to contain peaks
-        if args.peakfile is not None:
+        if nonpeak is not None:
             _logger.info('Finding intervals with peaks')
-            train['peak'] = check_bigwig_intervals_peak(train, args.peakfile)
+            train['peak'] = check_bigwig_intervals_peak(train, peakfile)
             _logger.info('{} of {} intervals contain peaks.'.format(
                 train['peak'].sum(), len(train)))
             train_peaks = train[train['peak']].copy()
             train_nonpeaks = train[train['peak'] is False].sample(
-                args.nonpeak * len(train_peaks))
+                nonpeak * len(train_peaks))
             train = train_peaks.append(train_nonpeaks)
             train = train.iloc[:, :3]
             _logger.info('Generated {} peak and {} non-peak\
@@ -183,44 +136,62 @@ def main():
                 len(train_peaks), len(train_nonpeaks)))
 
         # Write to file
-        if args.prefix is None:
-            out_file_name = 'training_intervals.bed'
-        else:
-            out_file_name = args.prefix + '.training_intervals.bed'
-        out_file_path = os.path.join(args.out_dir, out_file_name)
-        df_to_bed(train, out_file_path)
+        out_file_name = str(intervalsize) + '.training_intervals.bed'
+        train_file_path = os.path.join(out_dir, out_file_name)
+        df_to_bed(train, train_file_path)
 
         # Generate validation intervals - do not overlap
         _logger.info("Generating val intervals")
-        val_sizes = sizes[sizes['chrom'] == args.val]
+        val_sizes = sizes[sizes['chrom'] == val]
         val = get_tiling_intervals(
-            val_sizes, args.intervalsize)
+            val_sizes, intervalsize)
 
         # Write to file
-        if args.prefix is None:
-            out_file_name = 'val_intervals.bed'
-        else:
-            out_file_name = args.prefix + '.val_intervals.bed'
-        out_file_path = os.path.join(args.out_dir, out_file_name)
-        df_to_bed(val, out_file_path)
+        out_file_name = str(intervalsize) + '.val_intervals.bed'
+        val_file_path = os.path.join(out_dir, out_file_name)
+        df_to_bed(val, val_file_path)
 
         # Generate holdout intervals - do not overlap
-        if args.holdout is not None:
+        if holdout is not None:
             _logger.info("Generating holdout intervals")
-            holdout_sizes = sizes[sizes['chrom'] == args.holdout]
+            holdout_sizes = sizes[sizes['chrom'] == holdout]
             holdout = get_tiling_intervals(
-                holdout_sizes, args.intervalsize)
+                holdout_sizes, intervalsize)
 
             # Write to file
-            if args.prefix is None:
-                out_file_name = 'holdout_intervals.bed'
-            else:
-                out_file_name = args.prefix + '.holdout_intervals.bed'
-            out_file_path = os.path.join(args.out_dir, out_file_name)
-            df_to_bed(holdout, out_file_path)
+            out_file_name = str(intervalsize) + '.holdout_intervals.bed'
+            holdout_file_path = os.path.join(out_dir, out_file_name)
+            df_to_bed(holdout, holdout_file_path)
+        _logger.info('Done!')
+        return train_file_path, val_file_path, holdout_file_path
+    elif regions is not None:
+        # If given regions is a file, then just return the file path
+        if regions.endswith(".bed"):
+            return regions
+        else:
+            final_intervals = pd.DataFrame()
+            regions = regions.strip("[]").split(",")
+            for region in regions:
+                chrom = region
+                chrom_range = None
+                # If regions are specified with intervals like chr1:0-50
+                # Then split the region into chrom and it's range.
+                if region.find(":") != -1:
+                    chrom, chrom_range = region.split(":")
+                chrom_sizes = sizes[sizes['chrom'] == chrom]
+                intervals = get_tiling_intervals(chrom_sizes, intervalsize)
 
-    _logger.info('Done!')
+                if chrom_range:
+                    chrom_range = chrom_range.split("-")
+                    intervals = intervals[
+                        intervals["start"] >= int(chrom_range[0])]
+                    intervals = intervals[
+                        intervals["end"] <= int(chrom_range[1])]
+                final_intervals = final_intervals.append(intervals,
+                                                         ignore_index=True)
 
-
-if __name__ == "__main__":
-    main()
+            # Write the intervals to file
+            out_file_name = str(intervalsize) + '.regions_intervals.bed'
+            region_file_path = os.path.join(out_dir, out_file_name)
+            df_to_bed(final_intervals, region_file_path)
+            return region_file_path

@@ -138,8 +138,8 @@ def get_model(args, gpu, rank):
     _logger.debug('Rank %s' % str(rank))
 
     if args.distributed:
-        dist.init_process_group(backend=args.dist_backend,
-                                init_method=args.dist_url,
+        dist.init_process_group(backend="gloo",
+                                init_method="tcp://127.0.0.1:4321",
                                 world_size=args.world_size, rank=rank)
 
     # Why is model & optimizer built in spawned function?
@@ -178,7 +178,7 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
     dst_path = os.path.join(config_dir, "model_structure.yaml")
     save_config(dst_path, model_params)
     # TODO: LR schedule
-    train_dataset = DatasetTrain(files=args.files_train, layers=args.layers)
+    train_dataset = DatasetTrain(files=args.train_files, layers=args.layers)
     train_sampler = None
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(
@@ -215,42 +215,40 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
         train(rank=rank, gpu=gpu, task=args.task, model=model,
               train_loader=train_loader,
               loss_func=loss_func, optimizer=optimizer, epoch=epoch,
-              epochs=args.epochs, clip_grad=args.clip_grad,
-              print_freq=args.print_freq, pad=args.pad,
-              distributed=args.distributed, world_size=args.world_size,
-              transform=args.transform)
+              epochs=args.epochs, clip_grad=0,
+              print_freq=50, pad=args.pad,
+              distributed=args.distributed, world_size=args.world_size)
 
-        if epoch % args.eval_freq == 0:
-            # either create new objects or call reset on each metric obj
-            metrics_reg, metrics_cla, best_metric = get_metrics(
-                args.task, args.threshold, args.best_metric_choice)
+        # either create new objects or call reset on each metric obj
+        metrics_reg, metrics_cla, best_metric = get_metrics(
+            args.task, args.threshold, args.best_metric_choice)
 
-            # best_metric is the metric used to compare results
-            # across different evaluation runs. It's modified in place.
-            evaluate(rank=rank, gpu=gpu, task=args.task,
-                     model=model, val_loader=val_loader,
-                     metrics_reg=metrics_reg, metrics_cla=metrics_cla,
-                     world_size=args.world_size, distributed=args.distributed,
-                     best_metric=best_metric, pad=args.pad,
-                     print_freq=args.print_freq, transform=args.transform)
+        # best_metric is the metric used to compare results
+        # across different evaluation runs. It's modified in place.
+        evaluate(rank=rank, gpu=gpu, task=args.task,
+                 model=model, val_loader=val_loader,
+                 metrics_reg=metrics_reg, metrics_cla=metrics_cla,
+                 world_size=args.world_size, distributed=args.distributed,
+                 best_metric=best_metric, pad=args.pad,
+                 print_freq=50)
 
-            if rank == 0:
-                new_best = best_metric.better_than(current_best)
-                if new_best:
-                    current_best = best_metric
-                    myprint("New best metric found - {}".format(current_best),
-                            color='yellow', rank=rank)
-                if new_best or epoch % args.save_freq == 0:
-                    # give it the module attribute of the model
-                    # (DistributedDataParallel wrapper)
-                    if args.distributed:
-                        save_model(
-                            model.module, args.exp_dir, args.checkpoint_fname,
-                            epoch=epoch, is_best=new_best)
-                    else:
-                        save_model(
-                            model, args.exp_dir, args.checkpoint_fname,
-                            epoch=epoch, is_best=new_best)
+        if rank == 0:
+            new_best = best_metric.better_than(current_best)
+            if new_best:
+                current_best = best_metric
+                myprint("New best metric found - {}".format(current_best),
+                        color='yellow', rank=rank)
+            if new_best:
+                # give it the module attribute of the model
+                # (DistributedDataParallel wrapper)
+                if args.distributed:
+                    save_model(
+                        model.module, args.exp_dir, "checkpoint.pth.tar",
+                        epoch=epoch, is_best=new_best)
+                else:
+                    save_model(
+                        model, args.exp_dir, "checkpoint.pth.tar",
+                        epoch=epoch, is_best=new_best)
 
 
 def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
@@ -286,8 +284,8 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
 
     infer(rank=rank, gpu=gpu, task=args.task, model=model,
           infer_loader=infer_loader,
-          print_freq=args.print_freq, res_queue=res_queue,
-          pad=args.pad, transform=args.transform)
+          print_freq=50, res_queue=res_queue,
+          pad=args.pad)
 
 
 def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
@@ -328,5 +326,5 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
              metrics_cla=metrics_cla,
              world_size=args.world_size, distributed=args.distributed,
              best_metric=best_metric, res_queue=res_queue,
-             pad=args.pad, transform=args.transform,
-             print_freq=args.print_freq)
+             pad=args.pad,
+             print_freq=50)

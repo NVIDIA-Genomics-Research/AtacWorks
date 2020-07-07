@@ -14,15 +14,15 @@ echo ""
 echo "Summarize peak statistics..."
 echo ""
 python $root_dir/peaksummary.py \
-    --peakbw $out_dir/inference_latest/no_label_infer.peaks.bw \
-    --trackbw $out_dir/inference_latest/no_label_infer.track.bw \
+    --peakbw $out_dir/inference_latest/HSC_infer.peaks.bw \
+    --trackbw $out_dir/inference_latest/HSC_infer.track.bw \
     --out_dir $out_dir/inference_latest \
-    --prefix no_label.output.summary \
+    --prefix denoise.output.summary \
     --minlen 50
 
 echo ""
 echo "Verifying output model against expected model"
-python $utils_dir/verify_diff.py --result_path $out_dir/inference_latest/no_label.output.summary.bed \
-	                        --expected_path $expected_results_dir/inference_latest/no_label.output.summary.bed \
+python $utils_dir/verify_diff.py --result_path $out_dir/inference_latest/denoise.output.summary.bed \
+	                        --expected_path $expected_results_dir/inference_latest/denoise.output.summary.bed \
 		                --format "general_diff"
 check_status $? "Summary bed files do not match!"

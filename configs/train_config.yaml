@@ -8,34 +8,50 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
+### Data Pre-processing parameters
+## Generate intervals files for training, validation
+interval_size: 50000
+val_chrom: "None"
+holdout_chrom: "None"
+# Chromosome sizes to be used
+# You can also provide a file path
+genome: "hg19"
+# Ratio of non-peak to peak intervals in training
+# non-peak samples = nonpeak * peak samples
+nonpeak: "None"
+
+## Input files
+noisybw: "None"
+cleanbw: "None"
+layersbw: "None"
+# Batch size to read the bigiwig files, because
+# the entire file may not fit in memory if read at once.
+# This batch size has nothing to do with training. Look at
+# bs: for that option.
+batch_size: 1000
+
 
 # Experiment args
-out_home: './'
-label: 'trained_models'
+# If you wish to train a model to just denoise coverage track
+# task: regression
+# If you wish to train a model to just predict peaks
+# task: classification
+# If you wish to train a model to denoise and predict peaks
 task: 'both'
-print_freq: 50
+# Batch size for training
 bs: 64
+# Number of workers for data loading
 num_workers: 4
+# Path to model weights if you wish to train with those weights
+# instead of random initialization
 weights_path: "None"
-gpu: 0
-distributed: False
-dist-url: 'tcp://127.0.0.1:4321'
-dist-backend: 'gloo'
 seed: 42
-debug: False
 
 # Data processing args
 pad: 5000
-transform: "None"
 layers: "None"
 
-# Train args
-files_train: "None"
-checkpoint_fname: "checkpoint.pth.tar"
-save_freq: 1
-
 #Learning args
-clip_grad: 0 
 lr: 0.0002 
 epochs: 25
 mse_weight: 0.0005 
@@ -43,7 +59,5 @@ pearson_weight: 1
 poisson_weight: 0
 
 # Validation args
-val_files: "None"
-eval_freq: 1
 best_metric_choice: "AUROC"
 threshold: 0.5

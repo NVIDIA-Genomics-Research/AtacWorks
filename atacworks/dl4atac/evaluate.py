@@ -16,7 +16,7 @@ from atacworks.dl4atac.utils import myprint, gather_tensor, progbar
 
 
 def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg,
-             metrics_cla, world_size, distributed, pad, transform,
+             metrics_cla, world_size, distributed, pad,
              print_freq, best_metric=None, res_queue=None):
     """Evaluate given data and calculate metrics.
 
@@ -31,7 +31,6 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg,
         world_size: number of gpus used for evaluation
         distributed: distributed
         pad: padding around intervals
-        transform: transformation to apply to coverage track
         print_freq: logging frequency
         best_metric: metric object for comparison
         res_queue: network predictions will be put in the
@@ -69,10 +68,6 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg,
             else:
                 x = np.swapaxes(x, 1, 2)
             x = x.cuda(gpu, non_blocking=True)
-
-            # transform coverage track if required
-            if transform == 'log':
-                x = torch.log(x + 1)
 
             # model forward pass
             pred = model(x)
@@ -124,9 +119,6 @@ def evaluate(*, rank, gpu, task, model, val_loader, metrics_reg,
         if task == 'both' or task == 'regression':
             ys_reg = torch.cat(y_reg_list, dim=0)
             preds_reg = torch.cat(pred_reg_list, dim=0)
-            # Reverse transformation on predicted values for final evaluation
-            if transform == 'log':
-                preds_reg = torch.exp(preds_reg) - 1
             del y_reg_list
             del pred_reg_list
         if task == 'both' or task == 'classification':

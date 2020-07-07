@@ -64,6 +64,7 @@ def type_or_none_fn(type):
         else, type(val)
 
     """
+
     def type_or_none(val):
         if str(val) == "None":
             return None
@@ -83,13 +84,49 @@ def add_common_options(parser):
         parser : After adding the arguments.
 
     """
+    # Pre-processing 1 : Get intervals
+    parser.add('--interval_size', type=int, help='Interval size')
+    parser.add('--noisybw', type=type_or_none_fn(str),
+               help='Path to bigwig file containing noisy \
+                        (low coverage/low quality) ATAC-seq signal',
+               required=True)
+    parser.add('--cleanbw', type=type_or_none_fn(str),
+               help='Path to bigwig file containing clean \
+                        (high-coverage/high-quality) ATAC-seq signal.\
+                            Not used with --nolabel.')
+    parser.add('--cleanpeakfile', type=type_or_none_fn(str),
+               help='Path to narrowPeak or BED file containing peak calls '
+                    'from \
+                        MACS2.')
+    parser.add('--layersbw', type=type_or_none_fn(str),
+               help='Paths to bigWig files containing \
+                            additional layers. If single file,  \
+                            use format: "name:file". \
+                            If there are multiple files, use format: \
+                            "[name1:file1, name2:file2,...]"')
+    parser.add('--batch_size', type=type_or_none_fn(int),
+               help='batch size; number of intervals to read from '
+                    'bigWig \
+               files at a time. Unrelated to training/inference \
+               batch size.', default=1000)
+    parser.add('--nonzero', action='store_true',
+               help='Only save intervals with nonzero coverage. \
+                        Recommended when encoding training data, as intervals \
+                        with zero coverage do not help the model to learn.')
+
     # experiment args
-    parser.add('--label', required=True, type=str,
-               help='label of the experiment; used for naming output folder')
+    parser.add('--genome', required=True, type=str,
+               help='chromosome sizes file for the genome. You can \
+                       specify a path to the sizes file or use the keywords \
+                       \"hg19\" or \"hg38\" inorder to use the sizes file for \
+                       human genome 19 or human genome 38. Chromosome \
+                       sizes files for hg19 and hg38 are pre-installed with '
+                    'atacworks.')
+    parser.add('--exp_name', required=True, type=str,
+               help='Give a unique name to the experiment. \
+                     Used for naming output folder.')
     parser.add('--out_home', required=True, type=str,
                help='parent directory in which to create the output folder')
-    parser.add('--print_freq', required=True, type=int,
-               help="Logging frequency")
     parser.add('--task', required=True,
                choices=['regression', 'classification', 'both'],
                help='Task can be regression or\
@@ -105,9 +142,6 @@ def add_common_options(parser):
                    on either side of each interval. Use the same --pad \
                    value that was supplied to bw2h5.py when creating \
                    the h5 files for training and validation.")
-    parser.add('--transform', required=True, type=str, choices=['log', 'None'],
-               help='transformation to apply to\
-                           coverage tracks before training')
     parser.add('--layers', required=True, type=type_or_none_fn(str),
                help='Names of additional layers to read from h5 file \
                    as input, in the form: "[name1, name2]". \
@@ -117,23 +151,19 @@ def add_common_options(parser):
                help="checkpoint path to load the model from for\
                    inference or resume training")
     # dist-env args
-    parser.add('--gpu', required=True, type=int,
+    parser.add('--gpu', required=False, type=int,
                help='GPU id to use; preempted by --distributed\
                            which uses all available gpus ')
     parser.add('--distributed', action='store_true',
                help='Do distributed training \
-                   across all available gpus on the node')
-    parser.add('--dist-url', required=True, type=str,
-               help='url used to set up distributed training')
-    parser.add('--dist-backend', required=True, type=str,
-               help='distributed backend')
+                   across all available gpus on the node. Note that \
+                   --gpu and --distributed are mutually exclusive. Either\
+                   one of the options must be provided but both cannot be\
+                   provided at once.')
     parser.add('--seed', required=True, type=int,
                help='Seed value to set for RNG (Random Number Generators).\
                      Data loading and model initialization are \
                      deterministic with seed setting, model training is not.')
-    # debug
-    parser.add('--debug', action='store_true',
-               help='Enable debug prints')
 
 
 def add_train_options(parser):
@@ -147,37 +177,36 @@ def add_train_options(parser):
 
     """
     add_common_options(parser)
-    parser.add('--files_train', required=True, type=str,
-               help='list of data files in the form of "[file1, file2, '
-                    '...]";'
-                    'or a single path to a file or folder of files')
-    parser.add('--checkpoint_fname', required=True, type=str,
-               help="checkpoint filename to save the model")
-    parser.add('--save_freq', required=True, type=int,
-               help="model checkpoint saving frequency")
+    parser.add('--val_chrom', type=type_or_none_fn(str),
+               help='Chromosome for validation')
+    parser.add('--holdout_chrom', type=type_or_none_fn(str),
+               help='Chromosome to hold out')
+    parser.add('--nonpeak', type=type_or_none_fn(int),
+               help='Ratio between number of non-peak\
+                    intervals and peak intervals. In other words,\
+                    no. of nonpeak intervals = nonpeak*(no. of peak intervals')
     # Learning args
-    parser.add('--clip_grad', required=True, type=float,
-               help='Grad clipping for bad/extreme batches')
     parser.add('--lr', required=True, type=float,
-               help='learning rate')
+               help='Learning rate to be used for training.')
     parser.add('--epochs', required=True, type=int,
-               help='Number of epochs')
+               help='Number of epochs to train the model for.')
     parser.add('--mse_weight', required=True, type=float,
-               help='relative weight of mse loss')
+               help='Relative weight of mse loss')
     parser.add('--pearson_weight', required=True, type=float,
-               help='relative weight of pearson correlation loss')
-    parser.add_argument('--poisson_weight', required=True, type=float,
-                        help='relative weight of poisson loss')
+               help='Relative weight of pearson correlation loss')
+    parser.add('--poisson_weight', required=True, type=float,
+               help='Relative weight of poisson loss')
+    parser.add('--threshold', required=True,
+               type=float,
+               help='atacworks outputs probability values for peaks \
+                       by default. These are thresholded at 0.5 for \
+                       binary output and then classification metrics \
+                       are calculated. Threshold value can be a float \
+                       number between 0 and 1. \
+                       You can set the threshold using this option. \
+                       output < infer_threshold = 0,\
+                       output > infer_threshold = 1.')
     # validation args
-    parser.add('--val_files', required=True, type=str,
-               help='list of data files in the form of [file1, file2, '
-                    '...];'
-                    'or a single path to a folder of files')
-    parser.add('--eval_freq', required=True, type=int,
-               help="evaluation frequency")
-    parser.add('--threshold', required=True, type=float,
-               help="probability threshold above which to call peaks. \
-               Used for classification metrics")
     parser.add_argument('--best_metric_choice', required=True,
                         type=str,
                         choices=['BCE', 'MSE', 'Recall',
@@ -199,43 +228,51 @@ def add_inference_options(parser):
     add_common_options(parser)
     parser.add('--config', required=False,
                is_config_file=True, help='config file path')
-    parser.add('--input_files', required=True, type=str,
-               help='list of data files in the form of "[file1, file2, '
-                    '...]";'
-                    'or a single path to a file or folder of files')
+
+    parser.add('--wg', action='store_true',
+               help='Set this flag to produce one set of intervals for\
+                     whole genome. If you would like to run denoising \
+                     on a subset of chromosome instead, take a look at \
+                     the --regions option instead.')
+    parser.add('--regions', required=True, type=type_or_none_fn(str),
+               help='atacworks denoising is done on whole genome by'
+                    'default. You can optionally specify a list of \
+                     chromosomes separated by comma and no spaces \
+                     like [chr1,chr2]. You can aslo provide list of \
+                     region indices with each chromosome like \
+                     [chr1:0-1000,chr2,chr3:0-500]. Please note \
+                     NO SPACES. You can also provide a BED file that \
+                     contains equally spaced chromosome intervals. \
+                     See documentation for creating your own regions \
+                     file.')
     parser.add('--peaks', action='store_true',
-               help='Output denosied peaks from atacworks. If --task is regression, \
-                       model only outputs denoised tracks and \
-                       this option becomes irrelevant.')
+               help='Set this flag to output denosied peaks from atacworks. '
+                    'If --task is \
+                     regression, model only outputs denoised tracks \
+                     and this option becomes irrelevant.')
     parser.add('--tracks', action='store_true',
-               help='Output denosied tracks from atacworks. If --task is classification, \
-                       model only outputs denoised peaks and \
-                       this option becomes irrelevant.')
-    parser.add('--intervals_file', required=True, type=str,
-               help='bed file containing the genomic\
-                               intervals for inference')
-    parser.add('--sizes_file', required=True, type=str,
-               help='chromosome sizes file for the genome. \
-                       Chromosome sizes files for hg19 and hg38 are \
-                       given in the data/reference folder.')
-    parser.add('--infer_threshold', required=True,
+               help='Set this flag to output denosied tracks from atacworks. '
+                    'If --task is \
+                    classification, model only outputs denoised peaks \
+                     and this option becomes irrelevant.')
+    parser.add('--threshold', required=True,
                type=type_or_none_fn(float),
-               help='threshold above which to call peaks from the \
-                       predicted probability values.')
+               help='atacworks outputs probability values for peaks \
+                       by default. OUtput can be thresholded binary \
+                       output. You can set the threshold using this \
+                       option. Threshold value has to be a float \
+                       number between 0 and 1. \
+                       output < infer_threshold = 0,\
+                       output > infer_threshold = 1.')
     parser.add('--reg_rounding', required=True, type=int,
-               help='number of decimal digits to round values \
+               help='Number of decimal digits to round values \
                        for regression outputs')
-    parser.add('--cla_rounding', required=True, type=int,
-               help='number of decimal digits to round values \
-                       for classification outputs')
     parser.add('--batches_per_worker', required=True, type=int,
                help='number of batches to run per worker\
                                during multiprocessing')
     parser.add('--gen_bigwig', action='store_true',
-               help='save the inference output to bigiwig\
+               help='Save the inference output to bigiwig\
                                in addition to bedgraph')
-    parser.add('--result_fname', required=True, type=str,
-               help='prefix for the inference result files.')
     parser.add('--deletebg', action='store_true',
                help='delete output bedGraph file')
 
@@ -252,9 +289,6 @@ def add_eval_options(parser):
     """
     add_inference_options(parser)
 
-    parser.add('--threshold', required=True, type=float,
-               help="probability threshold above which to call peaks. \
-               Used for classification metrics")
     parser.add('--best_metric_choice', required=True,
                type=str,
                choices=['BCE', 'MSE', 'Recall',
@@ -305,5 +339,16 @@ def parse_args(root_dir):
     if args.mode == "denoise":
         check_dependence(args.deletebg, args.gen_bigwig, parser,
                          "--deletebg requires --gen_bigwig")
+
+    # Both options cannot be provided at once.
+    check_mutual_exclusive(args.gpu, args.distributed, "If args.gpu is set,\
+            cannot run atacworks in distributed mode. You can only use one \
+            of the options.")
+
+    # Either one of the options needs to be provided.
+    if not (args.gpu is not None or args.distributed):
+        parser.error("Either specify a gpu ID to run atacworks by \
+                setting --gpu <ID> or run on ALL available gpus by \
+                setting --distributed")
 
     return args

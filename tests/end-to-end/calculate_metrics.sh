@@ -16,9 +16,9 @@ echo ""
 python $root_dir/calculate_baseline_metrics.py \
     --label_file $data_dir/HSC.80M.chr123.10mb.coverage.bw \
     --task regression \
-    --test_file $out_dir/inference_latest/no_label_infer.track.bw \
-    --intervals $out_dir/result.holdout_intervals.bed \
-    --sep_peaks --peak_file $out_dir/clean.peaks.bw >& $out_dir/regression_metrics_log
+    --test_file $out_dir/inference_latest/HSC_infer.track.bw \
+    --intervals $out_dir/inference_latest/intervals/24000.genome_intervals.bed \
+    --sep_peaks --peak_file $expected_results_dir/model_latest/bigwig_peakfiles/HSC.80M.chr123.10mb.peaks.bed.bw >& $out_dir/regression_metrics_log
 
 echo ""
 echo "Verifying output model against expected model"
@@ -30,10 +30,10 @@ echo ""
 echo "Calculate metrics for peak classification after inference..."
 echo ""
 python $root_dir/calculate_baseline_metrics.py \
-    --label_file $out_dir/clean.peaks.bw \
+    --label_file $expected_results_dir/model_latest/bigwig_peakfiles/HSC.80M.chr123.10mb.peaks.bed.bw \
     --task classification \
-    --test_file $out_dir/inference_latest/no_label_infer.peaks.bw \
-    --intervals $out_dir/result.holdout_intervals.bed \
+    --test_file $out_dir/inference_latest/HSC_infer.peaks.bw \
+    --intervals $out_dir/inference_latest/intervals/24000.genome_intervals.bed \
     --thresholds 0.5 >& $out_dir/classification_metrics_log
 
 echo ""

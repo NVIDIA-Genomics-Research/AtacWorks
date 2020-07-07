@@ -8,44 +8,72 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
+### Data Pre-processing parameters
+## Generate intervals files
+interval_size: 50000
+wg: False
+# Chromosome sizes to be used
+# You can also provide a file path that
+# contains chromosome names and sizes.
+# Look at this file for reference:
+# https://github.com/clara-parabricks/AtacWorks/blob/master/data/reference/hg19.chrom.sizes
+genome: "hg19"
+# Ratio of non-peak to peak intervals in training
+# non-peak samples = nonpeak * peak samples
+nonpeak: "None"
+# If you do not wish to denoise whole genome,
+# You can specify a list of chromosomes
+# regions: ["chr1","chr2"]
+# You can also specify interval ranges for chromosomes
+# Equal sized intervals of intervalsize will be generated
+# within the mentioned intervals.
+#regions: ["chr1:0-10000","chr2:500-20000"]
+#You can also provide a path to a file containing
+#intervals that are equally spaced with intervalsize
+#Look at this file for reference:
+#https://github.com/clara-parabricks/AtacWorks/blob/master/tests/expected_results/end-to-end/result.holdout_intervals.bed
+regions: "None"
+
+## Input files
+noisybw: "None"
+cleanbw: "None"
+layersbw: "None"
+# Batch size to read the bigiwig files, because
+# the entire file may not fit in memory if read at once.
+# This batch size has nothing to do with denoising pipeline.
+# Look at bs: for that option.
+batch_size: 1000
+
 # Experiment args
-out_home: './'
-label: 'inference_output'
 # If both peaks and tracks are False, then the program enters into a default mode and outputs both.
 # If both peaks and tracks are True, then the program outputs both.
 # If either one of them is True, then only the corresponding denoised output is saved.
 peaks: False
 tracks: False
 # Task is the task that model was trained for. If the task is regression, then model cannot
-# output denosied peaks. Similarly, if the task is classification, then model cannot 
-# output denoised tracks. The above peaks, tracks options only are relevant if task is "both".
+# output denosied peaks. 
+# task: regression
+# Similarly, if the task is classification, then model cannot 
+# output denoised tracks. 
+# task: classification
+# The peaks: and tracks: options above are only
+#  relevant if task is "both".
 task: "both"
-print_freq: 50
 bs: 512
+# Number of workers to use for multiprocessing
 num_workers: 4
+# Path to model weights to be used for denoising
 weights_path: "None"
-gpu: 0
-distributed: False
-dist-url: 'tcp://127.0.0.1:4321'
-dist-backend: 'gloo'
 seed: 42
-debug: False
 
 # Data processing args
 pad: 5000
-transform: "None"
 layers: "None"
 
 #Infer args
-input_files: "None"
-intervals_file: "None"
-sizes_file: "None"
 reg_rounding: 0
-cla_rounding: 3
-infer_threshold: 0.5
+threshold: 0.5
 batches_per_worker: 16
-
 # Output file args
-result_fname: inferred
 gen_bigwig: True
 deletebg: False
