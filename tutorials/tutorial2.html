@@ -1,0 +1,245 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Denoising and peak calling using a trained AtacWorks model &mdash; atacworks v0.3.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="AtacWorks Dockerfile" href="../Dockerfile.html" />
+    <link rel="prev" title="Training an AtacWorks model" href="tutorial1.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> atacworks
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../readme.html">AtacWorks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pretrained_models.html">Pretrained_models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial1.html">Training an AtacWorks model</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Denoising and peak calling using a trained AtacWorks model</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#downloading-pre-trained-models">Downloading pre-trained models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#input-files">Input files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tutorial-notebook">Tutorial Notebook</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../Dockerfile.html">AtacWorks Dockerfile</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">atacworks</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Denoising and peak calling using a trained AtacWorks model</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/tutorials/tutorial2.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="denoising-and-peak-calling-using-a-trained-atacworks-model">
+<h1>Denoising and peak calling using a trained AtacWorks model<a class="headerlink" href="#denoising-and-peak-calling-using-a-trained-atacworks-model" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>In this tutorial we use a pre-trained AtacWorks model to denoise and call peaks from low-coverage aggregate single-cell ATAC-seq data. We use the dsc-ATAC-seq dataset presented in reference (1), section “AtacWorks generalizes to diverse applications”. This dataset consists of single-cell ATAC-seq data from several types of human blood cells.</p>
+<p>We selected 2400 NK cells from this dataset - this is our ‘clean’, high-coverage dataset. We then randomly sampled 50 of these 2400 NK cells. Here’s what the ATAC-seq signal from 50 cells and 2400 cells looks like, for a region on chromosome 10:</p>
+<p><img alt="subsampled_NK_cells" src="../_images/NK.2400.50.png" /></p>
+<p>Compared to the ‘clean’ signal from 2400 cells, the aggregated ATAC-seq profile of these 50 cells is noisy. Because the signal is noisy, peak calls calculated by MACS2 on this data (shown as red bars below the signal tracks) are also inaccurate. The AUPRC of peak calling by MACS2 on the noisy data is only 0.20.</p>
+<p>As reported in our paper, we trained an AtacWorks model to learn a mapping from 50-cell signal to 2400-cell signals and peak calls. In other words, given a noisy ATAC-seq signal from 50 cells, this model learned what the signal would look like - and where the peaks would be called - if we had sequenced 2400 cells. This model was trained on data from Monocytes and B cells, so it has not encountered data from NK cells.</p>
+<p>If you want to train your own AtacWorks model instead of using the model reported in the paper, refer to <a class="reference internal" href="tutorial1.html"><span class="doc">Tutorial 1</span></a>.</p>
+</div>
+<div class="section" id="downloading-pre-trained-models">
+<h2>Downloading pre-trained models<a class="headerlink" href="#downloading-pre-trained-models" title="Permalink to this headline">¶</a></h2>
+<p>All models described in <a class="reference external" href="https://www.biorxiv.org/content/10.1101/829481v2">Lal &amp; Chiang, et al. (2019)</a> are available for download and use at <code class="docutils literal notranslate"><span class="pre">https://atacworks-paper.s3.us-east-2.amazonaws.com</span></code>.</p>
+<p>See <a class="reference internal" href="pretrained_models.html"><span class="doc">pre-trained denoising models</span></a> for a list of the available pre-trained denoising models.</p>
+<p>Before using one of these models, please consider the following:</p>
+<ol class="simple">
+<li><p>Please read the description of how the training datasets for these models were preprocessed, in Lal &amp; Chiang, et al. (2019), Methods section, paragraph 1. If your data processing pipeline is different, it is advisable to train a new model using the instructions in <a class="reference internal" href="tutorial1.html"><span class="doc">tutorial 1</span></a>.</p></li>
+<li><p>AtacWorks models should only be applied to data of similar sequencing depth as the data used to train the model. If the sequencing depth of your dataset is different from that used for our pre-trained models, it is also advisable to train a new model using the instructions in <a class="reference internal" href="tutorial1.html"><span class="doc">Tutorial 1</span></a>.</p></li>
+</ol>
+<p>See below for instructions to use our pre-trained models or your own trained models.</p>
+</div>
+<div class="section" id="input-files">
+<h2>Input files<a class="headerlink" href="#input-files" title="Permalink to this headline">¶</a></h2>
+<p>To denoise and call peaks from low-coverage, low cell count, or low quality ATAC-seq data, you need three input files:</p>
+<ol class="simple">
+<li><p>A trained AtacWorks model file with extension <code class="docutils literal notranslate"><span class="pre">.pth.tar</span></code>.</p></li>
+<li><p>A coverage track representing the number of sequencing reads mapped to each position on the genome in the low-coverage or low-quality dataset. This track should be processed in the same way as the files used for training the model. Format: <a class="reference external" href="https://genome.ucsc.edu/goldenPath/help/bigWig.html">bigWig</a></p></li>
+<li><p>Chromosome sizes file - a tab-separated text file containing the names and sizes of chromosomes in the genome.</p></li>
+</ol>
+</div>
+<div class="section" id="tutorial-notebook">
+<h2>Tutorial Notebook<a class="headerlink" href="#tutorial-notebook" title="Permalink to this headline">¶</a></h2>
+<p>For easy demonstration of the inference workflow, we’ve set up a notebook that breaks the above command down into it’s component parts and familiarizes users with each step and all of the options available. Click here to access the <a class="reference external" href="https://github.com/clara-parabricks/AtacWorks/blob/dev-v0.3.0/tutorials/tutorial2.ipynb">notebook</a>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../Dockerfile.html" class="btn btn-neutral float-right" title="AtacWorks Dockerfile" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tutorial1.html" class="btn btn-neutral float-left" title="Training an AtacWorks model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, NVIDIA Corporation
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

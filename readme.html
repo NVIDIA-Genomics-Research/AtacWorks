@@ -1,0 +1,385 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>AtacWorks &mdash; atacworks v0.3.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Pretrained_models" href="tutorials/pretrained_models.html" />
+    <link rel="prev" title="Welcome to AtacWorks’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> atacworks
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">AtacWorks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#system-requirements">System requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pypi-installation">PyPI installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#docker-installation">Docker Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#build-from-source">Build from Source</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#clone-repository">1. Clone repository</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#latest-released-version">Latest released version</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#latest-development-version">Latest development version</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#install-dependencies">2. Install dependencies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tests">3. Tests</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#workflow">Workflow</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#training-an-atacworks-model">1. Training an AtacWorks model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#denoising-and-peak-calling-using-a-trained-atacworks-model">2. Denoising and peak calling using a trained AtacWorks model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#faq">FAQ</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#contributing-to-atacworks">Contributing to AtacWorks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#running-ci-tests-locally">Running CI Tests Locally</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#citation">Citation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/pretrained_models.html">Pretrained_models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/tutorial1.html">Training an AtacWorks model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/tutorial2.html">Denoising and peak calling using a trained AtacWorks model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Dockerfile.html">AtacWorks Dockerfile</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">atacworks</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>AtacWorks</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/readme.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="atacworks">
+<h1>AtacWorks<a class="headerlink" href="#atacworks" title="Permalink to this headline">¶</a></h1>
+<p>AtacWorks is a deep learning toolkit for coverage track denoising and peak calling from low-coverage or low-quality ATAC-Seq data.</p>
+<p><img alt="AtacWorks" src="_images/atacworks_slides.gif" /></p>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="system-requirements">
+<h3>System requirements<a class="headerlink" href="#system-requirements" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Ubuntu 16.04+</p></li>
+<li><p>CUDA 9.0+</p></li>
+<li><p>Python 3.6.7+</p></li>
+<li><p>GCC 5+</p></li>
+<li><p>(Optional) A conda or virtualenv setup</p></li>
+<li><p>Any NVIDIA GPU that supports CUDA 9.0+</p></li>
+</ul>
+<p><strong>AtacWorks training and inference currently does not run on CPU.</strong></p>
+</div>
+<div class="section" id="pypi-installation">
+<h3>PyPI installation<a class="headerlink" href="#pypi-installation" title="Permalink to this headline">¶</a></h3>
+<p>To install atacworks in your environment, run the following in your terminal</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">atacworks</span><span class="o">==</span><span class="mf">0.3</span><span class="o">.</span><span class="mi">0</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="docker-installation">
+<h3>Docker Installation<a class="headerlink" href="#docker-installation" title="Permalink to this headline">¶</a></h3>
+<p>If you’d like to skip all installation and use a pre-installed docker image instead,
+follow the instructions <a class="reference internal" href="Dockerfile.html"><span class="doc">here</span></a>, section “Pre-installed AtacWorks”.</p>
+<p>If you’d like to pull a docker image that contains AtacWorks source code, then
+follow the instructions <a class="reference internal" href="Dockerfile.html"><span class="doc">here</span></a>, section “AtacWorks from Source”.</p>
+</div>
+</div>
+<div class="section" id="build-from-source">
+<h2>Build from Source<a class="headerlink" href="#build-from-source" title="Permalink to this headline">¶</a></h2>
+<p>Follow the instructions below if you are interested in running AtacWorks tutorial notebooks outside
+of docker.</p>
+<div class="section" id="clone-repository">
+<h3>1. Clone repository<a class="headerlink" href="#clone-repository" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="latest-released-version">
+<h4>Latest released version<a class="headerlink" href="#latest-released-version" title="Permalink to this headline">¶</a></h4>
+<p>This will clone the repo to the <code class="docutils literal notranslate"><span class="pre">master</span></code> branch, which contains code for latest released version
+and hot-fixes.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="o">--</span><span class="n">recursive</span> <span class="o">-</span><span class="n">b</span> <span class="n">master</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">clara</span><span class="o">-</span><span class="n">genomics</span><span class="o">/</span><span class="n">AtacWorks</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="latest-development-version">
+<h4>Latest development version<a class="headerlink" href="#latest-development-version" title="Permalink to this headline">¶</a></h4>
+<p>This will clone the repo to the default branch, which is set to be the latest development branch.
+This branch is subject to change frequently as features and bug fixes are pushed.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="o">--</span><span class="n">recursive</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">clara</span><span class="o">-</span><span class="n">genomics</span><span class="o">/</span><span class="n">AtacWorks</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="install-dependencies">
+<h3>2. Install dependencies<a class="headerlink" href="#install-dependencies" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p>Download <code class="docutils literal notranslate"><span class="pre">bedGraphToBigWig</span></code> and <code class="docutils literal notranslate"><span class="pre">bigWigToBedGraph</span></code> binaries and add $PATH to your bashrc.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rsync</span> <span class="o">-</span><span class="n">aP</span> <span class="n">rsync</span><span class="p">:</span><span class="o">//</span><span class="n">hgdownload</span><span class="o">.</span><span class="n">soe</span><span class="o">.</span><span class="n">ucsc</span><span class="o">.</span><span class="n">edu</span><span class="o">/</span><span class="n">genome</span><span class="o">/</span><span class="n">admin</span><span class="o">/</span><span class="n">exe</span><span class="o">/</span><span class="n">linux</span><span class="o">.</span><span class="n">x86_64</span><span class="o">/</span><span class="n">bedGraphToBigWig</span> <span class="o">&lt;</span><span class="n">custom_path</span><span class="o">&gt;</span>
+<span class="n">rsync</span> <span class="o">-</span><span class="n">aP</span> <span class="n">rsync</span><span class="p">:</span><span class="o">//</span><span class="n">hgdownload</span><span class="o">.</span><span class="n">soe</span><span class="o">.</span><span class="n">ucsc</span><span class="o">.</span><span class="n">edu</span><span class="o">/</span><span class="n">genome</span><span class="o">/</span><span class="n">admin</span><span class="o">/</span><span class="n">exe</span><span class="o">/</span><span class="n">linux</span><span class="o">.</span><span class="n">x86_64</span><span class="o">/</span><span class="n">bigWigToBedGraph</span> <span class="o">&lt;</span><span class="n">custom_path</span><span class="o">&gt;</span>
+<span class="n">export</span> <span class="n">PATH</span><span class="o">=</span><span class="s2">&quot;$PATH:&lt;custom_path&gt; &gt;&gt; ~/.bashrc&quot;</span>
+</pre></div>
+</div>
+</li>
+<li><p>Install pip dependencies</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">AtacWorks</span> <span class="o">&amp;&amp;</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+</li>
+<li><p>Optional – Install macs2.
+Only required if you want to use macs2 subcommands to call peaks based on peak probabilities generated by AtacWorks.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">macs2</span><span class="o">==</span><span class="mf">2.2</span><span class="o">.</span><span class="mi">4</span>
+</pre></div>
+</div>
+</li>
+<li><p>Install atacworks</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">.</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="tests">
+<h3>3. Tests<a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h3>
+<p>Run unit tests to verify that installation was successful</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>```
+python -m pytest tests/
+```
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="workflow">
+<h2>Workflow<a class="headerlink" href="#workflow" title="Permalink to this headline">¶</a></h2>
+<p>AtacWorks trains a deep neural network to learn a mapping between noisy (low coverage/low cell count/low quality) ATAC-seq data and matching clean (high coverage, high cell count, and/or high quality) ATAC-seq data. Both noisy and clean data should be from the same cell type or tissue. Once this mapping is learned, the trained model can be applied to improve other noisy ATAC-Seq datasets.</p>
+<div class="section" id="training-an-atacworks-model">
+<h3>1. Training an AtacWorks model<a class="headerlink" href="#training-an-atacworks-model" title="Permalink to this headline">¶</a></h3>
+<p>See <a class="reference internal" href="tutorials/tutorial1.html"><span class="doc">Tutorial 1</span></a> for a workflow detailing the steps of model training and how to modify the parameters used in these steps.</p>
+</div>
+<div class="section" id="denoising-and-peak-calling-using-a-trained-atacworks-model">
+<h3>2. Denoising and peak calling using a trained AtacWorks model<a class="headerlink" href="#denoising-and-peak-calling-using-a-trained-atacworks-model" title="Permalink to this headline">¶</a></h3>
+<p>See <a class="reference internal" href="tutorials/tutorial2.html"><span class="doc">Tutorial 2</span></a> for an advanced workflow detailing the prediction using a trained model, and how to modify the parameters used in these steps.</p>
+</div>
+</div>
+<div class="section" id="faq">
+<h2>FAQ<a class="headerlink" href="#faq" title="Permalink to this headline">¶</a></h2>
+<ol>
+<li><p>What’s the preferred way for setting up the environment?</p>
+<blockquote>
+<div><p>A virtual environment, conda installation or docker is preferred for running atacworks. Follow the instructions of setting up your preferred platforms. Once the env is setup, you can follow the Installation section above to install all the necessary dependencies.</p>
+</div></blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="contributing-to-atacworks">
+<h2>Contributing to AtacWorks<a class="headerlink" href="#contributing-to-atacworks" title="Permalink to this headline">¶</a></h2>
+<p>This section is only for developers of atacworks. If you would like to contribute to atacworks codebase,
+take a look at the development guidelines <a class="reference external" href="https://clara-parabricks.github.io/development.html#contributing-to-clara-omics">here</a>.
+You can read about our Continuous Integration (CI) test flow <a class="reference external" href="https://clara-parabricks.github.io/development.html#ci-testing">here</a>.</p>
+<div class="section" id="running-ci-tests-locally">
+<h3>Running CI Tests Locally<a class="headerlink" href="#running-ci-tests-locally" title="Permalink to this headline">¶</a></h3>
+<p>When a PR is submitted to the github, CI tests are triggered by github CI. If you would like to run those tests locally,
+follow the instructions below.
+!!CAUTION!!
+Please note, your git repository will be mounted to the container, any untracked files will be removed from it.
+Before executing the CI locally, stash or add them to the index.</p>
+<p>Requirements:</p>
+<ol class="simple">
+<li><p><a class="reference external" href="https://docs.docker.com/install/linux/docker-ce/ubuntu/">docker</a></p></li>
+<li><p><a class="reference external" href="https://github.com/NVIDIA/nvidia-docker">nvidia-docker</a></p></li>
+<li><p><a class="reference external" href="https://github.com/NVIDIA/nvidia-container-runtime">nvidia-container-runtime</a></p></li>
+</ol>
+<p>Run the following command to execute the CI build steps inside a container locally:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bash</span> <span class="n">ci</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">build</span><span class="o">.</span><span class="n">sh</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">Atacworks</span> <span class="n">repo</span> <span class="n">path</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>ci/local/build.sh script was adapted from <a class="reference external" href="https://github.com/rapidsai/cudf/tree/branch-0.11/ci/local">rapidsai/cudf</a>
+The default docker image is <strong>clara-genomics-base:cuda10.1-ubuntu16.04-gcc5-py3.6</strong>.</p>
+<p>Other images from <a class="reference external" href="https://hub.docker.com/r/gpuci/clara-genomics-base/tags">gpuci/clara-genomics-base</a> repository can be used instead, by using -i argument as shown below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bash</span> <span class="n">ci</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">build</span><span class="o">.</span><span class="n">sh</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">Atacworks</span> <span class="n">repo</span> <span class="n">path</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">i</span> <span class="n">gpuci</span><span class="o">/</span><span class="n">clara</span><span class="o">-</span><span class="n">genomics</span><span class="o">-</span><span class="n">base</span><span class="p">:</span><span class="n">cuda10</span><span class="o">.</span><span class="mi">0</span><span class="o">-</span><span class="n">ubuntu18</span><span class="o">.</span><span class="mi">04</span><span class="o">-</span><span class="n">gcc7</span><span class="o">-</span><span class="n">py3</span><span class="o">.</span><span class="mi">6</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="citation">
+<h2>Citation<a class="headerlink" href="#citation" title="Permalink to this headline">¶</a></h2>
+<p>Please cite AtacWorks as follows:</p>
+<p>Lal, A., Chiang, Z.D., Yakovenko, N., Duarte, F.M., Israeli, J. and Buenrostro, J.D., 2019. AtacWorks: A deep convolutional neural network toolkit for epigenomics. BioRxiv, p.829481.</p>
+<p>Link: <a class="reference external" href="https://www.biorxiv.org/content/10.1101/829481v2">https://www.biorxiv.org/content/10.1101/829481v2</a></p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tutorials/pretrained_models.html" class="btn btn-neutral float-right" title="Pretrained_models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to AtacWorks’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, NVIDIA Corporation
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
