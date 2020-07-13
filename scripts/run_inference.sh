@@ -139,7 +139,7 @@ python $script_dir/bw2h5.py --noisybw $TEST_DATA_BW \
 
 #inference
 echo "Inference on selected intervals, producing denoised track and binary peak calls"
-python $script_dir/main.py infer \
+atacworks denoise \
     --infer_files $OUT_DIR/test_data.h5 \
     --weights_path $MODEL_FILE \
     --sizes_file $SIZES_FILE \

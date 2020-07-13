@@ -24,7 +24,10 @@ print_freq: 50
 bs: 512
 num_workers: 4
 weights_path: "None"
-gpu: 0
+# ID of the GPU to be used. Only relevant if running atacworks in single GPU mode.
+# If using multi-GPU mode i.e., if --distributed True, then this option is irrelevant. 
+# All available GPUs on the system are used in multi-GPU setting.
+gpu_idx: 0
 distributed: False
 dist-url: 'tcp://127.0.0.1:4321'
 dist-backend: 'gloo'
