@@ -45,6 +45,28 @@ logger "Running AtacWorks tests..."
 cd "${WORKSPACE}"
 source ci/common/test-atacworks.sh "$WORKSPACE"
 
+logger "Remove existing atacworks"
+pip uninstall -y atacworks
+################################################################################
+# Create Wheel Package for AtacWorks
+################################################################################
+logger "Create Wheel package for AtacWorks"
+python3 -m pip wheel . --global-option sdist --wheel-dir ${WORKSPACE}/atacworks_wheel --no-deps
+
+################################################################################
+# Install AtacWorks from Wheel Package
+################################################################################
+logger "Insalling AtacWorks from wheel..."
+cd "${WORKSPACE}"
+pip install --ignore-installed ${WORKSPACE}/atacworks_wheel/*
+
+################################################################################
+# AtacWorks tests
+################################################################################
+logger "Running AtacWorks tests..."
+cd "${WORKSPACE}"
+source ci/common/test-atacworks.sh "$WORKSPACE"
+
 ################################################################################
 # Upload AtacWorks to PyPI
 ################################################################################

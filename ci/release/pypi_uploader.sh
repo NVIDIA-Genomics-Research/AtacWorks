@@ -17,7 +17,7 @@ if [[ ${RUNNING_CI_LOCALLY} = true  ]]; then
     return 0
 fi
 
-# Skip upload if current branch is not master or starts with "dev-"
+# Skip upload if the merging branch is not master
 if [ "${COMMIT_HASH}" != "master" ]; then
     echo "Skipping PyPI upload - merge branch is not master"
     return 0
@@ -34,6 +34,6 @@ for f in "${WORKSPACE}"/atacworks/atacworks_wheel/*.whl; do
         mv "${f}" "${MODIFIED_WHL_NAME}"
         echo "File name ${f} was changed into ${MODIFIED_WHL_NAME}"
         # Perform Upload
-        #python3 -m twine upload --skip-existing --repository-url https://test.pypi.org/legacy/ "${WORKSPACE}"/atacworks_wheel/*
+        python3 -m twine upload --skip-existing "${WORKSPACE}"/atacworks_wheel/*
     fi
 done

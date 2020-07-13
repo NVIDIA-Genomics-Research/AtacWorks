@@ -11,9 +11,9 @@
 # Inherit from base NVIDIA CUDA 10.1 image with CUDNN
 FROM nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04
 
-# Set python version to 3.7
+# Set python version to 3.6
 RUN apt update && apt install -y \
-    python3.7 \
+    python3.6 \
     rsync \
     git \
     python3-pip \
@@ -27,5 +27,5 @@ RUN rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bedG
 RUN rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bigWigToBedGraph /usr/local/bin
 
 # Download AtacWorks repo
-RUN pip3 install -i https://test.pypi.org/simple/  --extra-index-url https://pypi.org/simple atacworks==0.2.2
+RUN pip3 install atacworks==0.3.0
 RUN pip3 install macs2==2.2.4 && pip3 install vim 

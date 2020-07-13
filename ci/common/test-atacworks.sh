@@ -21,5 +21,3 @@ else
     python -m pytest -m cpu tests/ -v
 fi
 
-# Install a wheel package
-python3 -m pip wheel . --global-option sdist --wheel-dir ${WORKSPACE}/atacworks_wheel --no-deps
