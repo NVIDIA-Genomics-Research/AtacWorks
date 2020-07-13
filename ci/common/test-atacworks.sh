@@ -20,3 +20,4 @@ if [ "${TEST_ON_GPU}" == '1' ]; then
 else
     python -m pytest -m cpu tests/ -v
 fi
+
