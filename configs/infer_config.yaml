@@ -50,5 +50,6 @@ batches_per_worker: 16
 
 # Output file args
 result_fname: inferred
-gen_bigwig: True
+gen_bigwig: False
 deletebg: False
+out_resolution: "None"
