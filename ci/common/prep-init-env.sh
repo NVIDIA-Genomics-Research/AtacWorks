@@ -19,21 +19,32 @@ logger "Check versions..."
 gcc --version
 g++ --version
 
-# FIX Added to deal with Anancoda SSL verification issues during conda builds
-conda config --set ssl_verify False
-
-################################################################################
-# BUILD - Conda package builds 
-################################################################################
-
-CUDA_REL=${CUDA:0:3}
 if [ "${CUDA:0:2}" == '10' ]; then
   # CUDA 10 release
   CUDA_REL=${CUDA:0:4}
 fi
 
-# Cleanup local git
-cd $1
+################################################################################
+# BUILD - Conda package builds 
+################################################################################
+
+# FIX Added to deal with Anancoda SSL verification issues during conda builds
+conda config --set ssl_verify False
+
+logger "Activate anaconda environment..."
+CONDA_NEW_ACTIVATION_CMD_VERSION="4.4"
+CONDA_VERSION=$(conda --version | awk '{print $2}')
+if [ "$CONDA_NEW_ACTIVATION_CMD_VERSION" == "$(echo -e "$CONDA_VERSION\n$CONDA_NEW_ACTIVATION_CMD_VERSION" | sort -V | head -1)" ]; then
+  logger "Version is higher than ${CONDA_NEW_ACTIVATION_CMD_VERSION}, using conda activate"
+  source /conda/etc/profile.d/conda.sh
+  conda activate "${CONDA_ENV_NAME}"
+else
+  logger "Version is lower than ${CONDA_NEW_ACTIVATION_CMD_VERSION}, using source activate"
+  source activate "${CONDA_ENV_NAME}"
+fi
+conda info --envs
+
+
+logger "cleanup local git repo..."
 git clean -xdf
 
-cd $1

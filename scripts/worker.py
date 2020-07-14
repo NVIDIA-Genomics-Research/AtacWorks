@@ -271,7 +271,7 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
 
     model, _ = get_model(args, gpu, rank)
 
-    infer_dataset = DatasetInfer(files=args.files, layers=args.layers)
+    infer_dataset = DatasetInfer(files=args.input_files, layers=args.layers)
     infer_sampler = None
 
     if args.distributed:
@@ -308,7 +308,7 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
 
     model, _ = get_model(args, gpu, rank)
 
-    eval_dataset = DatasetTrain(args.files, layers=args.layers)
+    eval_dataset = DatasetTrain(args.input_files, layers=args.layers)
     eval_sampler = None
 
     if args.distributed:

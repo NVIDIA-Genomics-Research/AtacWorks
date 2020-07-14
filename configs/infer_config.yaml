@@ -11,12 +11,23 @@
 # Experiment args
 out_home: './'
 label: 'inference_output'
-task: 'both'
+# If both peaks and tracks are False, then the program enters into a default mode and outputs both.
+# If both peaks and tracks are True, then the program outputs both.
+# If either one of them is True, then only the corresponding denoised output is saved.
+peaks: False
+tracks: False
+# Task is the task that model was trained for. If the task is regression, then model cannot
+# output denosied peaks. Similarly, if the task is classification, then model cannot 
+# output denoised tracks. The above peaks, tracks options only are relevant if task is "both".
+task: "both"
 print_freq: 50
 bs: 512
 num_workers: 4
 weights_path: "None"
-gpu: 0
+# ID of the GPU to be used. Only relevant if running atacworks in single GPU mode.
+# If using multi-GPU mode i.e., if --distributed True, then this option is irrelevant. 
+# All available GPUs on the system are used in multi-GPU setting.
+gpu_idx: 0
 distributed: False
 dist-url: 'tcp://127.0.0.1:4321'
 dist-backend: 'gloo'
@@ -29,7 +40,7 @@ transform: "None"
 layers: "None"
 
 #Infer args
-files: "None"
+input_files: "None"
 intervals_file: "None"
 sizes_file: "None"
 reg_rounding: 0
@@ -39,5 +50,6 @@ batches_per_worker: 16
 
 # Output file args
 result_fname: inferred
-gen_bigwig: True
+gen_bigwig: False
 deletebg: False
+out_resolution: "None"

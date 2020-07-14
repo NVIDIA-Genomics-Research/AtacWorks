@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
 #
@@ -8,23 +9,9 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
-configargparse==0.15.2
-Cython==0.29.13
-h5py==2.9.0
-numpy==1.17.0
-pandas==0.25.0
-pyBigWig==0.3.17
-pytest==4.4.1
-pyyaml==5.3
-scikit-learn==0.21.3
-scipy==1.3.2
-termcolor==1.1.0
-torch==1.2.0
-torchvision==0.3.0
-scikit-learn==0.21.3
-scipy==1.3.2
-configargparse==0.15.2
-setuptools==46.1.3
-sphinx==2.3.1
-recommonmark==0.6.0
-sphinx-rtd-theme==0.4.3
+# Logger function for build status output
+function logger() {
+  ELAPSED_TIME=$(( $(date +%s)-START_TIME ));
+  PRINT_TIME=$(printf '%dh:%dm:%ds\n' $((ELAPSED_TIME/3600)) $((ELAPSED_TIME%3600/60)) $((ELAPSED_TIME%60)));
+  echo -e "\n${PRINT_TIME} >>>> $* <<<<\n"
+}

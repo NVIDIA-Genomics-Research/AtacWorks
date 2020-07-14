@@ -9,36 +9,69 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
-######################################
-# ClaraGenomicsAnalysis CPU build script for CI #
-######################################
+################################################################################
+# AtacWorks CPU build script for CI #
+################################################################################
 set -e
 
-# Logger function for build status output
-function logger() {
-  echo -e "\n>>>> $@\n"
-}
+# Stat time for logger
+START_TIME=$(date +%s)
+
+export PATH=/conda/bin:/usr/local/cuda/bin:$PATH
+# Set home to the job's workspace
+export HOME=$WORKSPACE
+cd "${WORKSPACE}"
 
 ################################################################################
 # Init
 ################################################################################
 
-export TEST_PYCLARAGENOMICSANALYSIS=1
-export PATH=/conda/bin:/usr/local/cuda/bin:$PATH
-PARALLEL_LEVEL=4
+source ci/common/logger.sh
 
-# Set home to the job's workspace
-export HOME=$WORKSPACE
-
-cd ${WORKSPACE}
-
-source ci/common/prep-init-env.sh ${WORKSPACE}
+logger "Calling prep-init-env..."
+source ci/common/prep-init-env.sh
 
 ################################################################################
-# Pyclaragenomics tests
+# Install AtacWorks
 ################################################################################
+logger "Insalling AtacWorks..."
+cd "${WORKSPACE}"
+source ci/common/install-package.sh
 
-cd ${WORKSPACE}
-if [ "${TEST_PYCLARAGENOMICSANALYSIS}" == '1' ]; then
-    source ci/common/test-atacworks.sh $WORKSPACE
-fi
+################################################################################
+# AtacWorks tests
+################################################################################
+logger "Running AtacWorks tests..."
+cd "${WORKSPACE}"
+source ci/common/test-atacworks.sh "$WORKSPACE"
+
+logger "Remove existing atacworks"
+pip uninstall -y atacworks
+################################################################################
+# Create Wheel Package for AtacWorks
+################################################################################
+logger "Create Wheel package for AtacWorks"
+python3 -m pip wheel . --global-option sdist --wheel-dir ${WORKSPACE}/atacworks_wheel --no-deps
+
+################################################################################
+# Install AtacWorks from Wheel Package
+################################################################################
+logger "Insalling AtacWorks from wheel..."
+cd "${WORKSPACE}"
+pip install --ignore-installed ${WORKSPACE}/atacworks_wheel/*
+
+################################################################################
+# AtacWorks tests
+################################################################################
+logger "Running AtacWorks tests..."
+cd "${WORKSPACE}"
+source ci/common/test-atacworks.sh "$WORKSPACE"
+
+################################################################################
+# Upload AtacWorks to PyPI
+################################################################################
+logger "Upload Wheel to PyPI..."
+cd "${WORKSPACE}"
+source ci/release/pypi_uploader.sh
+
+logger "Done..."

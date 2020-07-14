@@ -88,12 +88,13 @@ def add_common_options(parser):
                help='label of the experiment; used for naming output folder')
     parser.add('--out_home', required=True, type=str,
                help='parent directory in which to create the output folder')
+    parser.add('--print_freq', required=True, type=int,
+               help="Logging frequency")
     parser.add('--task', required=True,
                choices=['regression', 'classification', 'both'],
                help='Task can be regression or\
-                           classification or both. (default: %(default)s)')
-    parser.add('--print_freq', required=True, type=int,
-               help="Logging frequency")
+                           classification or both. \
+                           Should match the task the model was trained for.')
     parser.add('--bs', required=True, type=int,
                help="batch_size")
     parser.add('--num_workers', required=True, type=int,
@@ -116,9 +117,10 @@ def add_common_options(parser):
                help="checkpoint path to load the model from for\
                    inference or resume training")
     # dist-env args
-    parser.add('--gpu', required=True, type=int,
-               help='GPU id to use; preempted by --distributed\
-                           which uses all available gpus ')
+    parser.add('--gpu_idx', required=True, type=int,
+               help='GPU ID to use. ID can be known from nvidia-smi; \
+                       preempted by --distributed which uses all \
+                       available gpus ')
     parser.add('--distributed', action='store_true',
                help='Do distributed training \
                    across all available gpus on the node')
@@ -198,10 +200,18 @@ def add_inference_options(parser):
     add_common_options(parser)
     parser.add('--config', required=False,
                is_config_file=True, help='config file path')
-    parser.add('--files', required=True, type=str,
+    parser.add('--input_files', required=True, type=str,
                help='list of data files in the form of "[file1, file2, '
                     '...]";'
                     'or a single path to a file or folder of files')
+    parser.add('--peaks', action='store_true',
+               help='Output denosied peaks from atacworks. If --task is regression, \
+                       model only outputs denoised tracks and \
+                       this option becomes irrelevant.')
+    parser.add('--tracks', action='store_true',
+               help='Output denosied tracks from atacworks. If --task is classification, \
+                       model only outputs denoised peaks and \
+                       this option becomes irrelevant.')
     parser.add('--intervals_file', required=True, type=str,
                help='bed file containing the genomic\
                                intervals for inference')
@@ -229,6 +239,9 @@ def add_inference_options(parser):
                help='prefix for the inference result files.')
     parser.add('--deletebg', action='store_true',
                help='delete output bedGraph file')
+    parser.add('--out_resolution', required=False, type=type_or_none_fn(int),
+               help='resolution of output files. \
+               default 1bp.')
 
 
 def add_eval_options(parser):
@@ -279,7 +292,7 @@ def parse_args(root_dir):
     # Inference args
     infer_config_path = os.path.join(root_dir, 'configs', 'infer_config.yaml')
     parser_infer = subparsers.add_parser(
-        'infer',
+        'denoise',
         config_file_parser_class=configargparse.YAMLConfigFileParser,
         default_config_files=[infer_config_path])
     add_inference_options(parser_infer)
@@ -293,7 +306,7 @@ def parse_args(root_dir):
     # =========================================================================
     args, extra = parser.parse_known_args()
 
-    if args.mode == "infer":
+    if args.mode == "denoise":
         check_dependence(args.deletebg, args.gen_bigwig, parser,
                          "--deletebg requires --gen_bigwig")
 
