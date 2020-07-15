@@ -1,10 +1,10 @@
-INFO:2020-02-05 17:40:04,642:AtacWorks-calculate-metrics] Loading intervals
-INFO:2020-02-05 17:40:04,644:AtacWorks-calculate-metrics] Loading labels for classification
-INFO:2020-02-05 17:40:05,343:AtacWorks-calculate-metrics] Loading data for classification
-INFO:2020-02-05 17:40:06,123:AtacWorks-calculate-metrics] Calculating per-threshold classification metrics
-INFO:2020-02-05 17:40:10,235:AtacWorks-calculate-metrics] Calculating AUC metrics
-INFO:2020-02-05 17:40:12,607:AtacWorks-calculate-metrics] Done!
-Bases per class in clean data: positive: 294990 | negative: 9689010
-Bases per class at threshold 0.5: positive: 1584560 | negative: 8399440
-Classification metrics at threshold 0.5 : recall: 0.8386 | precision: 0.1561 | specificity: 0.8620 | accuracy: 0.8613 | f1: 0.2632
-AUC metrics : auroc: 0.8503 | auprc: 0.1357
+INFO:2020-07-08 18:33:55,066:AtacWorks-calculate-metrics] Loading intervals
+INFO:2020-07-08 18:33:55,068:AtacWorks-calculate-metrics] Loading labels for classification
+INFO:2020-07-08 18:33:57,062:AtacWorks-calculate-metrics] Loading data for classification
+INFO:2020-07-08 18:33:59,320:AtacWorks-calculate-metrics] Calculating per-threshold classification metrics
+INFO:2020-07-08 18:34:04,440:AtacWorks-calculate-metrics] Calculating AUC metrics
+INFO:2020-07-08 18:34:11,816:AtacWorks-calculate-metrics] Done!
+Bases per class in clean data: positive: 985786 | negative: 28966214
+Bases per class at threshold 0.5: positive: 4196868 | negative: 25755132
+Classification metrics at threshold 0.5 : recall: 0.8301 | precision: 0.1950 | specificity: 0.8834 | accuracy: 0.8816 | f1: 0.3158
+AUC metrics : auroc: 0.8567 | auprc: 0.1675

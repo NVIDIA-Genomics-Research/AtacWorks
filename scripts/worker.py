@@ -178,13 +178,13 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
     dst_path = os.path.join(config_dir, "model_structure.yaml")
     save_config(dst_path, model_params)
     # TODO: LR schedule
-    train_dataset = DatasetTrain(files=args.files_train, layers=args.layers)
+    train_dataset = DatasetTrain(files=args.train_files, layers=args.layers)
     train_sampler = None
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(
             train_dataset)
     train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=args.bs, shuffle=(train_sampler is None),
+        train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
         # collate_fn=custom_collate_train,
         num_workers=args.num_workers, pin_memory=True, sampler=train_sampler,
         drop_last=False
@@ -197,7 +197,7 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
         val_sampler = torch.utils.data.distributed.DistributedSampler(
             val_dataset)
     val_loader = torch.utils.data.DataLoader(
-        val_dataset, batch_size=args.bs, shuffle=False,
+        val_dataset, batch_size=args.batch_size, shuffle=False,
         # collate_fn=custom_collate_train,
         num_workers=args.num_workers, pin_memory=True, sampler=val_sampler,
         drop_last=False
@@ -279,7 +279,7 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
             infer_dataset, shuffle=False)
 
     infer_loader = torch.utils.data.DataLoader(
-        infer_dataset, batch_size=args.bs, shuffle=False,
+        infer_dataset, batch_size=args.batch_size, shuffle=False,
         num_workers=args.num_workers, pin_memory=True, sampler=infer_sampler,
         drop_last=False
     )
@@ -316,7 +316,7 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
             eval_dataset)
 
     eval_loader = torch.utils.data.DataLoader(
-        eval_dataset, batch_size=args.bs, shuffle=False,
+        eval_dataset, batch_size=args.batch_size, shuffle=False,
         num_workers=args.num_workers, pin_memory=True, sampler=eval_sampler,
         drop_last=False
     )
