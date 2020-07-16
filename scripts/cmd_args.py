@@ -179,8 +179,7 @@ def add_train_options(parser):
     add_common_options(parser)
     parser.add('--cleanbw', type=type_or_none_fn(str),
                help='Path to bigwig file containing clean \
-                        (high-coverage/high-quality) ATAC-seq signal.\
-                            Not used with --nolabel.')
+                     (high-coverage/high-quality) ATAC-seq signal.')
     parser.add('--cleanpeakfile', type=type_or_none_fn(str),
                help='Path to narrowPeak or BED file containing peak calls '
                     'from MACS2 on the clean (high-coverage/high-quality) \
@@ -238,7 +237,7 @@ def add_inference_options(parser):
     parser.add('--config', required=False,
                is_config_file=True, help='config file path')
     parser.add('--peaks', action='store_true',
-               help='Output denosied peaks from atacworks. \
+               help='Output denoised peaks from atacworks. \
                      If --task is regression, \
                      model only outputs denoised tracks and \
                      this option becomes irrelevant.')
@@ -283,8 +282,7 @@ def add_eval_options(parser):
 
     parser.add('--cleanbw', type=type_or_none_fn(str),
                help='Path to bigwig file containing clean \
-                        (high-coverage/high-quality) ATAC-seq signal.\
-                            Not used with --nolabel.')
+                     (high-coverage/high-quality) ATAC-seq signal.')
     parser.add('--cleanpeakfile', type=type_or_none_fn(str),
                help='Path to narrowPeak or BED file containing peak calls '
                     'from MACS2 on the clean (high-coverage/high-quality) \
@@ -347,9 +345,13 @@ def parse_args(root_dir):
         if not(args.val_chrom or args.holdout_chrom):
             parser.error("val_chrom and holdout_chrom are required for \
                          training.")
-        check_dependence(args.cleanbw, args.cleanpeakbw)
+        check_dependence(args.cleanbw, args.cleanpeakfile, parser,
+                         "cleanbw and cleanpeakfile are required for \
+                          training")
 
     if args.mode == "eval":
-        check_dependence(args.cleanbw, args.cleanpeakbw)
+        check_dependence(args.cleanbw, args.cleanpeakfile, parser,
+                         "cleanbw and cleanpeakfile are required for \
+                          eval")
 
     return args

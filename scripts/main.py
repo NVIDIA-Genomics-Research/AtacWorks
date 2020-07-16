@@ -327,8 +327,7 @@ def main():
     genomes = {"hg19": os.path.join(root_dir, "reference",
                                     "hg19.chrom.sizes"),
                "hg38": os.path.join(root_dir, "reference",
-                                    "hg38.chrom.sizes")
-              }
+                                    "hg38.chrom.sizes")}
     if args.sizes_file in genomes:
         args.sizes_file = genomes[args.sizes_file]
 
@@ -360,9 +359,13 @@ def main():
     ##########################################################################
     if args.mode == "train":
 
-        args.cleanpeakfile = gather_files_from_cmdline(args.cleanpeakfile, extension=(".bed", ".narrowPeak"))
-        args.noisybw = gather_files_from_cmdline(args.noisybw, extension=".bw")
-        args.cleanbw = gather_files_from_cmdline(args.cleanbw, extension=".bw")
+        args.cleanpeakfile = gather_files_from_cmdline(
+            args.cleanpeakfile,
+            extension=(".bed", ".narrowPeak"))
+        args.noisybw = gather_files_from_cmdline(args.noisybw,
+                                                 extension=".bw")
+        args.cleanbw = gather_files_from_cmdline(args.cleanbw,
+                                                 extension=".bw")
 
         # We have to make sure there is a 1-1 correspondence between files.
         assert len(args.cleanpeakfile) == len(args.noisybw)
@@ -391,18 +394,17 @@ def main():
             # Convert the input bigwig files and the clean peak files into
             # h5 for training.
             out_path = os.path.join(args.exp_dir, "bw2h5")
-            nolabel = False
             nonzero = True
             prefix = os.path.basename(cleanbw) + ".train"
             train_file = bw2h5(noisybw, cleanbw, args.layersbw,
                                cleanpeakbw, args.read_buffer,
-                               nolabel, nonzero, train_intervals, out_path,
+                               nonzero, train_intervals, out_path,
                                prefix, args.pad)
             train_files.append(train_file)
             prefix = os.path.basename(cleanbw) + ".val"
             val_file = bw2h5(noisybw, cleanbw, args.layersbw, cleanpeakbw,
                              args.read_buffer,
-                             nolabel, nonzero, val_intervals, out_path,
+                             nonzero, val_intervals, out_path,
                              prefix, args.pad)
             val_files.append(val_file)
 
@@ -412,7 +414,7 @@ def main():
         _logger.debug("Validation data: " + "\n".join(args.val_files))
 
         # Get model parameters
-        with h5py.File(args.files_train[0], 'r') as f:
+        with h5py.File(args.train_files[0], 'r') as f:
             args.interval_size = f['input'].shape[1]
             args.batch_size = 1
 
@@ -461,17 +463,15 @@ def main():
         files = []
         for idx in range(len(args.noisybw)):
             out_path = os.path.join(args.exp_dir, "bw2h5")
-            nolabel = True
             nonzero = False
             cleanbw = None
             noisybw = args.noisybw[idx]
             if args.mode == "eval":
                 cleanbw = args.cleanbw[idx]
-                nolabel = False
             prefix = os.path.basename(noisybw) + "." + args.mode
             infer_file = bw2h5(noisybw, cleanbw, args.layersbw, None,
                                args.read_buffer,
-                               nolabel, nonzero, infer_intervals, out_path,
+                               nonzero, infer_intervals, out_path,
                                prefix, args.pad)
             files.append(infer_file)
 

@@ -57,13 +57,13 @@ atacworks denoise \
 	--out_home $out_dir --label logistic_inference \
 	--task classification --threshold 0.5 \
 	--batch_size 64 --pad 0 --distributed \
-	--result_fname infer \
+	--result_fname infer --gen_bigwig \
 	--weights_path $expected_results_dir/logistic_latest/model_best.pth.tar
 
 echo ""
 echo "Verifying generated h5 files."
 python $utils_dir/verify_diff.py --result_path $out_dir/logistic_inference_latest/bw2h5/HSC.5M.chr123.10mb.coverage.bw.denoise.h5 \
-    --expected_path $expected_results_dir/logistic_inference_latest/bw2h5/HSC.5M.chr123.10mb.coverage.bw.denoise.h5 \
+    --expected_path $expected_results_dir/logistic_inference_latest/bw2h5/HSC.5M.chr123.10mb.coverage.bw.wg.h5 \
     --format "h5"
 check_status $? "Inferred peak h5 files do not match!"
 echo ""

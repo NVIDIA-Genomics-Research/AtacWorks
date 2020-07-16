@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
 #
 # NVIDIA CORPORATION and its licensors retain all intellectual property
 # and proprietary rights in and to this software, related documentation
@@ -478,7 +478,7 @@ def get_intervals(sizesfile, intervalsize, out_dir, val=None,
         os.makedirs(out_dir)
     # Generate intervals
     if not(val is None or holdout is None):
-        # Generate training intervals - can overlap
+        # Generate training intervals
         _logger.info("Generating training intervals")
         train_sizes = sizes[sizes['chrom'] != val]
         train_sizes = train_sizes[train_sizes['chrom'] != holdout]
@@ -525,7 +525,8 @@ def get_intervals(sizesfile, intervalsize, out_dir, val=None,
         df_to_bed(holdout, holdout_file_path)
         return train_file_path, val_file_path, holdout_file_path
 
-    # If validation and holdout chromosome are not specified, we use whole genome.
+    # If validation and holdout chromosome are not specified,
+    # we use whole genome.
     else:
         # Generate intervals tiling across all chromosomes in the sizes file
         _logger.info("Generating intervals tiling across all chromosomes \

@@ -184,11 +184,11 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
         train_sampler = torch.utils.data.distributed.DistributedSampler(
             train_dataset)
     train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
-        # collate_fn=custom_collate_train,
-        num_workers=args.num_workers, pin_memory=True, sampler=train_sampler,
-        drop_last=False
-    )
+        train_dataset, batch_size=args.batch_size,
+        shuffle=(train_sampler is None),
+        num_workers=args.num_workers, pin_memory=True,
+        sampler=train_sampler,
+        drop_last=False)
 
     # TODO: need DatasetVal? Not for now
     val_dataset = DatasetTrain(files=args.val_files, layers=args.layers)
@@ -324,9 +324,11 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
     metrics_reg, metrics_cla, best_metric = get_metrics(
         args.task, args.threshold, args.best_metric_choice)
     evaluate(rank=rank, gpu=gpu, task=args.task,
-             model=model, val_loader=eval_loader, metrics_reg=metrics_reg,
+             model=model, val_loader=eval_loader,
+             metrics_reg=metrics_reg,
              metrics_cla=metrics_cla,
-             world_size=args.world_size, distributed=args.distributed,
+             world_size=args.world_size,
+             distributed=args.distributed,
              best_metric=best_metric, res_queue=res_queue,
              pad=args.pad, transform=args.transform,
              print_freq=args.print_freq)
