@@ -13,16 +13,15 @@ source $utils_dir/utils.sh
 echo ""
 echo "Run inference on test set with default peak calling setting..."
 echo ""
-
+-
 atacworks denoise \
-    --out_home $out_dir --label inference \
+    --out_home $out_dir --exp_name inference \
     --weights_path $expected_results_dir/model_latest/model_best.pth.tar \
     --num_workers 0 --gpu 0 \
     --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw  \
-    --wg --interval_size 24000 \
-    --sizes_file $data_dir/example.sizes \
+    --interval_size 24000 \
+    --genome $data_dir/example.sizes \
     --threshold 0.5 \
-    --result_fname infer \
     --config_mparams $config_dir/model_structure.yaml \
     --gen_bigwig --batch_size 4 \
     --width 50 --width_cla 50 --dil_cla 10 --pad 0
@@ -51,9 +50,9 @@ echo "Run inference in classification only mode..."
 echo ""
 atacworks denoise \
 	--noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw  \
-	--wg --interval_size 24000 \
+	--interval_size 24000 \
 	--model logistic --field 8401 \
-	--sizes_file $data_dir/example.sizes \
+	--genome $data_dir/example.sizes \
 	--out_home $out_dir --label logistic_inference \
 	--task classification --threshold 0.5 \
 	--batch_size 64 --pad 0 --distributed \

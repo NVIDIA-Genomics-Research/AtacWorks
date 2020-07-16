@@ -148,7 +148,7 @@ atacworks denoise \
 
 #peaksummary
 # Run only if an inference threshold is provided
-if grep -q "infer_threshold: [0-9]" $config_file
+if grep -q "threshold: [0-9]" $config_file
 then
     inferred_dir=$OUT_DIR/$(grep "label:" $config_file| cut -f 2 -d " ")_latest
     track_file=$(ls $inferred_dir | grep "track.bw")
