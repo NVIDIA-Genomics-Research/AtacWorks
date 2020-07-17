@@ -13,14 +13,13 @@ import time
 
 from atacworks.dl4atac.utils import myprint, progbar, equal_width_formatter
 
-import torch
 import torch.distributed as dist
 
 import numpy as np
 
 
 def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
-          epoch, epochs, clip_grad, print_freq, distributed, world_size,
+          epoch, epochs, print_freq, distributed, world_size,
           ):
     """Train with given data.
 
@@ -35,7 +34,6 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
         pad : Padding
         epoch : Current epoch
         epochs : Total epochs to train for
-        clip_grad : Gradient clipping
         print_freq : How frequently to print training information.
         distributed : Distributed training
         world_size : World size
@@ -111,8 +109,6 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
         optimizer.zero_grad()
         t = time.time()
         total_loss_value.backward()
-        if clip_grad > 0:
-            torch.nn.utils.clip_grad_norm_(model.parameters(), clip_grad)
         optimizer.step()
         backward_time += time.time() - t
 

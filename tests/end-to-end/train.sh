@@ -19,7 +19,7 @@ atacworks train\
     --distributed \
     --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
     --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
-    --sizes_file $data_dir/example.sizes \
+    --genome $data_dir/example.sizes \
     --interval_size 24000 --val_chrom chr2 --holdout_chrom chr3 \
     --cleanpeakfile $data_dir/HSC.80M.chr123.10mb.peaks.bed \
     --checkpoint_fname checkpoint.pth.tar \
@@ -69,7 +69,7 @@ echo ""
 atacworks train \
     --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
     --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
-    --sizes_file $data_dir/example.sizes --gpu 0 \
+    --genome $data_dir/example.sizes --gpu 0 \
     --interval_size 24000 --val_chrom chr2 --holdout_chrom chr3 \
     --cleanpeakfile $data_dir/HSC.80M.chr123.10mb.peaks.bed \
     --model logistic --field 8401 \

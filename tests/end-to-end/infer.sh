@@ -13,11 +13,10 @@ source $utils_dir/utils.sh
 echo ""
 echo "Run inference on test set with default peak calling setting..."
 echo ""
--
 atacworks denoise \
     --out_home $out_dir --exp_name inference \
     --weights_path $expected_results_dir/model_latest/model_best.pth.tar \
-    --num_workers 0 --gpu 0 \
+    --num_workers 0 --gpu_idx 0 \
     --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw  \
     --interval_size 24000 \
     --genome $data_dir/example.sizes \
@@ -53,7 +52,7 @@ atacworks denoise \
 	--interval_size 24000 \
 	--model logistic --field 8401 \
 	--genome $data_dir/example.sizes \
-	--out_home $out_dir --label logistic_inference \
+	--out_home $out_dir --exp_name logistic_inference \
 	--task classification --threshold 0.5 \
 	--batch_size 64 --pad 0 --distributed \
 	--result_fname infer --gen_bigwig \

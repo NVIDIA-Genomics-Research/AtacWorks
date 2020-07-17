@@ -11,6 +11,7 @@
 ## Input files
 noisybw: "None"
 cleanbw: "None"
+cleanpeakfile: "None"
 layersbw: "None"
 layers: "None"
 read_buffer: 1000
@@ -20,7 +21,7 @@ pad: 5000
 interval_size: 50000
 val_chrom: "None"
 holdout_chrom: "None"
-sizes_file: "hg19"
+genome: "hg19"
 nonpeak: "None"
 
 # Experiment args

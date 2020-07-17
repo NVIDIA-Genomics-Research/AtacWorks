@@ -84,14 +84,14 @@ def add_common_options(parser):
 
     """
     # Pre-processing
-    parser.add('--sizes_file', required=True, type=str,
+    parser.add('--genome', required=True, type=str,
                help='chromosome sizes file for the genome. Sizes \
                      files for human genome 19 (hg19) and human \
                      genome 38 (hg38) are already available. To use \
-                     hg19, specify --sizes_file hg19, to use \
-                     hg38, specify --sizes_file hg38. Alternatively, \
+                     hg19, specify --genome hg19, to use \
+                     hg38, specify --genome hg38. Alternatively, \
                      to pass in a path to a different sizes file, \
-                     specify --sizes_file <path-to-file>.')
+                     specify --genome <path-to-file>.')
     parser.add('--interval_size', type=int, help='Interval size \
                 defines the input feature size for the model. It should \
                 be atleast as big as the receptive field of the network.')
@@ -141,7 +141,7 @@ def add_common_options(parser):
                help="checkpoint path to load the model from for\
                    inference or resume training")
     # dist-env args
-    parser.add('--gpu_idx', required=True, type=int,
+    parser.add('--gpu_idx', required=False, type=int,
                help='GPU ID to use. ID can be known from nvidia-smi; \
                        preempted by --distributed which uses all \
                        available gpus ')
@@ -235,13 +235,6 @@ def add_inference_options(parser):
                help='Output denosied tracks from atacworks. If --task is classification, \
                        model only outputs denoised peaks and \
                        this option becomes irrelevant.')
-    parser.add('--intervals_file', required=True, type=str,
-               help='bed file containing the genomic\
-                               intervals for inference')
-    parser.add('--genome', required=True, type=str,
-               help='chromosome sizes file for the genome. \
-                       Chromosome sizes files for hg19 and hg38 are \
-                       given in the data/reference folder.')
     parser.add('--threshold', required=True,
                type=type_or_none_fn(float),
                help='threshold above which to call peaks from the \
@@ -287,9 +280,6 @@ def add_eval_options(parser):
                help='Path to narrowPeak or BED file containing peak calls '
                     'from MACS2 on the clean (high-coverage/high-quality) \
                      ATAC-seq signal.')
-    parser.add('--threshold', required=True, type=float,
-               help="probability threshold above which to call peaks. \
-               Used for classification metrics")
     parser.add('--best_metric_choice', required=True,
                type=str,
                choices=['BCE', 'MSE', 'Recall',
@@ -353,5 +343,10 @@ def parse_args(root_dir):
         check_dependence(args.cleanbw, args.cleanpeakfile, parser,
                          "cleanbw and cleanpeakfile are required for \
                           eval")
+
+    if not(args.distributed) and (args.gpu_idx is None):
+        parser.error("Either specify which GPU to run atacworks on \
+                through --gpu_idx, or pass the flag --distributed \
+                to run on ALL available GPUs.")
 
     return args

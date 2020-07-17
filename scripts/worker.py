@@ -216,7 +216,7 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
         train(rank=rank, gpu=gpu, task=args.task, model=model,
               train_loader=train_loader,
               loss_func=loss_func, optimizer=optimizer, epoch=epoch,
-              epochs=args.epochs, clip_grad=0,
+              epochs=args.epochs,
               print_freq=print_freq, pad=args.pad,
               distributed=args.distributed, world_size=args.world_size,
               )

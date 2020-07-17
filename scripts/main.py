@@ -328,14 +328,10 @@ def main():
                                     "hg19.chrom.sizes"),
                "hg38": os.path.join(root_dir, "reference",
                                     "hg38.chrom.sizes")}
-    if args.sizes_file in genomes:
-        args.sizes_file = genomes[args.sizes_file]
+    if args.genome in genomes:
+        args.genome = genomes[args.genome]
 
     # Set log level
-    if args.debug:
-        _handler.setLevel(logging.DEBUG)
-        _logger.setLevel(logging.DEBUG)
-
     _logger.debug(args)
 
     # check gpu
@@ -380,11 +376,11 @@ def main():
             # Read in the narrowPeak or BED files for clean data peak
             # labels, convert them to bigwig
             out_path = os.path.join(args.exp_dir, "bigwig_peakfiles")
-            cleanpeakbw = peak2bw(cleanpeakfile, args.sizes_file, out_path)
+            cleanpeakbw = peak2bw(cleanpeakfile, args.genome, out_path)
             # Generate training, validation, holdout intervals files
             out_path = os.path.join(args.exp_dir, "intervals")
             train_intervals, val_intervals, holdout_intervals = \
-                get_intervals(args.sizes_file, args.interval_size,
+                get_intervals(args.genome, args.interval_size,
                               out_path,
                               val=args.val_chrom,
                               holdout=args.holdout_chrom,
@@ -425,7 +421,9 @@ def main():
         # WAR: gloo distributed doesn't work if world size is 1.
         # This is fixed in newer torch version -
         # https://github.com/facebookincubator/gloo/issues/209
-        args.distributed = False if ngpus_per_node == 1 else args.distributed
+        if ngpus_per_node == 1:
+            args.distributed = False
+            args.gpu_idx = 0
 
         config_dir = os.path.join(args.exp_dir, "configs")
         if not os.path.exists(config_dir):
@@ -450,12 +448,12 @@ def main():
             # Read in the narrowPeak or BED files for clean data peak
             # labels, convert them to bigwig
             out_path = os.path.join(args.exp_dir, "bigwig_peakfiles")
-            cleanpeakbw = peak2bw(args.cleanpeakfile, args.sizes_file,
+            cleanpeakbw = peak2bw(args.cleanpeakfile, args.genome,
                                   out_path)
 
         # Generate training, validation, holdout intervals files
         out_path = os.path.join(args.exp_dir, "intervals")
-        infer_intervals = get_intervals(args.sizes_file, args.interval_size,
+        infer_intervals = get_intervals(args.genome, args.interval_size,
                                         out_path,
                                         peakfile=cleanpeakbw)
 
@@ -537,8 +535,9 @@ def main():
             # WAR: gloo distributed doesn't work if world size is 1.
             # This is fixed in newer torch version -
             # https://github.com/facebookincubator/gloo/issues/209
-            args.distributed = False if ngpus_per_node == 1 else \
-                args.distributed
+            if ngpus_per_node == 1:
+                args.distributed = False
+                args.gpu_idx = 0
 
             worker = infer_worker if args.mode == "denoise" else eval_worker
             if args.distributed:
