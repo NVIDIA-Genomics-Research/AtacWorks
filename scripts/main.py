@@ -455,7 +455,8 @@ def main():
         out_path = os.path.join(args.exp_dir, "intervals")
         infer_intervals = get_intervals(args.genome, args.interval_size,
                                         out_path,
-                                        peakfile=cleanpeakbw)
+                                        peakfile=cleanpeakbw,
+                                        regions=args.regions)
 
         # Convert the input bigiwg files and the clean peak files into h5
         # for training.

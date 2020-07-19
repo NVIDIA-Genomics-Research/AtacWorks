@@ -418,6 +418,35 @@ class Timers:
         myprint(string)
 
 
+def _tile_region_intervals(chrom, intervalsize, chrom_range):
+    """Produce intervals of given chromosomes.
+
+    Tile intervals for given region for a chromosome,
+    shifting by given interval size.
+
+    Args:
+        chrom: Chromosome name
+        intervalsize: length of intervals
+        chrom_range: A list of two elements, start and end. Intervals
+            are generated from [start, end] of size intervalsize.
+
+    Returns:
+        Pandas DataFrame containing chrom, start, and end of tiling intervals.
+
+    """
+    # Create empty DataFrame
+    intervals = pd.DataFrame()
+
+    starts = range(chrom_range[0],
+                   chrom_range[1] - (intervalsize + 1),
+                   intervalsize)
+    ends = [x + intervalsize for x in starts]
+    intervals = intervals.append(pd.DataFrame(
+        {'chrom': chrom, 'start': starts, 'end': ends}))
+
+    return intervals.loc[:, ('chrom', 'start', 'end')]
+
+
 def _get_tiling_intervals(sizes, intervalsize):
     """Produce intervals of given chromosomes.
 
@@ -452,7 +481,8 @@ def _get_tiling_intervals(sizes, intervalsize):
 
 
 def get_intervals(sizesfile, intervalsize, out_dir, val=None,
-                  holdout=None, nonpeak=None, peakfile=None):
+                  holdout=None, nonpeak=None, peakfile=None,
+                  regions=None):
     """Read chromosome sizes and generate intervals.
 
      Args:
@@ -524,6 +554,43 @@ def get_intervals(sizesfile, intervalsize, out_dir, val=None,
         holdout_file_path = os.path.join(out_dir, out_file_name)
         df_to_bed(holdout, holdout_file_path)
         return train_file_path, val_file_path, holdout_file_path
+
+    elif regions is not None:
+        # If given regions is a file, then just return the file path
+        if regions.endswith(".bed"):
+            return regions
+        else:
+            final_intervals = pd.DataFrame()
+            regions = regions.strip("[]").split(",")
+            for region in regions:
+                # If regions are specified with intervals like chr1:0-50
+                # Then split the region into chrom and it's range.
+                if region.find(":") != -1:
+                    chrom, chrom_range = region.split(":")
+                    chrom_range = chrom_range.split("-")
+                    chrom_range = [int(value) for value in chrom_range]
+                    intervals = _tile_region_intervals(
+                        chrom,
+                        intervalsize,
+                        chrom_range)
+                else:
+                    chrom = region
+                    chrom_sizes = sizes[sizes['chrom'] == chrom]
+                    chrlength = chrom_sizes.iloc[0, 1]
+                    intervals = _tile_region_intervals(
+                        chrom,
+                        intervalsize,
+                        [0, chrlength])
+
+                final_intervals = final_intervals.append(
+                    intervals,
+                    ignore_index=True)
+
+            # Write the intervals to file
+            out_file_name = str(intervalsize) + '.regions_intervals.bed'
+            region_file_path = os.path.join(out_dir, out_file_name)
+            df_to_bed(final_intervals, region_file_path)
+            return region_file_path
 
     # If validation and holdout chromosome are not specified,
     # we use whole genome.

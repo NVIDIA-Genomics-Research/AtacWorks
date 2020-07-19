@@ -226,6 +226,22 @@ def add_inference_options(parser):
     add_common_options(parser)
     parser.add('--config', required=False,
                is_config_file=True, help='config file path')
+    parser.add('--regions', required=True, type=type_or_none_fn(str),
+               help='atacworks denoising is done on whole genome by \
+                     default. You can optionally specify a list of \
+                     chromosomes separated by comma and no spaces \
+                     like [chr1,chr2]. You can also provide list of \
+                     region indices with each chromosome like \
+                     [chr1:0-1000,chr2,chr3:0-500]. Please note \
+                     NO SPACES. You can also provide a BED file that \
+                     contains genomic intervals of length equal to \
+                     --interval_size. The BED file should have three \
+                     columns (chromosome, start position, end position) \
+                     and no header. Specified chromosomes MUST be \
+                     present in the --genome file and the number of \
+                     base pairs specified by the region i.e, the diff \
+                     where diff = (end position - start position) \
+                     MUST be a multiple of --interval_size.')
     parser.add('--peaks', action='store_true',
                help='Output denoised peaks from atacworks. \
                      If --task is regression, \

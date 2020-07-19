@@ -16,7 +16,7 @@ layersbw: "None"
 layers: "None"
 read_buffer: 1000
 pad: 5000
-
+regions: "None"
 # Data Pre-processing parameters
 interval_size: 50000
 genome: "hg19"
