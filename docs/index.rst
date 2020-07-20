@@ -14,6 +14,7 @@ Welcome to AtacWorks's documentation!
    tutorials/tutorial1
    tutorials/tutorial2
    Dockerfile
+   advanced_usage
 
 
 
