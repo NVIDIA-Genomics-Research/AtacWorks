@@ -178,17 +178,17 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
     dst_path = os.path.join(config_dir, "model_structure.yaml")
     save_config(dst_path, model_params)
     # TODO: LR schedule
-    train_dataset = DatasetTrain(files=args.files_train, layers=args.layers)
+    train_dataset = DatasetTrain(files=args.train_files, layers=args.layers)
     train_sampler = None
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(
             train_dataset)
     train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=args.bs, shuffle=(train_sampler is None),
-        # collate_fn=custom_collate_train,
-        num_workers=args.num_workers, pin_memory=True, sampler=train_sampler,
-        drop_last=False
-    )
+        train_dataset, batch_size=args.batch_size,
+        shuffle=(train_sampler is None),
+        num_workers=args.num_workers, pin_memory=True,
+        sampler=train_sampler,
+        drop_last=False)
 
     # TODO: need DatasetVal? Not for now
     val_dataset = DatasetTrain(files=args.val_files, layers=args.layers)
@@ -197,7 +197,7 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
         val_sampler = torch.utils.data.distributed.DistributedSampler(
             val_dataset)
     val_loader = torch.utils.data.DataLoader(
-        val_dataset, batch_size=args.bs, shuffle=False,
+        val_dataset, batch_size=args.batch_size, shuffle=False,
         # collate_fn=custom_collate_train,
         num_workers=args.num_workers, pin_memory=True, sampler=val_sampler,
         drop_last=False
@@ -279,7 +279,7 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
             infer_dataset, shuffle=False)
 
     infer_loader = torch.utils.data.DataLoader(
-        infer_dataset, batch_size=args.bs, shuffle=False,
+        infer_dataset, batch_size=args.batch_size, shuffle=False,
         num_workers=args.num_workers, pin_memory=True, sampler=infer_sampler,
         drop_last=False
     )
@@ -316,7 +316,7 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
             eval_dataset)
 
     eval_loader = torch.utils.data.DataLoader(
-        eval_dataset, batch_size=args.bs, shuffle=False,
+        eval_dataset, batch_size=args.batch_size, shuffle=False,
         num_workers=args.num_workers, pin_memory=True, sampler=eval_sampler,
         drop_last=False
     )
@@ -324,9 +324,11 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
     metrics_reg, metrics_cla, best_metric = get_metrics(
         args.task, args.threshold, args.best_metric_choice)
     evaluate(rank=rank, gpu=gpu, task=args.task,
-             model=model, val_loader=eval_loader, metrics_reg=metrics_reg,
+             model=model, val_loader=eval_loader,
+             metrics_reg=metrics_reg,
              metrics_cla=metrics_cla,
-             world_size=args.world_size, distributed=args.distributed,
+             world_size=args.world_size,
+             distributed=args.distributed,
              best_metric=best_metric, res_queue=res_queue,
              pad=args.pad, transform=args.transform,
              print_freq=args.print_freq)
