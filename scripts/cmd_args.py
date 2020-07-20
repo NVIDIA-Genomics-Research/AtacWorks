@@ -266,6 +266,15 @@ def add_inference_options(parser):
                help='prefix for the inference result files.')
     parser.add('--deletebg', action='store_true',
                help='delete output bedGraph file')
+    parser.add('--out_resolution', required=False,
+               type=type_or_none_fn(int),
+               help='resolution of output files. default 1bp. \
+                     Atacworks always denoises at 1 base pair \
+                     resolution. If out_resolution is 5, then \
+                     the coverage values for every 5 base pairs is \
+                     averaged. Keep in mind that the interval_size \
+                     provided should be a multiple of the \
+                     out_resolution value provided.')
 
 
 def add_eval_options(parser):

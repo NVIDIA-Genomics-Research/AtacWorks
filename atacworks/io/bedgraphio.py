@@ -12,6 +12,7 @@
 
 # Import requirements
 import pandas as pd
+import numpy as np
 
 
 def expand_interval(interval, score=True):
@@ -71,12 +72,52 @@ def contract_interval(expanded_df, positive=True):
         return intervals_df
 
 
-def intervals_to_bg(intervals_df):
+def combine_over_bins(df, resolution):
+    """Combine rows of bedGraph format dataFrame into equal-sized bins.
+
+    Args:
+        df: Expanded pandas dataframe with columns chrom, start, end, score
+        resolution: output dataframe resolution
+        aggregate: function to aggregate rows
+
+    Returns:
+        binned_df: Binned dataFrame
+
+    """
+    binned_df = pd.DataFrame(columns=('chrom', 'start', 'end', 'score'))
+    # Check that total interval size is a multiple of resolution
+    assert(len(df) % resolution == 0)
+    # Split expanded interval
+    num_splits = (df.end.iloc[-1] - df.start.iloc[0]) / resolution
+    split_df = np.split(df, num_splits)
+    # Group rows and aggregate scores
+    binned_df = pd.concat([combine_bin(bin) for bin in split_df], axis=1).T
+    return binned_df
+
+
+def combine_bin(df):
+    """Combine rows of bedGraph format dataFrame.
+
+    Args:
+        df: Expanded pandas dataframe for a single bin, with columns
+            chrom, start, end, score
+
+    Returns:
+        bin_series: Pandas series describing the bin
+
+    """
+    bin_series = pd.Series({'chrom': df.chrom.iloc[0], 'start': min(df.start),
+                            'end': max(df.end), 'score': np.mean(df.score)})
+    return bin_series
+
+
+def intervals_to_bg(intervals_df, resolution):
     """Format intervals + scores to bedGraph format.
 
     Args:
         intervals_df: Pandas dataframe containing columns for chrom, start,
         end and scores.
+        resolution: output resolution in bp
 
     Returns:
         bg: pandas dataframe containing expanded+contracted intervals.
@@ -84,6 +125,9 @@ def intervals_to_bg(intervals_df):
     """
     # Expand each interval to single-base resolution and add scores
     bg = intervals_df.apply(expand_interval, axis=1)
+    if resolution is not None:
+        # Combine scores over bins
+        bg = bg.apply(combine_over_bins, args=(resolution,))
     # Contract regions where score is the same
     bg = bg.apply(contract_interval)
     # Combine into single pandas df
