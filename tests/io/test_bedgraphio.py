@@ -32,7 +32,7 @@ def test_expand_interval():
                         'end': [2, 3, 4, 5],
                         'score': [0.2, 0.5, 0.5, 0.2]}
     expected_df = pd.DataFrame(expected_df_dict)
-    assert expected_df.equals(output_df)
+    pd.testing.assert_frame_equal(expected_df, output_df)
 
 
 @pytest.mark.cpu
@@ -56,7 +56,7 @@ def test_contract_interval():
                         'end': [3, 4, 7, 8],
                         'score': [0.2, 0.5, 0.5, 0.5]}
     expected_df = pd.DataFrame(expected_df_dict)
-    assert expected_df.equals(output_df)
+    pd.testing.assert_frame_equal(expected_df, output_df)
 
 
 @pytest.mark.cpu
@@ -81,7 +81,7 @@ def test_intervals_to_bg_basepair():
                         'end': [3, 4, 6, 7, 4],
                         'score': [0.5, 0.1, 0.5, 0.1, 0.1]}
     expected_df = pd.DataFrame(expected_df_dict)
-    pd.testing.assert_frame_equal(expected_df, output_df, check_dtype=False)
+    pd.testing.assert_frame_equal(expected_df, output_df)
 
 
 @pytest.mark.cpu
@@ -108,6 +108,9 @@ def test_intervals_to_bg_with_resolution():
                         'end': [7, 10, 13, 16, 5],
                         'score': [1.1 / 3, 1.1 / 3, 0.3, 0.3, 0.2 / 3]}
     expected_df = pd.DataFrame(expected_df_dict)
+    # dtype check is False, because output_df returns all dtypes as "objects"
+    # Pandas 1.0.0 supports convert_dtypes() which infers the closest possible
+    # dtype. Since atacworks calls for 0.25.0, that feature doesn't exist.
     pd.testing.assert_frame_equal(expected_df, output_df, check_dtype=False)
 
 
@@ -129,12 +132,13 @@ def test_df_to_bedgraph(tmpdir):
     bedgraphio.df_to_bedGraph(intervals_df, bedgraphfile, sizes_df)
     output_df = pd.read_csv(bedgraphfile, sep="\t",
                             names=['chrom', 'start', 'end', 'score'],
-                            dtype=str)
+                            dtype={'chrom': str, 'start': int,
+                                   'end': int, 'score': str})
     expected_df_dict = {'chrom': ['chr1', 'chr1', 'chr2'],
                         'start': [1, 13, 1],
                         'end': [4, 18, 5],
                         'score': [str([0.2] * 3),
                                   str([0.3] * 5),
                                   str([0.5] * 4)]}
-    expected_df = pd.DataFrame(expected_df_dict, dtype=str)
-    pd.testing.assert_frame_equal(expected_df, output_df, check_dtype=False)
+    expected_df = pd.DataFrame(expected_df_dict)
+    pd.testing.assert_frame_equal(expected_df, output_df)
