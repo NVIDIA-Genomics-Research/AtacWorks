@@ -64,6 +64,23 @@ check_status $? "interval files for holdout data do not match!"
 
 
 echo ""
+echo "Train with h5 files as input"
+echo ""
+atacworks train\
+    --out_home $out_dir \
+    --exp_name h5_model \
+    --distributed \
+    --train_h5_files $expected_results_dir/model_latest/bw2h5/HSC.80M.chr123.10mb.coverage.bw.train.h5 \
+    --val_h5_files  $expected_results_dir/model_latest/bw2h5/HSC.80M.chr123.10mb.coverage.bw.val.h5 \
+    --genome $data_dir/example.sizes \
+    --interval_size 24000 \
+    --checkpoint_fname checkpoint.pth.tar \
+    --epochs 1 --batch_size 4 \
+    --width 50 --width_cla 50 --dil_cla 10 --pad 0
+# Training is not deterministic, so we are not comparing results.
+check_status $? "Training run not succesful!"
+
+echo ""
 echo "Test classification mode of training"
 echo ""
 atacworks train \

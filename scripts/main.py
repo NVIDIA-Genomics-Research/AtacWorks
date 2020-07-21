@@ -195,7 +195,7 @@ def writer(infer, intervals_file, exp_dir,
         elif tracks and peaks:
             channels = [0, 1]
         # If both tracks and peaks are false, turn them to default true.
-        elif not(tracks or peaks):
+        elif not (tracks or peaks):
             channels = [0, 1]
     elif task == "classification":
         channels = [1]
@@ -355,57 +355,68 @@ def main():
     ##########################################################################
     if args.mode == "train":
 
-        args.cleanpeakfile = gather_files_from_cmdline(
-            args.cleanpeakfile,
-            extension=(".bed", ".narrowPeak"))
-        args.noisybw = gather_files_from_cmdline(args.noisybw,
-                                                 extension=".bw")
-        args.cleanbw = gather_files_from_cmdline(args.cleanbw,
-                                                 extension=".bw")
+        # If h5 files are provided, load them.
+        if args.train_h5_files is not None:
+            args.train_files = gather_files_from_cmdline(
+                args.train_h5_files,
+                extension=".h5")
+            args.val_files = gather_files_from_cmdline(
+                args.val_h5_files,
+                extension=".h5")
 
-        # We have to make sure there is a 1-1 correspondence between files.
-        assert len(args.cleanpeakfile) == len(args.noisybw)
-        assert len(args.cleanbw) == len(args.noisybw)
+        # If h5 files not given, generate them.
+        else:
+            args.cleanpeakfile = gather_files_from_cmdline(
+                args.cleanpeakfile,
+                extension=(".bed", ".narrowPeak"))
+            args.noisybw = gather_files_from_cmdline(args.noisybw,
+                                                     extension=".bw")
+            args.cleanbw = gather_files_from_cmdline(args.cleanbw,
+                                                     extension=".bw")
 
-        train_files = []
-        val_files = []
-        for idx in range(len(args.cleanbw)):
-            cleanbw = args.cleanbw[idx]
-            noisybw = args.noisybw[idx]
-            cleanpeakfile = args.cleanpeakfile[idx]
-            # Read in the narrowPeak or BED files for clean data peak
-            # labels, convert them to bigwig
-            out_path = os.path.join(args.exp_dir, "bigwig_peakfiles")
-            cleanpeakbw = peak2bw(cleanpeakfile, args.genome, out_path)
-            # Generate training, validation, holdout intervals files
-            out_path = os.path.join(args.exp_dir, "intervals")
-            train_intervals, val_intervals, holdout_intervals = \
-                get_intervals(args.genome, args.interval_size,
-                              out_path,
-                              val=args.val_chrom,
-                              holdout=args.holdout_chrom,
-                              nonpeak=args.nonpeak,
-                              peakfile=cleanpeakbw)
+            # We have to make sure there is a 1-1 correspondence between files.
+            assert len(args.cleanpeakfile) == len(args.noisybw)
+            assert len(args.cleanbw) == len(args.noisybw)
 
-            # Convert the input bigwig files and the clean peak files into
-            # h5 for training.
-            out_path = os.path.join(args.exp_dir, "bw2h5")
-            nonzero = True
-            prefix = os.path.basename(cleanbw) + ".train"
-            train_file = bw2h5(noisybw, cleanbw, args.layersbw,
-                               cleanpeakbw, args.read_buffer,
-                               nonzero, train_intervals, out_path,
-                               prefix, args.pad)
-            train_files.append(train_file)
-            prefix = os.path.basename(cleanbw) + ".val"
-            val_file = bw2h5(noisybw, cleanbw, args.layersbw, cleanpeakbw,
-                             args.read_buffer,
-                             nonzero, val_intervals, out_path,
-                             prefix, args.pad)
-            val_files.append(val_file)
+            train_files = []
+            val_files = []
+            for idx in range(len(args.cleanbw)):
+                cleanbw = args.cleanbw[idx]
+                noisybw = args.noisybw[idx]
+                cleanpeakfile = args.cleanpeakfile[idx]
+                # Read in the narrowPeak or BED files for clean data peak
+                # labels, convert them to bigwig
+                out_path = os.path.join(args.exp_dir, "bigwig_peakfiles")
+                cleanpeakbw = peak2bw(cleanpeakfile, args.genome, out_path)
+                # Generate training, validation, holdout intervals files
+                out_path = os.path.join(args.exp_dir, "intervals")
+                train_intervals, val_intervals, holdout_intervals = \
+                    get_intervals(args.genome, args.interval_size,
+                                  out_path,
+                                  val=args.val_chrom,
+                                  holdout=args.holdout_chrom,
+                                  nonpeak=args.nonpeak,
+                                  peakfile=cleanpeakbw)
 
-        args.train_files = train_files
-        args.val_files = val_files
+                # Convert the input bigwig files and the clean peak files into
+                # h5 for training.
+                out_path = os.path.join(args.exp_dir, "bw2h5")
+                nonzero = True
+                prefix = os.path.basename(cleanbw) + ".train"
+                train_file = bw2h5(noisybw, cleanbw, args.layersbw,
+                                   cleanpeakbw, args.read_buffer,
+                                   nonzero, train_intervals, out_path,
+                                   prefix, args.pad)
+                train_files.append(train_file)
+                prefix = os.path.basename(cleanbw) + ".val"
+                val_file = bw2h5(noisybw, cleanbw, args.layersbw, cleanpeakbw,
+                                 args.read_buffer,
+                                 nonzero, val_intervals, out_path,
+                                 prefix, args.pad)
+                val_files.append(val_file)
+
+            args.train_files = train_files
+            args.val_files = val_files
         _logger.debug("Training data:   " + "\n".join(args.train_files))
         _logger.debug("Validation data: " + "\n".join(args.val_files))
 
@@ -443,39 +454,46 @@ def main():
     ##########################################################################
     if args.mode == "denoise" or args.mode == "eval":
 
-        cleanpeakbw = None
-        if args.mode == "eval":
-            # Read in the narrowPeak or BED files for clean data peak
-            # labels, convert them to bigwig
-            out_path = os.path.join(args.exp_dir, "bigwig_peakfiles")
-            cleanpeakbw = peak2bw(args.cleanpeakfile, args.genome,
-                                  out_path)
-
-        # Generate training, validation, holdout intervals files
-        out_path = os.path.join(args.exp_dir, "intervals")
-        infer_intervals = get_intervals(args.genome, args.interval_size,
-                                        out_path,
-                                        peakfile=cleanpeakbw,
-                                        regions=args.regions)
-
-        # Convert the input bigiwg files and the clean peak files into h5
-        # for training.
-        args.noisybw = gather_files_from_cmdline(args.noisybw, extension=".bw")
-
         files = []
-        for idx in range(len(args.noisybw)):
-            out_path = os.path.join(args.exp_dir, "bw2h5")
-            nonzero = False
-            cleanbw = None
-            noisybw = args.noisybw[idx]
+        if args.denoise_h5_files is not None:
+            files = gather_files_from_cmdline(args.denoise_h5_files,
+                                              extension=".h5")
+            infer_intervals = args.intervals_file
+        else:
+            cleanpeakbw = None
             if args.mode == "eval":
-                cleanbw = args.cleanbw[idx]
-            prefix = os.path.basename(noisybw) + "." + args.mode
-            infer_file = bw2h5(noisybw, cleanbw, args.layersbw, None,
-                               args.read_buffer,
-                               nonzero, infer_intervals, out_path,
-                               prefix, args.pad)
-            files.append(infer_file)
+                # Read in the narrowPeak or BED files for clean data peak
+                # labels, convert them to bigwig
+                out_path = os.path.join(args.exp_dir, "bigwig_peakfiles")
+                cleanpeakbw = peak2bw(args.cleanpeakfile, args.genome,
+                                      out_path)
+
+            # Generate training, validation, holdout intervals files
+            out_path = os.path.join(args.exp_dir, "intervals")
+            infer_intervals = get_intervals(args.genome,
+                                            args.interval_size,
+                                            out_path,
+                                            peakfile=cleanpeakbw,
+                                            regions=args.regions)
+
+            # Convert the input bigiwg files and the clean peak files into h5
+            # for training.
+            args.noisybw = gather_files_from_cmdline(args.noisybw,
+                                                     extension=".bw")
+
+            for idx in range(len(args.noisybw)):
+                out_path = os.path.join(args.exp_dir, "bw2h5")
+                nonzero = False
+                cleanbw = None
+                noisybw = args.noisybw[idx]
+                if args.mode == "eval":
+                    cleanbw = args.cleanbw[idx]
+                prefix = os.path.basename(noisybw) + "." + args.mode
+                infer_file = bw2h5(noisybw, cleanbw, args.layersbw, None,
+                                   args.read_buffer,
+                                   nonzero, infer_intervals, out_path,
+                                   prefix, args.pad)
+                files.append(infer_file)
 
         for x in range(len(files)):
             infile = files[x]
