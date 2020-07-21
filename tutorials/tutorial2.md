@@ -18,7 +18,7 @@ If you want to train your own AtacWorks model instead of using the model reporte
 
 All models described in [Lal & Chiang, et al. (2019)](https://www.biorxiv.org/content/10.1101/829481v2) are available for download and use at `https://atacworks-paper.s3.us-east-2.amazonaws.com`. 
 
-See [pre-trained denoising models](pretrained_models.md) for a list of the available pre-trained denoising models.
+See [pre-trained denoising models](pretrained_models) for a list of the available pre-trained denoising models.
 
 Before using one of these models, please consider the following:
 
@@ -38,29 +38,6 @@ To denoise and call peaks from low-coverage, low cell count, or low quality ATAC
 
 3. Chromosome sizes file - a tab-separated text file containing the names and sizes of chromosomes in the genome.
 
-## One step denoising + peak calling command
-```
-bash Atacworks/scripts/run_inference.sh -bw <path to bigWig file with test ATAC-seq data> -m <path to model file> -f <path to chromosome sizes file> -o <output directory> -c <path to folder containing config files (optional)>
-```
-This command produces a folder containing several files:
-1. <prefix>_infer_results.track.bw: A bigWig file containing the denoised ATAC-seq coverage track. 
-2. infer_results_peaks.bed: A BED file containing the peaks called from the denoised ATAC-seq track. This file has 8 columns, in order: 
-- chromosome
-- peak start position
-- peak end position
-- peak length (bp)
-- Mean coverage over peak
-- Maximum coverage in peak
-- Position of summit (relative to start)
-- Position of summit (absolute). 
-3. <prefix>_infer_results.peaks.bw: The same peak calls, in the form of a bigWig track for genome browser visualization.
-
-`run_inference.sh` optionally takes a folder containing config files - specifically, this folder needs to contain two files, `infer_config.yaml` which specifies parameters for inference, and `model_structure.yaml` which specifies the structure of the deep learning model. If no folder containing config files is supplied, the folder `AtacWorks/configs` containing default parameter values will be used.
-
-In order to vary output file names or formats, or inference parameters, you can change the arguments supplied in `infer_config.yaml`. Type `python AtacWorks/scripts/main.py infer --help` to understand which arguments to change.
-
-In particular, the threshold for peak calling is controlled by the `threshold` parameter in `infer_config.yaml`. By default, this is set to 0.5. If `infer_threshold` is set to "None" in the config file, `run_inference.sh` will instead produce a bigWig file in which each base is labeled with the probability (between 0 and 1) that it is part of a peak. 
-
 ## Tutorial Notebook
 
-The above one step command is a good place to get started. For advanced usages, this command is not suitable. For easy demonstration of the inference workflow, we've set up a notebook that breaks the above command down into it's component parts and familiarizes users with each step and all of the options available. Click here to access the [notebook](https://github.com/clara-parabricks/AtacWorks/blob/dev-v0.3.0/tutorials/tutorial2.ipynb).
+For easy demonstration of the inference workflow, we've set up a notebook that breaks the above command down into it's component parts and familiarizes users with each step and all of the options available. Click here to access the [notebook](https://github.com/clara-parabricks/AtacWorks/blob/dev-v0.3.0/tutorials/tutorial2.ipynb).

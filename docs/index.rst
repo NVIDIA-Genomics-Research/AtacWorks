@@ -10,7 +10,7 @@ Welcome to AtacWorks's documentation!
    :maxdepth: 2
 
    readme
-   pretrained_models
+   tutorials/pretrained_models
    tutorials/tutorial1
    tutorials/tutorial2
    Dockerfile

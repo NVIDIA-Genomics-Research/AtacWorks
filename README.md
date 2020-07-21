@@ -37,18 +37,22 @@ git clone --recursive https://github.com/clara-genomics/AtacWorks.git
 
 #### Install dependencies
 
-* Download `bedGraphToBigWig` and `bigWigToBedGraph` binaries and add to your $PATH
+* Download `bedGraphToBigWig` and `bigWigToBedGraph` binaries and add $PATH to your bashrc.
     ```
     rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bedGraphToBigWig <custom_path>
     rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bigWigToBedGraph <custom_path>
-    export PATH="$PATH:<custom_path>"
-    sudo apt-get install hdf5-tools
+    export PATH="$PATH:<custom_path> >> ~/.bashrc"
     ```
 
 * Install pip dependencies
 
     ```
-    pip install -r requirements-base.txt && pip install -r requirements-macs2.txt
+    pip install -r requirements.txt
+    ```
+* Optional -- Install macs2
+
+    ```
+    pip install macs2==2.2.4
     ```
 
 * Install atacworks
@@ -56,9 +60,6 @@ git clone --recursive https://github.com/clara-genomics/AtacWorks.git
     ```
     pip install .
     ```
-Note: The above non-standard installation is necessary to ensure the requirements for macs2 are installed
-before macs2 itself.
-
 ### 3. Tests
 
 Run unit tests:
@@ -67,24 +68,27 @@ Run unit tests:
     python -m pytest tests/
     ```
 
-####Running CI Tests Locally
+### Running CI Tests Locally
+!!CAUTION!!
 Please note, your git repository will be mounted to the container, any untracked files will be removed from it.
 Before executing the CI locally, stash or add them to the index.
 
 Requirements:
-1. docker (https://docs.docker.com/install/linux/docker-ce/ubuntu/)
-2. nvidia-docker (https://github.com/NVIDIA/nvidia-docker)
-3. nvidia-container-runtime (https://github.com/NVIDIA/nvidia-container-runtime)
+1. [docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+2. [nvidia-docker](https://github.com/NVIDIA/nvidia-docker)
+3. [nvidia-container-runtime](https://github.com/NVIDIA/nvidia-container-runtime)
 
 Run the following command to execute the CI build steps inside a container locally:
-```bash
+
+```
 bash ci/local/build.sh -r <Atacworks repo path>
 ```
 ci/local/build.sh script was adapted from [rapidsai/cudf](https://github.com/rapidsai/cudf/tree/branch-0.11/ci/local)
 
 The default docker image is **clara-genomics-base:cuda10.1-ubuntu16.04-gcc5-py3.6**.
 Other images from [gpuci/clara-genomics-base](https://hub.docker.com/r/gpuci/clara-genomics-base/tags) repository can be used instead, by using -i argument
-```bash
+
+```
 bash ci/local/build.sh -r <Atacworks repo path> -i gpuci/clara-genomics-base:cuda10.0-ubuntu18.04-gcc7-py3.6
 ```
 
@@ -93,11 +97,11 @@ AtacWorks trains a deep neural network to learn a mapping between noisy (low cov
 
 ### 1. Training an AtacWorks model
 
-See [Tutorial 1](tutorials/tutorial1.md) for a workflow detailing the steps of data processing, encoding and model training and how to modify the parameters used in these steps.
+See [Tutorial 1](tutorials/tutorial1.md) for a workflow detailing the steps of model training and how to modify the parameters used in these steps.
 
 ### 2. Denoising and peak calling using a trained AtacWorks model
 
-See [Tutorial 2](tutorials/tutorial2.md) for an advanced workflow detailing the individual steps of data processing, encoding and prediction using a trained model, and how to modify the parameters used in these steps. 
+See [Tutorial 2](tutorials/tutorial2.md) for an advanced workflow detailing the prediction using a trained model, and how to modify the parameters used in these steps. 
 
 ## FAQ
 1. What's the preferred way for setting up the environment?
