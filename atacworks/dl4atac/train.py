@@ -13,15 +13,14 @@ import time
 
 from atacworks.dl4atac.utils import myprint, progbar, equal_width_formatter
 
-import torch
 import torch.distributed as dist
 
 import numpy as np
 
 
 def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
-          epoch, epochs, clip_grad, print_freq, distributed, world_size,
-          transform):
+          epoch, epochs, print_freq, distributed, world_size,
+          ):
     """Train with given data.
 
     Args:
@@ -35,11 +34,9 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
         pad : Padding
         epoch : Current epoch
         epochs : Total epochs to train for
-        clip_grad : Gradient clipping
         print_freq : How frequently to print training information.
         distributed : Distributed training
         world_size : World size
-        transform : transformation to apply to coverage track
 
     """
     num_batches = len(train_loader)
@@ -75,14 +72,6 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
         elif task == 'both':
             y_reg = y_reg.cuda(gpu, non_blocking=True)
             y_cla = y_cla.cuda(gpu, non_blocking=True)
-
-        # transform tracks if required
-        if transform == 'log':
-            x = torch.log(x + 1)
-            if task == 'regression':
-                y = torch.log(y + 1)
-            elif task == 'both':
-                y_reg = torch.log(y_reg + 1)
 
         # Model forward pass
         t = time.time()
@@ -120,8 +109,6 @@ def train(*, rank, gpu, task, model, train_loader, loss_func, optimizer, pad,
         optimizer.zero_grad()
         t = time.time()
         total_loss_value.backward()
-        if clip_grad > 0:
-            torch.nn.utils.clip_grad_norm_(model.parameters(), clip_grad)
         optimizer.step()
         backward_time += time.time() - t
 

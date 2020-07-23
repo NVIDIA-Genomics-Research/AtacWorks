@@ -11,6 +11,7 @@
 ## Input files
 noisybw: "None"
 cleanbw: "None"
+cleanpeakfile: "None"
 layersbw: "None"
 layers: "None"
 read_buffer: 1000
@@ -20,29 +21,24 @@ pad: 5000
 interval_size: 50000
 val_chrom: "None"
 holdout_chrom: "None"
-sizes_file: "hg19"
+genome: "hg19"
 nonpeak: "None"
 
 # Experiment args
-out_home: './'
-label: 'trained_models'
 task: 'both'
-print_freq: 50
 batch_size: 64
 num_workers: 4
 weights_path: "None"
-gpu_idx: 0
-distributed: False
-dist-url: 'tcp://127.0.0.1:4321'
-dist-backend: 'gloo'
 seed: 42
-transform: "None"
-debug: False
+
+# Data processing args
+pad: 5000
+layers: "None"
 
 # Train args
 checkpoint_fname: "checkpoint.pth.tar"
-save_freq: 1
-clip_grad: 0 
+
+#Learning args
 lr: 0.0002 
 epochs: 25
 mse_weight: 0.0005 
@@ -50,6 +46,10 @@ pearson_weight: 1
 poisson_weight: 0
 
 # Validation args
-eval_freq: 1
+val_files: "None"
 best_metric_choice: "AUROC"
 threshold: 0.5
+
+#Advanced torch distributed args
+dist-url: 'tcp://127.0.0.1:4321'
+dist-backend: 'gloo'

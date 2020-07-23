@@ -59,7 +59,7 @@ This command produces a folder containing several files:
 
 In order to vary output file names or formats, or inference parameters, you can change the arguments supplied in `infer_config.yaml`. Type `python AtacWorks/scripts/main.py infer --help` to understand which arguments to change.
 
-In particular, the threshold for peak calling is controlled by the `infer_threshold` parameter in `infer_config.yaml`. By default, this is set to 0.5. If `infer_threshold` is set to "None" in the config file, `run_inference.sh` will instead produce a bigWig file in which each base is labeled with the probability (between 0 and 1) that it is part of a peak. 
+In particular, the threshold for peak calling is controlled by the `threshold` parameter in `infer_config.yaml`. By default, this is set to 0.5. If `infer_threshold` is set to "None" in the config file, `run_inference.sh` will instead produce a bigWig file in which each base is labeled with the probability (between 0 and 1) that it is part of a peak. 
 
 ## Tutorial Notebook
 

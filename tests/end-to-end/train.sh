@@ -15,11 +15,11 @@ echo "Train "
 echo ""
 atacworks train\
     --out_home $out_dir \
-    --label model \
+    --exp_name model \
     --distributed \
     --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
     --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
-    --sizes_file $data_dir/example.sizes \
+    --genome $data_dir/example.sizes \
     --interval_size 24000 --val_chrom chr2 --holdout_chrom chr3 \
     --cleanpeakfile $data_dir/HSC.80M.chr123.10mb.peaks.bed \
     --checkpoint_fname checkpoint.pth.tar \
@@ -69,11 +69,11 @@ echo ""
 atacworks train \
     --cleanbw $data_dir/HSC.80M.chr123.10mb.coverage.bw \
     --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw \
-    --sizes_file $data_dir/example.sizes --gpu 0 \
+    --genome $data_dir/example.sizes --gpu 0 \
     --interval_size 24000 --val_chrom chr2 --holdout_chrom chr3 \
     --cleanpeakfile $data_dir/HSC.80M.chr123.10mb.peaks.bed \
     --model logistic --field 8401 \
-    --out_home $out_dir --label logistic \
+    --out_home $out_dir --exp_name logistic \
     --task classification --batch_size 4 \
     --epochs 1 --pad 5000
 # Training is not deterministic, so we are not comparing results.

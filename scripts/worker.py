@@ -164,6 +164,7 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
         timers : .
 
     """
+    print_freq = 50
     # fix random seed so models have the same starting weights
     if args.seed is not None and args.seed > 0:
         torch.manual_seed(args.seed)
@@ -215,42 +216,40 @@ def train_worker(gpu, ngpu_per_node, args, timers=None):
         train(rank=rank, gpu=gpu, task=args.task, model=model,
               train_loader=train_loader,
               loss_func=loss_func, optimizer=optimizer, epoch=epoch,
-              epochs=args.epochs, clip_grad=args.clip_grad,
-              print_freq=args.print_freq, pad=args.pad,
+              epochs=args.epochs,
+              print_freq=print_freq, pad=args.pad,
               distributed=args.distributed, world_size=args.world_size,
-              transform=args.transform)
+              )
 
-        if epoch % args.eval_freq == 0:
-            # either create new objects or call reset on each metric obj
-            metrics_reg, metrics_cla, best_metric = get_metrics(
-                args.task, args.threshold, args.best_metric_choice)
+        # either create new objects or call reset on each metric obj
+        metrics_reg, metrics_cla, best_metric = get_metrics(
+            args.task, args.threshold, args.best_metric_choice)
 
-            # best_metric is the metric used to compare results
-            # across different evaluation runs. It's modified in place.
-            evaluate(rank=rank, gpu=gpu, task=args.task,
-                     model=model, val_loader=val_loader,
-                     metrics_reg=metrics_reg, metrics_cla=metrics_cla,
-                     world_size=args.world_size, distributed=args.distributed,
-                     best_metric=best_metric, pad=args.pad,
-                     print_freq=args.print_freq, transform=args.transform)
+        # best_metric is the metric used to compare results
+        # across different evaluation runs. It's modified in place.
+        evaluate(rank=rank, gpu=gpu, task=args.task,
+                 model=model, val_loader=val_loader,
+                 metrics_reg=metrics_reg, metrics_cla=metrics_cla,
+                 world_size=args.world_size, distributed=args.distributed,
+                 best_metric=best_metric, pad=args.pad,
+                 print_freq=print_freq)
 
-            if rank == 0:
-                new_best = best_metric.better_than(current_best)
-                if new_best:
-                    current_best = best_metric
-                    myprint("New best metric found - {}".format(current_best),
-                            color='yellow', rank=rank)
-                if new_best or epoch % args.save_freq == 0:
-                    # give it the module attribute of the model
-                    # (DistributedDataParallel wrapper)
-                    if args.distributed:
-                        save_model(
-                            model.module, args.exp_dir, args.checkpoint_fname,
-                            epoch=epoch, is_best=new_best)
-                    else:
-                        save_model(
-                            model, args.exp_dir, args.checkpoint_fname,
-                            epoch=epoch, is_best=new_best)
+        if rank == 0:
+            new_best = best_metric.better_than(current_best)
+            if new_best:
+                current_best = best_metric
+                myprint("New best metric found - {}".format(current_best),
+                        color='yellow', rank=rank)
+            # give it the module attribute of the model
+            # (DistributedDataParallel wrapper)
+            if args.distributed:
+                save_model(
+                    model.module, args.exp_dir, args.checkpoint_fname,
+                    epoch=epoch, is_best=new_best)
+            else:
+                save_model(
+                    model, args.exp_dir, args.checkpoint_fname,
+                    epoch=epoch, is_best=new_best)
 
 
 def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
@@ -263,6 +262,7 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
         res_queue : Inference queue.
 
     """
+    print_freq = 50
     # fix random seed so models have the same starting weights
     if args.seed is not None and args.seed > 0:
         torch.manual_seed(args.seed)
@@ -286,8 +286,8 @@ def infer_worker(gpu, ngpu_per_node, args, res_queue=None):
 
     infer(rank=rank, gpu=gpu, task=args.task, model=model,
           infer_loader=infer_loader,
-          print_freq=args.print_freq, res_queue=res_queue,
-          pad=args.pad, transform=args.transform)
+          print_freq=print_freq, res_queue=res_queue,
+          pad=args.pad)
 
 
 def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
@@ -300,6 +300,7 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
         res_queue : Evaluate queue.
 
     """
+    print_freq = 50
     # fix random seed so models have the same starting weights
     if args.seed is not None and args.seed > 0:
         torch.manual_seed(args.seed)
@@ -330,5 +331,5 @@ def eval_worker(gpu, ngpu_per_node, args, res_queue=None):
              world_size=args.world_size,
              distributed=args.distributed,
              best_metric=best_metric, res_queue=res_queue,
-             pad=args.pad, transform=args.transform,
-             print_freq=args.print_freq)
+             pad=args.pad,
+             print_freq=print_freq)

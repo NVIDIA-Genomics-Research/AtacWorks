@@ -115,6 +115,7 @@ def save_to_bedgraph(batch_range, item, task, channel, intervals,
         scores = batch[start:end, :, channel]
     else:
         scores = batch[start:end, :, 0]
+
     # Round scores - for regression output
     if rounding is not None:
         scores = scores.astype('float64')
@@ -141,9 +142,9 @@ def save_to_bedgraph(batch_range, item, task, channel, intervals,
         df_to_bedGraph(batch_bg, outfile)
 
 
-def writer(infer, intervals_file, exp_dir, result_fname,
+def writer(infer, intervals_file, exp_dir,
            task, peaks, tracks, num_workers, infer_threshold,
-           reg_rounding, cla_rounding, batches_per_worker,
+           reg_rounding, batches_per_worker,
            gen_bigwig, sizes_file, res_queue, prefix, deletebg,
            out_resolution):
     """Write out the inference output to specified format.
@@ -156,14 +157,12 @@ def writer(infer, intervals_file, exp_dir, result_fname,
         inference output.
         intervals_file: Files containing the chromosome intervals.
         exp_dir: Experiment directory.
-        result_fname:Name of the result.
         task: Regression, classification or both.
         peaks: classification output.
         tracks: regression output.
         num_workers: Number of workers to use, for multi-processing
         infer_threshold: Value to threshold the inference output at.
         reg_rounding: Number of digits to round the regression output.
-        cla_rounding: Number of digits to round the classification output.
         batches_per_worker: If using multi processing, how many batches per
         worker.
         gen_bigwig: Whether to generate bigwig file
@@ -184,6 +183,8 @@ def writer(infer, intervals_file, exp_dir, result_fname,
                             dtype={'chrom': str, 'start': int, 'end': int})
 
     channels = []
+    # Suffix to give to the output
+    result_fname = "infer"
     out_base_path = os.path.join(exp_dir, prefix + "_" + result_fname)
 
     if task == "both":
@@ -203,7 +204,8 @@ def writer(infer, intervals_file, exp_dir, result_fname,
 
     outfiles = [os.path.join(out_base_path + ".track.bedGraph"),
                 os.path.join(out_base_path + ".peaks.bedGraph")]
-    rounding = [reg_rounding, cla_rounding]
+    # Always round to 3 decimal digits. We will threshold it anyway.
+    rounding = [reg_rounding, int(3)]
 
     # Temp dir used to save temp files during multiprocessing.
     temp_dir = tempfile.mkdtemp()
@@ -326,14 +328,10 @@ def main():
                                     "hg19.chrom.sizes"),
                "hg38": os.path.join(root_dir, "reference",
                                     "hg38.chrom.sizes")}
-    if args.sizes_file in genomes:
-        args.sizes_file = genomes[args.sizes_file]
+    if args.genome in genomes:
+        args.genome = genomes[args.genome]
 
     # Set log level
-    if args.debug:
-        _handler.setLevel(logging.DEBUG)
-        _logger.setLevel(logging.DEBUG)
-
     _logger.debug(args)
 
     # check gpu
@@ -343,7 +341,7 @@ def main():
 
     # all output will be written in the exp_dir folder
     args.exp_dir = make_experiment_dir(
-        args.label, args.out_home, timestamp=True)
+        args.exp_name, args.out_home, timestamp=True)
 
     # Convert layer names to a list
     if args.layers is not None:
@@ -378,11 +376,11 @@ def main():
             # Read in the narrowPeak or BED files for clean data peak
             # labels, convert them to bigwig
             out_path = os.path.join(args.exp_dir, "bigwig_peakfiles")
-            cleanpeakbw = peak2bw(cleanpeakfile, args.sizes_file, out_path)
+            cleanpeakbw = peak2bw(cleanpeakfile, args.genome, out_path)
             # Generate training, validation, holdout intervals files
             out_path = os.path.join(args.exp_dir, "intervals")
             train_intervals, val_intervals, holdout_intervals = \
-                get_intervals(args.sizes_file, args.interval_size,
+                get_intervals(args.genome, args.interval_size,
                               out_path,
                               val=args.val_chrom,
                               holdout=args.holdout_chrom,
@@ -423,7 +421,9 @@ def main():
         # WAR: gloo distributed doesn't work if world size is 1.
         # This is fixed in newer torch version -
         # https://github.com/facebookincubator/gloo/issues/209
-        args.distributed = False if ngpus_per_node == 1 else args.distributed
+        if ngpus_per_node == 1:
+            args.distributed = False
+            args.gpu_idx = 0
 
         config_dir = os.path.join(args.exp_dir, "configs")
         if not os.path.exists(config_dir):
@@ -448,12 +448,12 @@ def main():
             # Read in the narrowPeak or BED files for clean data peak
             # labels, convert them to bigwig
             out_path = os.path.join(args.exp_dir, "bigwig_peakfiles")
-            cleanpeakbw = peak2bw(args.cleanpeakfile, args.sizes_file,
+            cleanpeakbw = peak2bw(args.cleanpeakfile, args.genome,
                                   out_path)
 
         # Generate training, validation, holdout intervals files
         out_path = os.path.join(args.exp_dir, "intervals")
-        infer_intervals = get_intervals(args.sizes_file, args.interval_size,
+        infer_intervals = get_intervals(args.genome, args.interval_size,
                                         out_path,
                                         peakfile=cleanpeakbw)
 
@@ -485,7 +485,7 @@ def main():
                 # Check that intervals, sizes and h5 file are all compatible.
                 _logger.info('Checking input files for compatibility')
                 intervals = read_intervals(infer_intervals)
-                sizes = read_sizes(args.sizes_file)
+                sizes = read_sizes(args.genome)
                 check_intervals(intervals, sizes, infile)
 
                 # Delete intervals and sizes objects in main thread
@@ -515,17 +515,15 @@ def main():
             keyword_args = {"infer": args.mode == "denoise",
                             "intervals_file": infer_intervals,
                             "exp_dir": args.exp_dir,
-                            "result_fname": args.result_fname,
                             "task": args.task,
                             "peaks": args.peaks,
                             "tracks": args.tracks,
                             "num_workers": args.num_workers,
-                            "infer_threshold": args.infer_threshold,
+                            "infer_threshold": args.threshold,
                             "reg_rounding": args.reg_rounding,
-                            "cla_rounding": args.cla_rounding,
                             "batches_per_worker": args.batches_per_worker,
                             "gen_bigwig": args.gen_bigwig,
-                            "sizes_file": args.sizes_file,
+                            "sizes_file": args.genome,
                             "res_queue": res_queue, "prefix": prefix,
                             "deletebg": args.deletebg,
                             "out_resolution": args.out_resolution}
@@ -537,8 +535,9 @@ def main():
             # WAR: gloo distributed doesn't work if world size is 1.
             # This is fixed in newer torch version -
             # https://github.com/facebookincubator/gloo/issues/209
-            args.distributed = False if ngpus_per_node == 1 else \
-                args.distributed
+            if ngpus_per_node == 1:
+                args.distributed = False
+                args.gpu_idx = 0
 
             worker = infer_worker if args.mode == "denoise" else eval_worker
             if args.distributed:
