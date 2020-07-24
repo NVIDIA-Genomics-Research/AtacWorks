@@ -38,7 +38,7 @@ checkpoint_fname: "checkpoint.pth.tar"
 
 #Learning args
 lr: 0.0002 
-epochs: 25
+epochs: 10
 mse_weight: 0.0005 
 pearson_weight: 1
 poisson_weight: 0
