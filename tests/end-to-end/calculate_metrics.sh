@@ -17,7 +17,7 @@ python $root_dir/calculate_baseline_metrics.py \
     --label_file $data_dir/HSC.80M.chr123.10mb.coverage.bw \
     --task regression \
     --test_file $out_dir/inference_latest/HSC_infer.track.bw \
-    --intervals $out_dir/inference_latest/intervals/24000.genome_intervals.bed \
+    --intervals $out_dir/inference_latest/intervals/24000.regions_intervals.bed \
     --sep_peaks --peak_file $expected_results_dir/model_latest/bigwig_peakfiles/HSC.80M.chr123.10mb.peaks.bed.bw >& $out_dir/regression_metrics_log
 
 echo ""
@@ -33,7 +33,7 @@ python $root_dir/calculate_baseline_metrics.py \
     --label_file $expected_results_dir/model_latest/bigwig_peakfiles/HSC.80M.chr123.10mb.peaks.bed.bw \
     --task classification \
     --test_file $out_dir/inference_latest/HSC_infer.peaks.bw \
-    --intervals $out_dir/inference_latest/intervals/24000.genome_intervals.bed \
+    --intervals $out_dir/inference_latest/intervals/24000.regions_intervals.bed \
     --thresholds 0.5 >& $out_dir/classification_metrics_log
 
 echo ""

@@ -18,7 +18,7 @@ atacworks denoise \
     --weights_path $expected_results_dir/model_latest/model_best.pth.tar \
     --num_workers 0 --gpu_idx 0 \
     --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw  \
-    --interval_size 24000 \
+    --regions "chr3" --interval_size 24000 \
     --genome $data_dir/example.sizes \
     --threshold 0.5 \
     --config_mparams $config_dir/model_structure.yaml \
@@ -28,7 +28,7 @@ atacworks denoise \
 echo ""
 echo "Verifying generated h5 files."
 python $utils_dir/verify_diff.py --result_path $out_dir/inference_latest/bw2h5/HSC.5M.chr123.10mb.coverage.bw.denoise.h5 \
-    --expected_path $expected_results_dir/inference_latest/bw2h5/HSC.5M.chr123.10mb.coverage.bw.wg.h5 \
+    --expected_path $expected_results_dir/inference_latest/bw2h5/HSC.5M.chr123.10mb.coverage.bw.denoise.h5 \
     --format "h5"
 check_status $? "Inferred peak bedGraph files do not match!"
 echo ""
