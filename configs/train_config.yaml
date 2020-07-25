@@ -12,8 +12,6 @@
 noisybw: "None"
 cleanbw: "None"
 cleanpeakfile: "None"
-layersbw: "None"
-layers: "None"
 read_buffer: 1000
 pad: 5000
 
@@ -53,3 +51,9 @@ threshold: 0.5
 #Advanced torch distributed args
 dist-url: 'tcp://127.0.0.1:4321'
 dist-backend: 'gloo'
+
+#ADVANCED OPTIONS
+layersbw: "None"
+layers: "None"
+train_h5_files: "None"
+val_h5_files: "None"
