@@ -18,7 +18,8 @@ RUN apt update && apt install -y \
     git \
     python3-pip \
     libz-dev \
-    vim
+    vim \
+    wget
 
 RUN ln -nsf /usr/bin/python3.6 /usr/bin/python
 
