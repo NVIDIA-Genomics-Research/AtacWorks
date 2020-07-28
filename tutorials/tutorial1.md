@@ -4,7 +4,7 @@
 
 In this tutorial we train an AtacWorks model to denoise the signal track and call peaks from aggregate single-cell ATAC-seq data derived from a small number of cells. We use the dsc-ATAC-seq dataset presented in reference (1) (Section "AtacWorks enhances ATAC-seq results from small numbers of single cells", also Supplementary Table 8). This dataset consists of single-cell ATAC-seq data from several types of human blood cells.
 
-Note that all the AtacWorks models described in reference (1) are available to download (https://atacworks-paper.s3.us-east-2.amazonaws.com) and you may be able to use one of these instead of training a new model. To learn how to download and use an existing model, refer to Tutorial 2.
+Note that all the AtacWorks models described in reference (1) are available to download. To learn how to download and use an existing model, refer to the [documentation](pretrained_models).
  
 We selected 2400 Monocytes from this dataset - this is our ‘clean’, high-coverage dataset. We then randomly sampled 50 of these 2400 Monocytes. Here's what the ATAC-seq signal from 50 cells and 2400 cells looks like, for a region on chromosome 10:
 
@@ -28,4 +28,4 @@ The model learns a mapping from (1) to both (2) and (3); in other words, from th
 
 ## Tutorial Notebook
 
-For easy demonstration of training workflow, we've setup a notebook. Follow the [notebook](https://github.com/clara-parabricks/AtacWorks/blob/dev-v0.3.0/tutorials/tutorial1.ipynb) for step-by-step guide.  
+For easy demonstration of training workflow, we've setup a notebook. Follow the [documentation](https://clara-parabricks.github.io/AtacWorks/tutorials/tutorial1.html) for step-by-step guide.

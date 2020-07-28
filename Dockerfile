@@ -18,7 +18,7 @@ RUN apt update && apt install -y \
     git \
     python3-pip \
     libz-dev \
-    hdf5-tools
+    vim
 
 RUN ln -nsf /usr/bin/python3.6 /usr/bin/python
 
@@ -28,4 +28,4 @@ RUN rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bigW
 
 # Download AtacWorks repo
 RUN pip3 install atacworks==0.3.0
-RUN pip3 install macs2==2.2.4 && pip3 install vim 
+RUN pip3 install macs2==2.2.4
