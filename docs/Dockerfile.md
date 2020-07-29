@@ -13,7 +13,7 @@ If the setup above completed successfully and your system has access to [Docker 
 then the following command will run a sample AtacWorks workflow.
 
 ```
-    docker run --gpus all claraomics/atacworks /AtacWorks/tests/end-to-end/run.sh
+    docker run --gpus all --shm-size 2G claraomics/atacworks /AtacWorks/tests/end-to-end/run.sh
 ```
 
 If the above command doesn't run successfully, please stop and re-install docker or contact the
@@ -29,12 +29,22 @@ Use the `-v` option in docker to mount volumes with your data. Official document
 
 * Use mounted dataset with containerized toolkit
 ```
-    docker run --gpus all -v /ssd/my_atacworks_data:/data claraomics/atacworks \
+    docker run --gpus all --shm-size 2G -v /ssd/my_atacworks_data:/data claraomics/atacworks \
         /AtacWorks/peak2bw.py \
         /data/HSC.80M.chr123.10mb.peaks.bed \
         /data/hg19.auto.sizes \
         --prefix=/data/out
 ```
+
+## Run Docker in interactive mode with port forwarding for Jupyter notebooks
+```
+docker run -it --gpus all --shm-size 2G -p 8888:8888 claraomics/atacworks
+```
+Note: Jupyter notebook will have to be started manually once inside the container. Below is an example command to launch the jupyter-lab.
+```
+jupyter-lab --ip 0.0.0.0 --allow-root
+```
+
 ## FAQ
 1. Unexpected bus error, how to troubleshoot?
 ```
