@@ -36,6 +36,8 @@ git clone --recursive https://github.com/clara-genomics/AtacWorks.git
 
 ### 2. Install dependencies
 
+#### Native Installation
+
 * Download `bedGraphToBigWig` and `bigWigToBedGraph` binaries and add $PATH to your bashrc.
     ```
     rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bedGraphToBigWig <custom_path>
@@ -60,6 +62,10 @@ git clone --recursive https://github.com/clara-genomics/AtacWorks.git
     ```
     pip install .
     ```
+
+#### Docker Installation
+Follow the instructions [here](Dockerfile.md) for docker installation.
+ 
 ### 3. Tests
 
 Run unit tests to verify that installation was successful
