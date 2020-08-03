@@ -8,41 +8,52 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
+## Input files
+noisybw: "None"
+cleanbw: "None"
+cleanpeakfile: "None"
+read_buffer: 1000
+pad: 5000
+
+# Data Pre-processing parameters
+interval_size: 50000
+val_chrom: "None"
+holdout_chrom: "None"
+genome: "hg19"
+nonpeak: "None"
 
 # Experiment args
-out_home: './'
-label: 'trained_models'
 task: 'both'
-print_freq: 50
-bs: 64
+batch_size: 64
 num_workers: 4
 weights_path: "None"
-gpu: 0
-distributed: False
-dist-url: 'tcp://127.0.0.1:4321'
-dist-backend: 'gloo'
-debug: False
+seed: 42
 
 # Data processing args
 pad: 5000
-transform: "None"
 layers: "None"
 
 # Train args
-files_train: "None"
-checkpoint_fname: "None"
-save_freq: 1
+checkpoint_fname: "checkpoint.pth.tar"
 
 #Learning args
-clip_grad: 0 
 lr: 0.0002 
-epochs: 25
+epochs: 10
 mse_weight: 0.0005 
 pearson_weight: 1
 poisson_weight: 0
 
 # Validation args
 val_files: "None"
-eval_freq: 1
 best_metric_choice: "AUROC"
 threshold: 0.5
+
+#Advanced torch distributed args
+dist-url: 'tcp://127.0.0.1:4321'
+dist-backend: 'gloo'
+
+#ADVANCED OPTIONS
+layersbw: "None"
+layers: "None"
+train_h5_files: "None"
+val_h5_files: "None"

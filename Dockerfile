@@ -18,7 +18,8 @@ RUN apt update && apt install -y \
     git \
     python3-pip \
     libz-dev \
-    hdf5-tools
+    vim \
+    wget
 
 RUN ln -nsf /usr/bin/python3.6 /usr/bin/python
 
@@ -27,8 +28,5 @@ RUN rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bedG
 RUN rsync -aP rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/bigWigToBedGraph /usr/local/bin
 
 # Download AtacWorks repo
-RUN git clone --recursive https://github.com/clara-genomics/AtacWorks.git
-
-# Install AtacWorks requirements
-RUN pip3 install -r AtacWorks/requirements-base.txt && pip3 install -r AtacWorks/requirements-macs2.txt
-RUN pip install .
+RUN pip3 install atacworks==0.3.0
+RUN pip3 install macs2==2.2.4

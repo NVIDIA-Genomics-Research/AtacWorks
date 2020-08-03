@@ -19,7 +19,7 @@ export test_dir=$(readlink -f $(dirname "$0"))
 export test_root_dir=$(readlink -f "$test_dir/..")
 export root_dir=$(readlink -f "$test_root_dir/../scripts")
 export data_dir="$test_root_dir/data/end-to-end"
-export ref_dir="$test_root_dir/reference/end-to-end"
+export ref_dir="$test_root_dir/reference"
 export out_dir="$test_root_dir/result/end-to-end"
 export expected_results_dir="$test_root_dir/expected_results/end-to-end"
 export utils_dir="$test_root_dir/utils"
@@ -34,10 +34,7 @@ if [ -d "$out_dir" ]; then
 fi
 mkdir -p $out_dir
 
-bash $test_dir/convert_to_bigwig.sh
-bash $test_dir/split_dataset.sh
-bash $test_dir/save_to_h5.sh
 bash $test_dir/train.sh
 bash $test_dir/infer.sh
-bash $test_dir/calculate_metrics.sh
 bash $test_dir/get_summary.sh
+bash $test_dir/calculate_metrics.sh
