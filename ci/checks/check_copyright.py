@@ -149,7 +149,7 @@ if __name__ == "__main__":
     files = get_tracked_files(root_dir)
     files = filter_files(files,
                          r"LICENSE|README|data\/|docs\/|reference\/|json"
-                         r"|expected_results\/|tutorials\/")
+                         r"|Dockerfile|expected_results\/|tutorials\/")
 
     # Git list of files missing headers.
     missing_header_files = [f for f in files if not copyright_present(f)]
