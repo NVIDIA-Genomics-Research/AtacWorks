@@ -23,7 +23,7 @@ if [ "${COMMIT_HASH}" != "master" ]; then
     return 0
 fi
 
-for f in "${WORKSPACE}"/atacworks/atacworks_wheel/*.whl; do
+for f in "${WORKSPACE}"/atacworks_wheel/*.whl; do
     if [ ! -e "${f}" ]; then
         echo "atacworks Whl file does not exist"
         exit 1
