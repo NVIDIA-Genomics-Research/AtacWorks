@@ -55,3 +55,6 @@ layersbw: "None"
 layers: "None"
 denoise_h5_files: "None"
 intervals_file: "None"
+
+#Eval options
+best_metric_choice: "AUROC"
