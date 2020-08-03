@@ -29,10 +29,7 @@ for f in "${WORKSPACE}"/atacworks_wheel/*.whl; do
         exit 1
     else
         conda install -c conda-forge twine
-        # Change .whl package name to support PyPI upload
-        MODIFIED_WHL_NAME=$(dirname ${f})/$(basename "${f}" | sed -r "s/(.*-.+-.+)-.+-.+.whl/\1-none-any.whl/")
-        mv "${f}" "${MODIFIED_WHL_NAME}"
-        echo "File name ${f} was changed into ${MODIFIED_WHL_NAME}"
+        echo "Uploading file name ${f} to PYPI"
         # Perform Upload
         python3 -m twine upload --skip-existing "${WORKSPACE}"/atacworks_wheel/*
     fi
