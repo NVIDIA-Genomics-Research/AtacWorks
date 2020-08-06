@@ -17,6 +17,23 @@ AtacWorks is a deep learning toolkit for coverage track denoising and peak calli
 
 **AtacWorks training and inference currently does not run on CPU.**
 
+### PyPI installation
+To install atacworks in your environment, run the following in your terminal
+```
+pip install atacworks==0.3.0
+```
+
+### Docker Installation
+If you'd like to skip all installation and use a pre-installed docker image instead,
+follow the instructions [here](Dockerfile.md), section "Pre-installed AtacWorks".
+
+If you'd like to pull a docker image that contains AtacWorks source code, then 
+follow the instructions [here](Dockerfile.md), section "AtacWorks from Source".
+
+## Build from Source
+Follow the instructions below if you are interested in running AtacWorks tutorial notebooks outside
+of docker.
+
 ### 1. Clone repository
 
 #### Latest released version
@@ -35,8 +52,6 @@ git clone --recursive https://github.com/clara-genomics/AtacWorks.git
 ```
 
 ### 2. Install dependencies
-
-#### Native Installation
 
 * Download `bedGraphToBigWig` and `bigWigToBedGraph` binaries and add $PATH to your bashrc.
     ```
@@ -63,8 +78,6 @@ git clone --recursive https://github.com/clara-genomics/AtacWorks.git
     pip install .
     ```
 
-#### Docker Installation
-Follow the instructions [here](Dockerfile.md) for docker installation.
  
 ### 3. Tests
 
