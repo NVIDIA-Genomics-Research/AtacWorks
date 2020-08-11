@@ -1,0 +1,14 @@
+afunc: relu
+bn: false
+config_mparams: null
+dil: 8
+dil_cla: 10
+field: null
+in_channels: 1
+model: resnet
+nblocks: 5
+nblocks_cla: 2
+nfilt: 15
+nfilt_cla: 15
+width: 50
+width_cla: 50

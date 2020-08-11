@@ -64,6 +64,7 @@ def type_or_none_fn(type):
         else, type(val)
 
     """
+
     def type_or_none(val):
         if str(val) == "None":
             return None
@@ -83,31 +84,55 @@ def add_common_options(parser):
         parser : After adding the arguments.
 
     """
+    # Pre-processing
+    parser.add('--genome', required=True, type=str,
+               help='chromosome sizes file for the genome. Sizes \
+                     files for human genome 19 (hg19) and human \
+                     genome 38 (hg38) are already available. To use \
+                     hg19, specify --genome hg19, to use \
+                     hg38, specify --genome hg38. Alternatively, \
+                     to pass in a path to a different sizes file, \
+                     specify --genome <path-to-file>.')
+    parser.add('--interval_size', type=int, help='Interval size \
+                defines the input feature size for the model. It should \
+                be atleast as big as the receptive field of the network.')
+    parser.add('--noisybw', required=True, type=type_or_none_fn(str),
+               help='Path to bigwig file containing noisy \
+                    (low coverage/low quality/ low cell) \
+                    ATAC-seq signal')
+    parser.add('--layersbw', type=type_or_none_fn(str),
+               help='Paths to bigWig files containing \
+                     additional layers. If single file,  \
+                     use format: "name:file". \
+                     If there are multiple files, use format: \
+                     "[name1:file1, name2:file2,...]"')
+    parser.add('--read_buffer', type=type_or_none_fn(int),
+               help='Number of intervals to read from bigWig \
+               files at a time, since very big files may not fit \
+               in memory if read at once.')
+    parser.add('--nonzero', action='store_true',
+               help='Only save intervals with nonzero coverage. \
+                        Recommended when encoding training data, as intervals \
+                        with zero coverage do not help the model to learn.')
+
     # experiment args
-    parser.add('--label', required=True, type=str,
-               help='label of the experiment; used for naming output folder')
+    parser.add('--exp_name', required=True, type=str,
+               help='Name of the experiment; used for naming output folder')
     parser.add('--out_home', required=True, type=str,
                help='parent directory in which to create the output folder')
-    parser.add('--print_freq', required=True, type=int,
-               help="Logging frequency")
     parser.add('--task', required=True,
                choices=['regression', 'classification', 'both'],
-               help='Task can be regression or\
-                           classification or both. \
-                           Should match the task the model was trained for.')
-    parser.add('--bs', required=True, type=int,
-               help="batch_size")
+               help='Task can be regression or classification or both. \
+                     When using for denoising, this should match the \
+                     task the model was trained for.')
+    parser.add('--batch_size', required=True, type=int,
+               help="batch size to be used for training.")
     parser.add('--num_workers', required=True, type=int,
                help="number of workers for dataloader")
     # Dataset args
     parser.add('--pad', required=True, type=type_or_none_fn(int),
                help="Number of additional bases to add as padding \
-                   on either side of each interval. Use the same --pad \
-                   value that was supplied to bw2h5.py when creating \
-                   the h5 files for training and validation.")
-    parser.add('--transform', required=True, type=str, choices=['log', 'None'],
-               help='transformation to apply to\
-                           coverage tracks before training')
+                   on either side of each interval.")
     parser.add('--layers', required=True, type=type_or_none_fn(str),
                help='Names of additional layers to read from h5 file \
                    as input, in the form: "[name1, name2]". \
@@ -117,7 +142,7 @@ def add_common_options(parser):
                help="checkpoint path to load the model from for\
                    inference or resume training")
     # dist-env args
-    parser.add('--gpu_idx', required=True, type=int,
+    parser.add('--gpu_idx', required=False, type=int,
                help='GPU ID to use. ID can be known from nvidia-smi; \
                        preempted by --distributed which uses all \
                        available gpus ')
@@ -132,9 +157,6 @@ def add_common_options(parser):
                help='Seed value to set for RNG (Random Number Generators).\
                      Data loading and model initialization are \
                      deterministic with seed setting, model training is not.')
-    # debug
-    parser.add('--debug', action='store_true',
-               help='Enable debug prints')
 
 
 def add_train_options(parser):
@@ -148,42 +170,63 @@ def add_train_options(parser):
 
     """
     add_common_options(parser)
-    parser.add('--files_train', required=True, type=str,
-               help='list of data files in the form of "[file1, file2, '
-                    '...]";'
-                    'or a single path to a file or folder of files')
+    parser.add('--cleanbw', type=type_or_none_fn(str),
+               help='Path to bigwig file containing clean \
+                     (high-coverage/high-quality) ATAC-seq signal.')
+    parser.add('--cleanpeakfile', type=type_or_none_fn(str),
+               help='Path to narrowPeak or BED file containing peak calls '
+                    'from MACS2 on the clean (high-coverage/high-quality) \
+                     ATAC-seq signal.')
+    parser.add('--val_chrom', type=type_or_none_fn(str),
+               help='Chromosome to be reserved for validation')
+    parser.add('--holdout_chrom', type=type_or_none_fn(str),
+               help='Chromosome to be reserved for hold out')
+    parser.add('--nonpeak', type=type_or_none_fn(int),
+               help='Ratio between number of non-peak intervals and \
+                     peak intervals. In other words, \
+                     nonpeak intervals = nonpeak*(peak intervals)')
     parser.add('--checkpoint_fname', required=True, type=str,
                help="checkpoint filename to save the model")
-    parser.add('--save_freq', required=True, type=int,
-               help="model checkpoint saving frequency")
     # Learning args
-    parser.add('--clip_grad', required=True, type=float,
-               help='Grad clipping for bad/extreme batches')
     parser.add('--lr', required=True, type=float,
-               help='learning rate')
+               help='Learning rate to be used for training.')
     parser.add('--epochs', required=True, type=int,
-               help='Number of epochs')
+               help='Number of epochs to train the model for.')
     parser.add('--mse_weight', required=True, type=float,
-               help='relative weight of mse loss')
+               help='Relative weight of mse loss')
     parser.add('--pearson_weight', required=True, type=float,
-               help='relative weight of pearson correlation loss')
-    parser.add_argument('--poisson_weight', required=True, type=float,
-                        help='relative weight of poisson loss')
+               help='Relative weight of pearson correlation loss')
+    parser.add('--poisson_weight', required=True, type=float,
+               help='Relative weight of poisson loss')
+    parser.add('--train_h5_files', required=False,
+               type=type_or_none_fn(str),
+               help="Instead of providing bigwig files, users can \
+                     optionally provide pre-processed h5 files \
+                     generated by previous runs. If h5 files are \
+                     provided, then atacworks will skip re-generating \
+                     the h5 files. ONLY MEANT FOR ADVANCED USERS. Can \
+                     provide path to the folder containing all h5 \
+                     files or a comma separated list of file paths \
+                     like [file1,file2,file3]")
     # validation args
-    parser.add('--val_files', required=True, type=str,
-               help='list of data files in the form of [file1, file2, '
-                    '...];'
-                    'or a single path to a folder of files')
-    parser.add('--eval_freq', required=True, type=int,
-               help="evaluation frequency")
+    parser.add('--val_h5_files', required=False,
+               type=type_or_none_fn(str),
+               help="Instead of providing bigwig files, users can \
+                     optionally provide pre-processed h5 files \
+                     generated by previous runs. If h5 files are \
+                     provided, then atacworks will skip re-generating \
+                     the h5 files. ONLY MEANT FOR ADVANCED USERS. Can \
+                     provide path to the folder containing all h5 \
+                     files or a comma separated list of file paths \
+                     like [file1,file2,file3]")
     parser.add('--threshold', required=True, type=float,
                help="probability threshold above which to call peaks. \
                Used for classification metrics")
-    parser.add_argument('--best_metric_choice', required=True,
-                        type=str,
-                        choices=['BCE', 'MSE', 'Recall',
-                                 'Specificity', 'CorrCoef', 'AUROC'],
-                        help="metric to select the best model.\
+    parser.add('--best_metric_choice', required=True,
+               type=str,
+               choices=['BCE', 'MSE', 'Recall',
+                        'Specificity', 'CorrCoef', 'AUROC'],
+               help="metric to select the best model.\
                                 Choice is case sensitive.")
 
 
@@ -200,48 +243,70 @@ def add_inference_options(parser):
     add_common_options(parser)
     parser.add('--config', required=False,
                is_config_file=True, help='config file path')
-    parser.add('--input_files', required=True, type=str,
-               help='list of data files in the form of "[file1, file2, '
-                    '...]";'
-                    'or a single path to a file or folder of files')
+    parser.add('--regions', required=True, type=type_or_none_fn(str),
+               help='atacworks denoising is done on whole genome by \
+                     default. You can optionally specify a list of \
+                     chromosomes separated by comma and no spaces \
+                     like [chr1,chr2]. You can also provide list of \
+                     region indices with each chromosome like \
+                     [chr1:0-1000,chr2,chr3:0-500]. Please note \
+                     NO SPACES. You can also provide a BED file that \
+                     contains genomic intervals of length equal to \
+                     --interval_size. The BED file should have three \
+                     columns (chromosome, start position, end position) \
+                     and no header. Specified chromosomes MUST be \
+                     present in the --genome file and the number of \
+                     base pairs specified by the region i.e, the diff \
+                     where diff = (end position - start position) \
+                     MUST be a multiple of --interval_size.')
     parser.add('--peaks', action='store_true',
-               help='Output denosied peaks from atacworks. If --task is regression, \
-                       model only outputs denoised tracks and \
-                       this option becomes irrelevant.')
+               help='Output denoised peaks from atacworks. \
+                     If --task is regression, \
+                     model only outputs denoised tracks and \
+                     this option becomes irrelevant.')
     parser.add('--tracks', action='store_true',
                help='Output denosied tracks from atacworks. If --task is classification, \
                        model only outputs denoised peaks and \
                        this option becomes irrelevant.')
-    parser.add('--intervals_file', required=True, type=str,
-               help='bed file containing the genomic\
-                               intervals for inference')
-    parser.add('--sizes_file', required=True, type=str,
-               help='chromosome sizes file for the genome. \
-                       Chromosome sizes files for hg19 and hg38 are \
-                       given in the data/reference folder.')
-    parser.add('--infer_threshold', required=True,
+    parser.add('--threshold', required=True,
                type=type_or_none_fn(float),
                help='threshold above which to call peaks from the \
-                       predicted probability values.')
+                     predicted probability values.')
     parser.add('--reg_rounding', required=True, type=int,
                help='number of decimal digits to round values \
                        for regression outputs')
-    parser.add('--cla_rounding', required=True, type=int,
-               help='number of decimal digits to round values \
-                       for classification outputs')
     parser.add('--batches_per_worker', required=True, type=int,
                help='number of batches to run per worker\
                                during multiprocessing')
     parser.add('--gen_bigwig', action='store_true',
-               help='save the inference output to bigiwig\
+               help='save the inference output to bigwig\
                                in addition to bedgraph')
-    parser.add('--result_fname', required=True, type=str,
-               help='prefix for the inference result files.')
     parser.add('--deletebg', action='store_true',
                help='delete output bedGraph file')
-    parser.add('--out_resolution', required=False, type=type_or_none_fn(int),
-               help='resolution of output files. \
-               default 1bp.')
+    parser.add('--out_resolution', required=False,
+               type=type_or_none_fn(int),
+               help='resolution of output files. default 1bp. \
+                     Atacworks always denoises at 1 base pair \
+                     resolution. If out_resolution is 5, then \
+                     the coverage values for every 5 base pairs is \
+                     averaged. Keep in mind that the interval_size \
+                     provided should be a multiple of the \
+                     out_resolution value provided.')
+    parser.add('--denoise_h5_files', required=False,
+               type=type_or_none_fn(str),
+               help="Instead of providing bigwig files, users can \
+                     optionally provide pre-processed h5 files \
+                     generated by previous runs. If h5 files are \
+                     provided, then atacworks will skip re-generating \
+                     the h5 files. ONLY MEANT FOR ADVANCED USERS. Can \
+                     provide path to the folder containing all h5 \
+                     files or a comma separated list of file paths \
+                     like [file1,file2,file3]")
+    parser.add('--intervals_file', required=False,
+               type=type_or_none_fn(str),
+               help="ONLY RELEVANT IF USING --denoise_h5_files option.\
+                     Provide the path to intervals file that was used \
+                     to generate the h5 files.")
 
 
 def add_eval_options(parser):
@@ -256,9 +321,13 @@ def add_eval_options(parser):
     """
     add_inference_options(parser)
 
-    parser.add('--threshold', required=True, type=float,
-               help="probability threshold above which to call peaks. \
-               Used for classification metrics")
+    parser.add('--cleanbw', type=type_or_none_fn(str),
+               help='Path to bigwig file containing clean \
+                     (high-coverage/high-quality) ATAC-seq signal.')
+    parser.add('--cleanpeakfile', type=type_or_none_fn(str),
+               help='Path to narrowPeak or BED file containing peak calls '
+                    'from MACS2 on the clean (high-coverage/high-quality) \
+                     ATAC-seq signal.')
     parser.add('--best_metric_choice', required=True,
                type=str,
                choices=['BCE', 'MSE', 'Recall',
@@ -309,5 +378,30 @@ def parse_args(root_dir):
     if args.mode == "denoise":
         check_dependence(args.deletebg, args.gen_bigwig, parser,
                          "--deletebg requires --gen_bigwig")
+
+    if args.mode == "train":
+        if not (args.val_chrom or args.holdout_chrom):
+            if args.train_h5_files or args.val_h5_files:
+                check_dependence(args.train_h5_files,
+                                 args.val_h5_files,
+                                 parser,
+                                 "Specify both --train_h5_file and "
+                                 "--val_h5_file.")
+            else:
+                parser.error("val_chrom and holdout_chrom are required for \
+                              training.")
+        check_dependence(args.cleanbw, args.cleanpeakfile, parser,
+                         "cleanbw and cleanpeakfile are required for \
+                          training")
+
+    if args.mode == "eval":
+        check_dependence(args.cleanbw, args.cleanpeakfile, parser,
+                         "cleanbw and cleanpeakfile are required for \
+                          eval")
+
+    if not(args.distributed) and (args.gpu_idx is None):
+        parser.error("Either specify which GPU to run atacworks on \
+                through --gpu_idx, or pass the flag --distributed \
+                to run on ALL available GPUs.")
 
     return args

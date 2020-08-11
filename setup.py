@@ -73,7 +73,7 @@ required_packages = \
 
 
 setup(name='atacworks',
-      version='0.2.2',
+      version='0.3.0',
       description='NVIDIA genomics python libraries and utiliites',
       author='NVIDIA Corporation',
       url="https://github.com/clara-genomics/AtacWorks",
@@ -89,6 +89,9 @@ setup(name='atacworks',
           ('configs', ['configs/infer_config.yaml',
                        'configs/train_config.yaml',
                        'configs/model_structure.yaml']),
-          ('reference', ['reference/hg19.auto.sizes'])],
+          ('reference', ['data/reference/hg19.chrom.sizes',
+                         'data/reference/hg19.auto.sizes',
+                         'data/reference/hg38.chrom.sizes',
+                         'data/reference/hg38.auto.sizes'])],
       platforms=['any'],
       )
