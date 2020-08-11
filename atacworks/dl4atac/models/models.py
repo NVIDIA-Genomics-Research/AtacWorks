@@ -21,9 +21,9 @@ class DenoisingResNet(nn.Module):
 
     def __init__(self, interval_size, in_channels=1, out_channels=15,
                  num_blocks=5,
-                 kernel_size=50, dilation=8, bn=False, afunc='relu',
+                 kernel_size=51, dilation=8, bn=False, afunc='relu',
                  num_blocks_class=2,
-                 kernel_size_class=50, dilation_class=8,
+                 kernel_size_class=51, dilation_class=8,
                  out_channels_class=15):
         """Initialize the class.
 
