@@ -123,7 +123,7 @@ class DatasetTrain(DatasetBase):
                         rec['input'],
                         hrecs[layer_key][file_id][local_idx]))
                 rec['input'] = np.swapaxes(rec['input'], 0, 1)
-            yield rec
+            idx = yield rec
 
 
 class DatasetInfer(DatasetBase):
