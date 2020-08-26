@@ -47,6 +47,7 @@ source ci/common/test-atacworks.sh "$WORKSPACE"
 
 logger "Remove existing atacworks"
 pip uninstall -y atacworks
+
 ################################################################################
 # Create Wheel Package for AtacWorks
 ################################################################################
