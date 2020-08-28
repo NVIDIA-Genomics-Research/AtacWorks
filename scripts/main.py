@@ -273,6 +273,10 @@ def writer(infer, intervals_file, exp_dir,
                         files = sorted(
                             glob.glob(os.path.join(temp_dir,
                                                    str(channel), "*")))
+                        if len(files) == 0:
+                            _logger.debug("No files to combine")
+                            break
+
                         if len(files) == 1:
                             break
                         map_args = [(files[i * 2], files[i * 2 + 1])
@@ -426,7 +430,6 @@ def main():
                 args.interval_size = f['input'].shape[1] - 2 * args.pad
             else:
                 args.interval_size = f['input'].shape[1]
-            args.batch_size = 1
 
         ngpus_per_node = torch.cuda.device_count()
         # WAR: gloo distributed doesn't work if world size is 1.
@@ -518,7 +521,6 @@ def main():
                     args.interval_size = f['input'].shape[1] - 2 * args.pad
                 else:
                     args.interval_size = f['input'].shape[1]
-                args.batch_size = 1
 
             # Make sure that interval_size is a multiple of the out_resolution
             if args.out_resolution is not None:
