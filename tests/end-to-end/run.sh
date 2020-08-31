@@ -36,5 +36,6 @@ mkdir -p $out_dir
 
 bash $test_dir/train.sh
 bash $test_dir/infer.sh
+bash $test_dir/eval.sh
 bash $test_dir/get_summary.sh
 bash $test_dir/calculate_metrics.sh
