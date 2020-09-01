@@ -16,7 +16,7 @@ echo ""
 atacworks denoise \
     --out_home $out_dir --exp_name inference \
     --weights_path $expected_results_dir/model_latest/model_best.pth.tar \
-    --num_workers 0 --gpu_idx 0 \
+    --num_workers 4 --distributed \
     --noisybw $data_dir/HSC.5M.chr123.10mb.coverage.bw  \
     --regions "chr3" --interval_size 24000 \
     --genome $data_dir/example.sizes \
