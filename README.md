@@ -96,7 +96,10 @@ See [Tutorial 1](tutorials/tutorial1.md) for a workflow detailing the steps of m
 
 ### 2. Denoising and peak calling using a trained AtacWorks model
 
-See [Tutorial 2](tutorials/tutorial2.md) for an advanced workflow detailing the prediction using a trained model, and how to modify the parameters used in these steps. 
+See [Tutorial 2](tutorials/tutorial2.md) for an advanced workflow detailing the prediction using a trained model, and how to modify the parameters used in these steps.
+
+### 3. RAPIDS + AtacWorks Visualization of Single-cell Chromatin Accessibility
+See [Tutorial here](tutorials/rapids_examples.md) for a demonstration of using Atacworks in conjunction with RAPIDS, to visualize cell type-specific chromatin accessibility and generate cell type-specific peak calls from single-cell ATAC-seq data. 
 
 ## FAQ
 1. What's the preferred way for setting up the environment?
