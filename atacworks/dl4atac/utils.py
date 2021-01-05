@@ -418,44 +418,21 @@ class Timers:
         myprint(string)
 
 
-def _tile_region_intervals(chrom, intervalsize, chrom_range):
+def _get_tiling_intervals(intervalsize, sizes=None, chrom_range=None):
     """Produce intervals of given chromosomes.
 
-    Tile intervals for given region for a chromosome,
-    shifting by given interval size.
+    If sizes, tile from start to end of given chromosomes,
+    shifting by given length. If chrom_range, tile within given range.
 
     Args:
-        chrom: Chromosome name
         intervalsize: length of intervals
-        chrom_range: A list of two elements, start and end. Intervals
-            are generated from [start, end] of size intervalsize.
-
-    Returns:
-        Pandas DataFrame containing chrom, start, and end of tiling intervals.
-
-    """
-    # Create empty DataFrame
-    intervals = pd.DataFrame()
-
-    starts = range(chrom_range[0],
-                   chrom_range[1] - (intervalsize + 1),
-                   intervalsize)
-    ends = [x + intervalsize for x in starts]
-    intervals = intervals.append(pd.DataFrame(
-        {'chrom': chrom, 'start': starts, 'end': ends}))
-
-    return intervals.loc[:, ('chrom', 'start', 'end')]
-
-
-def _get_tiling_intervals(sizes, intervalsize):
-    """Produce intervals of given chromosomes.
-
-    Tile from start to end of given chromosomes, shifting by given length.
-
-    Args:
         sizes: Pandas df containing columns 'chrom' and 'length',
             with name and length of required chromosomes
-        intervalsize: length of intervals
+        chrom_range: A list of three elements, chrom, start and end. Intervals
+            are generated from [chrom, start, end] of size intervalsize.
+
+        If both chrom_range and sizes are provided, chrom_range takes priority.
+        If both are None, then error is raised.
 
     Returns:
         Pandas DataFrame containing chrom, start, and end of tiling intervals.
@@ -464,20 +441,34 @@ def _get_tiling_intervals(sizes, intervalsize):
     # Create empty DataFrame
     intervals = pd.DataFrame()
 
-    # Create intervals per chromosome
-    for i in range(len(sizes)):
-        chrom = sizes.iloc[i, 0]
-        chrend = sizes.iloc[i, 1]
-        starts = range(0, chrend - (intervalsize + 1), intervalsize)
+    if chrom_range is not None:
+        starts = range(chrom_range[1],
+                       chrom_range[2] - (intervalsize + 1),
+                       intervalsize)
         ends = [x + intervalsize for x in starts]
         intervals = intervals.append(pd.DataFrame(
-            {'chrom': chrom, 'start': starts, 'end': ends}))
+            {'chrom': chrom_range[0], 'start': starts, 'end': ends}))
 
-    # Eliminate intervals that extend beyond chromosome size
-    intervals = intervals.merge(sizes, on='chrom')
-    intervals = intervals[intervals['end'] < intervals['length']]
+        return intervals.loc[:, ('chrom', 'start', 'end')]
 
-    return intervals.loc[:, ('chrom', 'start', 'end')]
+    elif sizes is not None:
+        # Create intervals per chromosome
+        for i in range(len(sizes)):
+            chrom = sizes.iloc[i, 0]
+            chrend = sizes.iloc[i, 1]
+            starts = range(0, chrend - (intervalsize + 1), intervalsize)
+            ends = [x + intervalsize for x in starts]
+            intervals = intervals.append(pd.DataFrame(
+                {'chrom': chrom, 'start': starts, 'end': ends}))
+
+        # Eliminate intervals that extend beyond chromosome size
+        intervals = intervals.merge(sizes, on='chrom')
+        intervals = intervals[intervals['end'] < intervals['length']]
+
+        return intervals.loc[:, ('chrom', 'start', 'end')]
+    else:
+        raise ValueError("get_tiling_intervals.py: Provide either sizes"
+                         "or chrom_range. Both cannot be None.")
 
 
 def get_intervals(sizesfile, intervalsize, out_dir, val=None,
@@ -512,7 +503,7 @@ def get_intervals(sizesfile, intervalsize, out_dir, val=None,
         _logger.info("Generating training intervals")
         train_sizes = sizes[sizes['chrom'] != val]
         train_sizes = train_sizes[train_sizes['chrom'] != holdout]
-        train = _get_tiling_intervals(train_sizes, intervalsize)
+        train = _get_tiling_intervals(intervalsize, sizes=train_sizes)
 
         # Optional - Set fraction of training intervals to contain peaks
         if nonpeak is not None:
@@ -538,7 +529,7 @@ def get_intervals(sizesfile, intervalsize, out_dir, val=None,
         _logger.info("Generating val intervals")
         val_sizes = sizes[sizes['chrom'] == val]
         val = _get_tiling_intervals(
-            val_sizes, intervalsize)
+            intervalsize, sizes=val_sizes)
 
         # Write to file
         out_file_name = str(intervalsize) + '.val_intervals.bed'
@@ -547,7 +538,7 @@ def get_intervals(sizesfile, intervalsize, out_dir, val=None,
 
         # Generate holdout intervals - do not overlap
         holdout_sizes = sizes[sizes['chrom'] == holdout]
-        holdout = _get_tiling_intervals(holdout_sizes, intervalsize)
+        holdout = _get_tiling_intervals(intervalsize, sizes=holdout_sizes)
 
         # Write to file
         out_file_name = str(intervalsize) + '.holdout_intervals.bed'
@@ -569,18 +560,17 @@ def get_intervals(sizesfile, intervalsize, out_dir, val=None,
                     chrom, chrom_range = region.split(":")
                     chrom_range = chrom_range.split("-")
                     chrom_range = [int(value) for value in chrom_range]
-                    intervals = _tile_region_intervals(
-                        chrom,
+                    chrom_range.insert(0, chrom)
+                    intervals = _get_tiling_intervals(
                         intervalsize,
-                        chrom_range)
+                        chrom_range=chrom_range)
                 else:
                     chrom = region
                     chrom_sizes = sizes[sizes['chrom'] == chrom]
                     chrlength = chrom_sizes.iloc[0, 1]
-                    intervals = _tile_region_intervals(
-                        chrom,
+                    intervals = _get_tiling_intervals(
                         intervalsize,
-                        [0, chrlength])
+                        chrom_range=[chrom, 0, chrlength])
 
                 final_intervals = final_intervals.append(
                     intervals,
@@ -598,7 +588,7 @@ def get_intervals(sizesfile, intervalsize, out_dir, val=None,
         # Generate intervals tiling across all chromosomes in the sizes file
         _logger.info("Generating intervals tiling across all chromosomes \
             in sizes file: " + sizesfile)
-        intervals = _get_tiling_intervals(sizes, intervalsize)
+        intervals = _get_tiling_intervals(intervalsize, sizes=sizes)
 
         # Write to file
         out_file_name = str(intervalsize) + '.genome_intervals.bed'
