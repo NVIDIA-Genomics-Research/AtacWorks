@@ -406,13 +406,13 @@ def main():
                 # h5 for training.
                 out_path = os.path.join(args.exp_dir, "bw2h5")
                 nonzero = True
-                prefix = os.path.basename(cleanbw) + ".train"
+                prefix = os.path.basename(noisybw) + ".train"
                 train_file = bw2h5(noisybw, cleanbw, args.layersbw,
                                    cleanpeakbw, args.read_buffer,
                                    nonzero, train_intervals, out_path,
                                    prefix, args.pad)
                 train_files.append(train_file)
-                prefix = os.path.basename(cleanbw) + ".val"
+                prefix = os.path.basename(noisybw) + ".val"
                 val_file = bw2h5(noisybw, cleanbw, args.layersbw, cleanpeakbw,
                                  args.read_buffer,
                                  nonzero, val_intervals, out_path,
