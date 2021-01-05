@@ -236,7 +236,7 @@ def gather_files_from_cmdline(input, extension):
             res = [path]
         elif os.path.isdir(path):
             paths = [os.path.join(path, f)
-                     for f in os.listdir(path)]
+                     for f in sorted(os.listdir(path))]
             paths = [f for f in paths if
                      os.path.isfile(f) and f.endswith(extension)]
             res = paths
