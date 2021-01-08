@@ -85,6 +85,8 @@ def add_common_options(parser):
 
     """
     # Pre-processing
+    parser.add('--config', required=False,
+               is_config_file=True, help='config file path')
     parser.add('--genome', required=True, type=str,
                help='chromosome sizes file for the genome. Sizes \
                      files for human genome 19 (hg19) and human \
@@ -142,7 +144,7 @@ def add_common_options(parser):
                help="checkpoint path to load the model from for\
                    inference or resume training")
     # dist-env args
-    parser.add('--gpu_idx', required=False, type=int,
+    parser.add('--gpu_idx', required=False, type=type_or_none_fn(int),
                help='GPU ID to use. ID can be known from nvidia-smi; \
                        preempted by --distributed which uses all \
                        available gpus ')
@@ -241,8 +243,6 @@ def add_inference_options(parser):
 
     """
     add_common_options(parser)
-    parser.add('--config', required=False,
-               is_config_file=True, help='config file path')
     parser.add('--regions', required=True, type=type_or_none_fn(str),
                help='atacworks denoising is done on whole genome by \
                      default. You can optionally specify a list of \
