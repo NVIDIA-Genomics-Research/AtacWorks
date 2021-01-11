@@ -99,7 +99,8 @@ def add_common_options(parser):
     parser.add('--noisybw', required=True, type=type_or_none_fn(str),
                help='Path to bigwig file containing noisy \
                     (low coverage/low quality/ low cell) \
-                    ATAC-seq signal')
+                    ATAC-seq signal). If a directory is provided, \
+                    files are read in sorted order')
     parser.add('--layersbw', type=type_or_none_fn(str),
                help='Paths to bigWig files containing \
                      additional layers. If single file,  \
@@ -172,11 +173,14 @@ def add_train_options(parser):
     add_common_options(parser)
     parser.add('--cleanbw', type=type_or_none_fn(str),
                help='Path to bigwig file containing clean \
-                     (high-coverage/high-quality) ATAC-seq signal.')
+                     (high-coverage/high-quality) ATAC-seq signal.)\
+                     If a directory is provided, files are read in \
+                     sorted order')
     parser.add('--cleanpeakfile', type=type_or_none_fn(str),
                help='Path to narrowPeak or BED file containing peak calls '
                     'from MACS2 on the clean (high-coverage/high-quality) \
-                     ATAC-seq signal.')
+                     ATAC-seq signal. If a directory is provided, files are \
+                     read in sorted order.')
     parser.add('--val_chrom', type=type_or_none_fn(str),
                help='Chromosome to be reserved for validation')
     parser.add('--holdout_chrom', type=type_or_none_fn(str),
@@ -265,7 +269,8 @@ def add_inference_options(parser):
                      model only outputs denoised tracks and \
                      this option becomes irrelevant.')
     parser.add('--tracks', action='store_true',
-               help='Output denosied tracks from atacworks. If --task is classification, \
+               help='Output denoised tracks from atacworks. If --task \
+                       is classification, \
                        model only outputs denoised peaks and \
                        this option becomes irrelevant.')
     parser.add('--threshold', required=True,
