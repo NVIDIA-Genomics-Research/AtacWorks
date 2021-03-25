@@ -18,7 +18,6 @@ regions: "None"
 # Data Pre-processing parameters
 interval_size: 50000
 genome: "hg19"
-nonpeak: "None"
 
 # Experiment args
 peaks: False
@@ -34,7 +33,6 @@ pad: 5000
 layers: "None"
 
 #Infer args
-input_files: "None"
 intervals_file: "None"
 genome: "None"
 reg_rounding: 0

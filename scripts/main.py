@@ -273,6 +273,10 @@ def writer(infer, intervals_file, exp_dir,
                         files = sorted(
                             glob.glob(os.path.join(temp_dir,
                                                    str(channel), "*")))
+                        if len(files) == 0:
+                            _logger.debug("No files to combine")
+                            break
+
                         if len(files) == 1:
                             break
                         map_args = [(files[i * 2], files[i * 2 + 1])
@@ -426,7 +430,6 @@ def main():
                 args.interval_size = f['input'].shape[1] - 2 * args.pad
             else:
                 args.interval_size = f['input'].shape[1]
-            args.batch_size = 1
 
         ngpus_per_node = torch.cuda.device_count()
         # WAR: gloo distributed doesn't work if world size is 1.
@@ -467,8 +470,10 @@ def main():
                 out_path = os.path.join(args.exp_dir, "bigwig_peakfiles")
                 cleanpeakbw = peak2bw(args.cleanpeakfile, args.genome,
                                       out_path)
+                args.cleanbw = gather_files_from_cmdline(
+                    args.cleanbw,
+                    extension=".bw")
 
-            # Generate training, validation, holdout intervals files
             out_path = os.path.join(args.exp_dir, "intervals")
             infer_intervals = get_intervals(args.genome,
                                             args.interval_size,
@@ -489,8 +494,8 @@ def main():
                 if args.mode == "eval":
                     cleanbw = args.cleanbw[idx]
                 prefix = os.path.basename(noisybw) + "." + args.mode
-                infer_file = bw2h5(noisybw, cleanbw, args.layersbw, None,
-                                   args.read_buffer,
+                infer_file = bw2h5(noisybw, cleanbw, args.layersbw,
+                                   cleanpeakbw, args.read_buffer,
                                    nonzero, infer_intervals, out_path,
                                    prefix, args.pad)
                 files.append(infer_file)
@@ -518,7 +523,6 @@ def main():
                     args.interval_size = f['input'].shape[1] - 2 * args.pad
                 else:
                     args.interval_size = f['input'].shape[1]
-                args.batch_size = 1
 
             # Make sure that interval_size is a multiple of the out_resolution
             if args.out_resolution is not None:
@@ -529,25 +533,27 @@ def main():
             #############################################################
             manager = mp.Manager()
             res_queue = manager.Queue()
-            # Create a keyword argument dictionary to pass into the
-            # multiprocessor
-            keyword_args = {"infer": args.mode == "denoise",
-                            "intervals_file": infer_intervals,
-                            "exp_dir": args.exp_dir,
-                            "task": args.task,
-                            "peaks": args.peaks,
-                            "tracks": args.tracks,
-                            "num_workers": args.num_workers,
-                            "infer_threshold": args.threshold,
-                            "reg_rounding": args.reg_rounding,
-                            "batches_per_worker": args.batches_per_worker,
-                            "gen_bigwig": args.gen_bigwig,
-                            "sizes_file": args.genome,
-                            "res_queue": res_queue, "prefix": prefix,
-                            "deletebg": args.deletebg,
-                            "out_resolution": args.out_resolution}
-            write_proc = mp.Process(target=writer, kwargs=keyword_args)
-            write_proc.start()
+
+            if args.mode == "denoise":
+                # Create a keyword argument dictionary to pass into the
+                # multiprocessor
+                keyword_args = {"infer": True,
+                                "intervals_file": infer_intervals,
+                                "exp_dir": args.exp_dir,
+                                "task": args.task,
+                                "peaks": args.peaks,
+                                "tracks": args.tracks,
+                                "num_workers": args.num_workers,
+                                "infer_threshold": args.threshold,
+                                "reg_rounding": args.reg_rounding,
+                                "batches_per_worker": args.batches_per_worker,
+                                "gen_bigwig": args.gen_bigwig,
+                                "sizes_file": args.genome,
+                                "res_queue": res_queue, "prefix": prefix,
+                                "deletebg": args.deletebg,
+                                "out_resolution": args.out_resolution}
+                write_proc = mp.Process(target=writer, kwargs=keyword_args)
+                write_proc.start()
             #############################################################
 
             ngpus_per_node = torch.cuda.device_count()
@@ -571,8 +577,9 @@ def main():
             # finish off writing
             #############################################################
             res_queue.put("done")
-            _logger.info("Waiting for writer to finish...")
-            write_proc.join()
+            if args.mode == "denoise":
+                _logger.info("Waiting for writer to finish...")
+                write_proc.join()
             #############################################################
     # Save config parameters
     dst_config_path = os.path.join(args.out_home,

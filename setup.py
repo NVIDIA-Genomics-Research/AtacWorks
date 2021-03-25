@@ -73,7 +73,6 @@ required_packages = \
 
 
 setup(name='atacworks',
-      version='0.3.0',
       description='NVIDIA genomics python libraries and utiliites',
       author='NVIDIA Corporation',
       url="https://github.com/clara-genomics/AtacWorks",
