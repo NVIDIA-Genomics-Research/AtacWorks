@@ -38,12 +38,12 @@ check_status $? "Bigwig peakfiles do not match!"
 
 echo ""
 echo "Verifying created h5 files."
-python $utils_dir/verify_diff.py --result_path $out_dir/model_latest/bw2h5/HSC.80M.chr123.10mb.coverage.bw.train.h5 \
-    --expected_path $expected_results_dir/model_latest/bw2h5/HSC.80M.chr123.10mb.coverage.bw.train.h5 \
+python $utils_dir/verify_diff.py --result_path $out_dir/model_latest/bw2h5/HSC.5M.chr123.10mb.coverage.bw.train.h5 \
+    --expected_path $expected_results_dir/model_latest/bw2h5/HSC.5M.chr123.10mb.coverage.bw.train.h5 \
     --format "h5"
 check_status $? "h5 train files do not match!"
-python $utils_dir/verify_diff.py --result_path $out_dir/model_latest/bw2h5/HSC.80M.chr123.10mb.coverage.bw.val.h5 \
-    --expected_path $expected_results_dir/model_latest/bw2h5/HSC.80M.chr123.10mb.coverage.bw.val.h5 \
+python $utils_dir/verify_diff.py --result_path $out_dir/model_latest/bw2h5/HSC.5M.chr123.10mb.coverage.bw.val.h5 \
+    --expected_path $expected_results_dir/model_latest/bw2h5/HSC.5M.chr123.10mb.coverage.bw.val.h5 \
     --format "h5"
 check_status $? "h5 val files do not match!"
 
@@ -70,8 +70,8 @@ atacworks train\
     --out_home $out_dir \
     --exp_name h5_model \
     --distributed \
-    --train_h5_files $expected_results_dir/model_latest/bw2h5/HSC.80M.chr123.10mb.coverage.bw.train.h5 \
-    --val_h5_files  $expected_results_dir/model_latest/bw2h5/HSC.80M.chr123.10mb.coverage.bw.val.h5 \
+    --train_h5_files $expected_results_dir/model_latest/bw2h5/HSC.5M.chr123.10mb.coverage.bw.train.h5 \
+    --val_h5_files  $expected_results_dir/model_latest/bw2h5/HSC.5M.chr123.10mb.coverage.bw.val.h5 \
     --genome $data_dir/example.sizes \
     --interval_size 24000 \
     --checkpoint_fname checkpoint.pth.tar \
