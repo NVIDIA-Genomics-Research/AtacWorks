@@ -141,6 +141,4 @@ bash ci/local/build.sh -r <Atacworks repo path> -i gpuci/clara-genomics-base:cud
 
 Please cite AtacWorks as follows:
 
-Lal, A., Chiang, Z.D., Yakovenko, N., Duarte, F.M., Israeli, J. and Buenrostro, J.D., 2019. AtacWorks: A deep convolutional neural network toolkit for epigenomics. BioRxiv, p.829481.
-
-Link: [https://www.biorxiv.org/content/10.1101/829481v2](https://www.biorxiv.org/content/10.1101/829481v2)
+Lal, A., Chiang, Z.D., Yakovenko, N. et al. Deep learning-based enhancement of epigenomics data with AtacWorks. Nat Commun 12, 1507 (2021). https://doi.org/10.1038/s41467-021-21765-5
