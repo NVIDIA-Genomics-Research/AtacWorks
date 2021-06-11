@@ -26,7 +26,7 @@ def dict_to_h5(x, h5file, create_new=True, compression='lzf'):
             Only valid with create_new=True.
 
     """
-    with h5py.File(h5file) as f:
+    with h5py.File(h5file, 'a') as f:
         if create_new:
             # Create new datasets
             for key in x.keys():
