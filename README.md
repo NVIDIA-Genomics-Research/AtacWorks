@@ -10,7 +10,7 @@ AtacWorks is a deep learning toolkit for coverage track denoising and peak calli
 
 * Ubuntu 16.04+
 * CUDA 9.0+
-* Python 3.6.7+
+* Python 3.7.0+
 * GCC 5+
 * (Optional) A conda or virtualenv setup
 * Any NVIDIA GPU that supports CUDA 9.0+
