@@ -52,7 +52,7 @@ def test_h5_to_array(tmpdir):
     input_dict = {"features": np.array([0, 1, 2, 3]),
                   "scores": np.array([1, 2, 1, 1])}
     h5file = os.path.join(tmpdir, "h5file.h5")
-    with h5py.File(h5file) as f:
+    with h5py.File(h5file, 'w') as f:
         for key in input_dict.keys():
             f.create_dataset(key, data=input_dict[key])
 
