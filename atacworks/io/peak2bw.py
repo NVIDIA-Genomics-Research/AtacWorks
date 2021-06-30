@@ -52,9 +52,9 @@ def peak2bw(input_file, sizesfile, out_dir):
     # Read input files
     _logger.info('Reading input file')
     # Skip first line if the file is narrowPeak
-    skip = False
+    skip = 0
     if input_file.endswith("narrowPeak"):
-        skip = True
+        skip = 1
     peaks = read_intervals(input_file, skip=skip)
     _logger.info('Read ' + str(len(peaks)) + ' peaks.')
     sizes = read_sizes(sizesfile)

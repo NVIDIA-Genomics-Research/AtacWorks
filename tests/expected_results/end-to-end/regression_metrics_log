@@ -1,11 +1,11 @@
-INFO:2020-07-24 10:10:55,590:AtacWorks-calculate-metrics] Loading intervals
-INFO:2020-07-24 10:10:55,592:AtacWorks-calculate-metrics] Loading labels for regression
-INFO:2020-07-24 10:10:56,360:AtacWorks-calculate-metrics] Loading data for regression
-INFO:2020-07-24 10:10:57,093:AtacWorks-calculate-metrics] Calculating metrics for regression
-INFO:2020-07-24 10:11:02,252:AtacWorks-calculate-metrics] Loading labels for classification
-INFO:2020-07-24 10:11:02,956:AtacWorks-calculate-metrics] Calculating metrics for regression in peaks
-INFO:2020-07-24 10:11:02,995:AtacWorks-calculate-metrics] Calculating metrics for regression outside peaks
-INFO:2020-07-24 10:11:04,480:AtacWorks-calculate-metrics] Done!
-Regression metrics on full data : mse:329.1190 | corrcoef: 0.9539 | spearmancorrcoef: 0.4031
-Regression metrics in peaks : mse:10770.2969 | corrcoef: 0.9485 | spearmancorrcoef: 0.8116
-Regression metrics outside peaks : mse:11.2286 | corrcoef: 0.4128 | spearmancorrcoef: 0.3315
+INFO:2021-06-29 04:38:48,240:AtacWorks-calculate-metrics] Loading intervals
+INFO:2021-06-29 04:38:48,242:AtacWorks-calculate-metrics] Loading labels for regression
+INFO:2021-06-29 04:38:48,995:AtacWorks-calculate-metrics] Loading data for regression
+INFO:2021-06-29 04:38:49,712:AtacWorks-calculate-metrics] Calculating metrics for regression
+INFO:2021-06-29 04:38:54,432:AtacWorks-calculate-metrics] Loading labels for classification
+INFO:2021-06-29 04:38:55,133:AtacWorks-calculate-metrics] Calculating metrics for regression in peaks
+INFO:2021-06-29 04:38:55,181:AtacWorks-calculate-metrics] Calculating metrics for regression outside peaks
+INFO:2021-06-29 04:38:56,968:AtacWorks-calculate-metrics] Done!
+Regression metrics on full data : mse:766.2310 | corrcoef: 0.9627 | spearmancorrcoef: 0.4117
+Regression metrics in peaks : mse:25640.6914 | corrcoef: 0.9647 | spearmancorrcoef: 0.8133
+Regression metrics outside peaks : mse: 8.9072 | corrcoef: 0.3981 | spearmancorrcoef: 0.3397
