@@ -584,7 +584,13 @@ def main():
     # Save config parameters
     dst_config_path = os.path.join(args.out_home,
                                    args.mode + "_config.yaml")
-    save_config(dst_config_path, args)
+    # args object is manipulated in the code, we want to save the original
+    # unchanged args object.
+    args_org = parse_args(root_dir)
+    # Delete mode from args object, as mode is registered as an argument instead of
+    # a subparser
+    del args.mode
+    save_config(dst_config_path, args_org)
 
 
 if __name__ == '__main__':
